@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+
+# coverage
+/coverage
+/coverageEnv
+/coverage.json
+
+
+# build dir
+abi
+dist
+cache
+artifacts
+
+typechain
+
+# yarn, npm
+yarn-error.log
+# Ignore package-lock files (only use yarn.lock)
+package-lock.json
+yarn-error.log
+
+# Misc
+.DS_Store
+.cache
+.env
+.vscode/
+
+public/artifact.json
+public/manifest.json
+public/code.sol
