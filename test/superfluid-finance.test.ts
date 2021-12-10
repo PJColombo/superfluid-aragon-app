@@ -35,10 +35,11 @@ describe('Superfluid Finance', () => {
   let receiver: SignerWithAddress;
   let permissionlessAccount: SignerWithAddress;
   let nonContractAccount: SignerWithAddress;
+  let depositor: SignerWithAddress;
 
   let dao: Kernel;
   let acl: ACL;
-  let superfluidFinanceAgent: Agent;
+  let sfAgent: Agent;
   let superfluidFinance: SuperfluidFinance;
 
   let host: ISuperfluid;
@@ -102,7 +103,8 @@ describe('Superfluid Finance', () => {
       root
     );
 
-    [root, receiver, permissionlessAccount, nonContractAccount] = await ethers.getSigners();
+    [root, receiver, permissionlessAccount, nonContractAccount, depositor] =
+      await ethers.getSigners();
     [dao, acl] = await newDao(root, daoFactory);
   });
 
@@ -135,9 +137,9 @@ describe('Superfluid Finance', () => {
   });
 
   before('Prepare initialization parameters', async () => {
-    superfluidFinanceAgent = await setUpAgent();
+    sfAgent = await setUpAgent();
 
-    await generateSuperTokens(await impersonateAddress(superfluidFinanceAgent.address));
+    await generateSuperTokens(await impersonateAddress(sfAgent.address));
 
     snapshotId = await takeSnapshot();
   });
@@ -153,30 +155,18 @@ describe('Superfluid Finance', () => {
 
     it('should revert when passing an invalid host', async () => {
       await expect(
-        superfluidFinance.initialize(
-          superfluidFinanceAgent.address,
-          nonContractAccount.address,
-          cfav1.address
-        )
+        superfluidFinance.initialize(sfAgent.address, nonContractAccount.address, cfav1.address)
       ).to.be.revertedWith('SUPERFLUID_FINANCE_HOST_NOT_CONTRACT');
     });
 
     it('should revert when passing an invalid cfa', async () => {
       await expect(
-        superfluidFinance.initialize(
-          superfluidFinanceAgent.address,
-          host.address,
-          nonContractAccount.address
-        )
+        superfluidFinance.initialize(sfAgent.address, host.address, nonContractAccount.address)
       ).to.be.revertedWith('SUPERFLUID_FINANCE_CFA_NOT_CONTRACT');
     });
 
     it('should initialize the app', async () => {
-      await superfluidFinance.initialize(
-        superfluidFinanceAgent.address,
-        host.address,
-        cfav1.address
-      );
+      await superfluidFinance.initialize(sfAgent.address, host.address, cfav1.address);
 
       // await tenderly.persistArtifacts([
       //   { address: superfluidFinance.address, name: 'SuperfluidFinance' },
@@ -221,6 +211,65 @@ describe('Superfluid Finance', () => {
     });
   });
 
+  describe('deposit(ISuperToken _token, uint256 _amount, bool _isExternalDeposit)', () => {
+    let depositSuperToken: ISuperToken;
+    let sfDepositor: SuperfluidFinance;
+
+    const DEPOSIT_AMOUNT = toDecimals(3000);
+
+    before(async () => {
+      const superTokenAddress = deployments.superfluid.supertokens[1];
+      const tokenSigner = await impersonateAddress(superTokenAddress);
+      depositSuperToken = await ethers.getContractAt('ISuperToken', superTokenAddress, tokenSigner);
+      sfDepositor = superfluidFinance.connect(depositor);
+
+      await depositSuperToken.connect(depositor).approve(superfluidFinance.address, DEPOSIT_AMOUNT);
+      await depositSuperToken.selfMint(depositor.address, DEPOSIT_AMOUNT, '0x');
+
+      snapshotId = await takeSnapshot();
+    });
+
+    it('should deposit tokens correctly', async () => {
+      const agentBalanceBefore = await depositSuperToken.balanceOf(sfAgent.address);
+
+      await sfDepositor.deposit(depositSuperToken.address, DEPOSIT_AMOUNT, true);
+
+      const agentBalanceAfter = await depositSuperToken.balanceOf(sfAgent.address);
+      const depositorBalanceAfter = await depositSuperToken.balanceOf(depositor.address);
+
+      expect(depositorBalanceAfter).to.equal(0);
+      expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(DEPOSIT_AMOUNT);
+    });
+
+    it('should deposit tokens already transfered to the app', async () => {
+      await depositSuperToken
+        .connect(depositor)
+        .transfer(superfluidFinance.address, DEPOSIT_AMOUNT);
+
+      const agentBalanceBefore = await depositSuperToken.balanceOf(sfAgent.address);
+
+      await superfluidFinance.deposit(depositSuperToken.address, DEPOSIT_AMOUNT, false);
+
+      const sfBalanceAfter = await depositSuperToken.balanceOf(superfluidFinance.address);
+      const agentBalanceAfter = await depositSuperToken.balanceOf(sfAgent.address);
+
+      expect(sfBalanceAfter).to.equal(0);
+      expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(DEPOSIT_AMOUNT);
+    });
+
+    it('should revert when trying to deposit zero amount', async () => {
+      await expect(sfDepositor.deposit(depositSuperToken.address, 0, true)).to.be.revertedWith(
+        'SUPERFLUID_FINANCE_DEPOSIT_AMOUNT_ZERO'
+      );
+    });
+
+    it('should revert when trying to deposit an invalid supertoken', async () => {
+      await expect(sfDepositor.deposit(fakeToken.address, DEPOSIT_AMOUNT, true)).to.be.revertedWith(
+        'SUPERFLUID_FINANCE_INVALID_SUPERTOKEN'
+      );
+    });
+  });
+
   describe('createFlow(address _token,address _receiver,int96 _flowRate)', () => {
     const flowRate = computeFlowRate(1000); // 1000 tokens/month
 
@@ -232,7 +281,7 @@ describe('Superfluid Finance', () => {
         .to.emit(cfav1, 'FlowUpdated')
         .withArgs(
           superToken.address,
-          superfluidFinanceAgent.address,
+          sfAgent.address,
           receiver.address,
           flowRate,
           flowRate.mul(-1),
@@ -245,11 +294,7 @@ describe('Superfluid Finance', () => {
       const tx = await superfluidFinance.createFlow(superToken.address, receiver.address, flowRate);
       const block = await root.provider.getBlock(tx.blockNumber);
 
-      const flow = await cfav1.getFlow(
-        superToken.address,
-        superfluidFinanceAgent.address,
-        receiver.address
-      );
+      const flow = await cfav1.getFlow(superToken.address, sfAgent.address, receiver.address);
 
       checkFlow(flow, [block.timestamp, flowRate, BigNumber.from('138888888891591360512'), 0]);
     });
@@ -288,7 +333,7 @@ describe('Superfluid Finance', () => {
         .to.emit(cfav1, 'FlowUpdated')
         .withArgs(
           superToken.address,
-          superfluidFinanceAgent.address,
+          sfAgent.address,
           receiver.address,
           newFlowRate,
           newFlowRate.mul(-1),
@@ -305,11 +350,7 @@ describe('Superfluid Finance', () => {
       );
       const block = await root.provider.getBlock(tx.blockNumber);
 
-      const flow = await cfav1.getFlow(
-        superToken.address,
-        superfluidFinanceAgent.address,
-        receiver.address
-      );
+      const flow = await cfav1.getFlow(superToken.address, sfAgent.address, receiver.address);
 
       checkFlow(flow, [block.timestamp, newFlowRate, BigNumber.from('34722222226119065600'), 0]);
     });
@@ -343,25 +384,13 @@ describe('Superfluid Finance', () => {
     it('should emit a correct FlowUpdated event', async () => {
       expect(await superfluidFinance.deleteFlow(superToken.address, receiver.address))
         .to.emit(cfav1, 'FlowUpdated')
-        .withArgs(
-          superToken.address,
-          superfluidFinanceAgent.address,
-          receiver.address,
-          0,
-          0,
-          0,
-          '0x'
-        );
+        .withArgs(superToken.address, sfAgent.address, receiver.address, 0, 0, 0, '0x');
     });
 
     it('should delete a flow correctly', async () => {
       await superfluidFinance.deleteFlow(superToken.address, receiver.address);
 
-      const flow = await cfav1.getFlow(
-        superToken.address,
-        superfluidFinanceAgent.address,
-        receiver.address
-      );
+      const flow = await cfav1.getFlow(superToken.address, sfAgent.address, receiver.address);
 
       checkFlow(flow, [0, 0, 0, 0]);
     });

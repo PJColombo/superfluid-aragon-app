@@ -21,6 +21,10 @@ contract SuperfluidFinance is AragonApp {
     string private constant ERROR_CFA_NOT_CONTRACT = "SUPERFLUID_FINANCE_CFA_NOT_CONTRACT";
     string private constant ERROR_SUPERTOKEN_NOT_CONTRACT = "SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT";
     string private constant ERROR_INVALID_SUPERTOKEN = "SUPERFLUID_FINANCE_INVALID_SUPERTOKEN";
+    string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "SUPERFLUID_FINANCE_DEPOSIT_AMOUNT_ZERO";
+    string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "SUPERFLUID_FINANCE_SUPERTOKEN_APPROVE_FAILED";
+    string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED =
+        "SUPERFLUID_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
 
     // Superfluid data
     ISuperfluid private host;
@@ -54,11 +58,30 @@ contract SuperfluidFinance is AragonApp {
         initialized();
     }
 
+    function deposit(
+        ISuperToken _token,
+        uint256 _amount,
+        bool _isExternalDeposit
+    ) external isInitialized isValidSuperToken(_token) {
+        require(_amount > 0, ERROR_DEPOSIT_AMOUNT_ZERO);
+
+        // External deposit will be false when the assets were already in the Finance app
+        // and just need to be transferred to the Agent
+        if (_isExternalDeposit) {
+            // This assumes the sender has approved the tokens for Finance
+            require(_token.transferFrom(msg.sender, address(this), _amount), ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED);
+        }
+        // Approve the tokens for the Agent (it does the actual transferring)
+        require(_token.approve(agent, _amount), ERROR_SUPERTOKEN_APPROVE_FAILED);
+        // Finally, initiate the deposit
+        agent.deposit(_token, _amount);
+    }
+
     function createFlow(
         ISuperToken _token,
         address _receiver,
         int96 _flowRate
-    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+    ) external auth(MANAGE_STREAMS_ROLE) isInitialized isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.createFlow.selector,
             _token,
@@ -74,7 +97,7 @@ contract SuperfluidFinance is AragonApp {
         ISuperToken _token,
         address _receiver,
         int96 _flowRate
-    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+    ) external auth(MANAGE_STREAMS_ROLE) isInitialized isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.updateFlow.selector,
             _token,
@@ -89,6 +112,7 @@ contract SuperfluidFinance is AragonApp {
     function deleteFlow(ISuperToken _token, address _receiver)
         external
         auth(MANAGE_STREAMS_ROLE)
+        isInitialized
         isValidSuperToken(_token)
     {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
