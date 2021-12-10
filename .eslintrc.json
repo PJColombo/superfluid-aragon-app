@@ -15,6 +15,7 @@
   "plugins": ["prettier"],
   "rules": {
     "no-undef": "off",
+    "no-unused-expressions": "off",
     "camelcase": "off",
     "valid-jsdoc": "error",
     "react/prop-types": 0,
@@ -22,7 +23,7 @@
       "error",
       {
         "singleQuote": true,
-        "semi": false,
+        "semi": true,
         "trailingComma": "es5",
         "bracketSpacing": true,
         "printWidth": 100,

@@ -4,6 +4,7 @@
       "files": "*.sol",
       "options": {
         "printWidth": 120,
+        "semi": true,
         "explicitTypes": "always"
       }
     }
