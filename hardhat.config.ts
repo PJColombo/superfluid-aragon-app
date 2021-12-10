@@ -1,23 +1,28 @@
-import 'dotenv/config'
-import { HardhatUserConfig } from 'hardhat/types'
-
-import '@1hive/hardhat-aragon'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@typechain/hardhat'
-import 'hardhat-deploy'
-import 'hardhat-gas-reporter'
-import 'solidity-coverage'
-
-const { node_url, accounts } = require('./utils/network')
-
-process.removeAllListeners('warning')
+import '@1hive/hardhat-aragon';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-waffle';
+import '@tenderly/hardhat-tenderly';
+import '@typechain/hardhat';
+import 'dotenv/config';
+import 'hardhat-deploy';
+import 'hardhat-gas-reporter';
+import { HardhatUserConfig } from 'hardhat/types';
+import { accounts, node_url } from './utils/network';
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
         version: '0.4.24',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10000,
+          },
+        },
+      },
+      {
+        version: '0.7.6',
         settings: {
           optimizer: {
             enabled: true,
@@ -35,23 +40,33 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      chainId: process.env.HARDHAT_FORK_ID ? parseInt(process.env.HARDHAT_FORK_ID) : undefined,
       initialBaseFeePerGas: 0,
       // process.env.HARDHAT_FORK will specify the network that the fork is made from.
       // this line ensure the use of the corresponding accounts
       accounts: accounts(process.env.HARDHAT_FORK),
       forking: process.env.HARDHAT_FORK
         ? {
-            url: node_url(process.env.HARDHAT_FORK),
-            blockNumber: process.env.HARDHAT_FORK_NUMBER
-              ? parseInt(process.env.HARDHAT_FORK_NUMBER)
+            url: process.env.HARDHAT_FORK,
+            blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
+              ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
               : undefined,
           }
         : undefined,
     },
     localhost: {
+      chainId: process.env.HARDHAT_FORK_ID ? parseInt(process.env.HARDHAT_FORK_ID) : undefined,
       url: node_url('localhost'),
-      accounts: accounts(),
-      ensRegistry: '0xaafca6b0c89521752e559650206d7c925fd0e530',
+      // accounts: accounts(),
+      ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D',
+      forking: process.env.HARDHAT_FORK
+        ? {
+            url: process.env.HARDHAT_FORK,
+            blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
+              ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
+              : undefined,
+          }
+        : undefined,
     },
     mainnet: {
       url: node_url('mainnet'),
@@ -118,10 +133,14 @@ const config: HardhatUserConfig = {
         },
       }
     : undefined,
+  tenderly: {
+    username: process.env.HARDHAT_TENDERLY_USERNAME,
+    project: process.env.HARDHAT_TENDERLY_PROJECT,
+  },
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
   },
-}
+};
 
-export default config
+export default config;

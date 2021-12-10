@@ -27,6 +27,8 @@ yarn-error.log
 .env
 .vscode/
 
+tenderly.yaml
+
 public/artifact.json
 public/manifest.json
 public/code.sol
