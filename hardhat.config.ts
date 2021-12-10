@@ -35,7 +35,18 @@ const config: HardhatUserConfig = {
   aragon: {
     appEnsName: 'superfluid-finance.open.aragonpm.eth',
     appContractName: 'SuperfluidFinance',
-    appRoles: [],
+    appRoles: [
+      {
+        id: 'MANAGE_STREAMS_ROLE',
+        name: 'Manage payment flow streams',
+        params: [],
+      },
+      {
+        id: 'SET_AGENT_ROLE',
+        name: 'Set an agent',
+        params: [],
+      },
+    ],
     appBuildOutputPath: 'public/',
   },
   networks: {
