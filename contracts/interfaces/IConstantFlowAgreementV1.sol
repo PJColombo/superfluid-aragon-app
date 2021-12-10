@@ -1,8 +1,10 @@
 pragma solidity ^0.4.24;
 
+import "./ISuperfluidToken.sol";
+
 contract IConstantFlowAgreementV1 {
     event FlowUpdated(
-        address indexed token,
+        ISuperfluidToken indexed token,
         address indexed sender,
         address indexed receiver,
         int96 flowRate,
@@ -12,28 +14,28 @@ contract IConstantFlowAgreementV1 {
     );
 
     function createFlow(
-        address token,
+        ISuperfluidToken token,
         address receiver,
         int96 flowRate,
         bytes ctx
     ) external returns (bytes memory newCtx);
 
     function updateFlow(
-        address token,
+        ISuperfluidToken token,
         address receiver,
         int96 flowRate,
         bytes ctx
     ) external returns (bytes memory newCtx);
 
     function deleteFlow(
-        address token,
+        ISuperfluidToken token,
         address sender,
         address receiver,
         bytes ctx
     ) external returns (bytes memory newCtx);
 
     function getFlow(
-        address token,
+        ISuperfluidToken token,
         address sender,
         address receiver
     )

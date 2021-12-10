@@ -3,8 +3,9 @@ pragma solidity ^0.4.24;
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "@aragon/apps-agent/contracts/Agent.sol";
 
-import "./interfaces/ISuperfluid.sol";
 import "./interfaces/IConstantFlowAgreementV1.sol";
+import "./interfaces/ISuperfluid.sol";
+import "./interfaces/ISuperToken.sol";
 
 contract SuperfluidFinance is AragonApp {
     /**
@@ -13,7 +14,8 @@ contract SuperfluidFinance is AragonApp {
         bytes32 public constant MANAGE_STREAMS_ROLE = keccak256("MANAGE_STREAMS_ROLE");
         bytes32 public constant SET_AGENT_ROLE = keccak256("SET_AGENT_ROLE");
     */
-    bytes32 public constant MANAGE_SUPERTOKENS_ROLE = 0xc3785b41f0ebb77bd89636ecae52c950cee1cd359f0a1e5fababbcb5a0bfcb97;
+    bytes32 public constant MANAGE_SUPERTOKENS_ROLE =
+        0xc3785b41f0ebb77bd89636ecae52c950cee1cd359f0a1e5fababbcb5a0bfcb97;
     bytes32 public constant MANAGE_STREAMS_ROLE = 0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
     bytes32 public constant SET_AGENT_ROLE = 0xf57d195c0663dd0e8a2210bb519e2b7de35301795015198efff16e9a2be238c8;
 
@@ -33,10 +35,10 @@ contract SuperfluidFinance is AragonApp {
 
     Agent public agent;
 
-    event NewAgentSet(address agent);
+    event NewAgentSet(Agent agent);
 
-    modifier isAcceptedToken(address _token) {
-        require(acceptedTokens[_token], ERROR_TOKEN_NOT_ACCEPTED);
+    modifier isAcceptedToken(ISuperToken _token) {
+        require(acceptedTokens[address(_token)], ERROR_TOKEN_NOT_ACCEPTED);
         _;
     }
 
@@ -44,14 +46,14 @@ contract SuperfluidFinance is AragonApp {
         Agent _agent,
         ISuperfluid _host,
         IConstantFlowAgreementV1 _cfa,
-        address[] _acceptedTokens
+        ISuperToken[] _acceptedTokens
     ) external onlyInit {
         require(isContract(address(_agent)), ERROR_AGENT_NOT_CONTRACT);
         require(isContract(address(_host)), ERROR_HOST_NOT_CONTRACT);
         require(isContract(address(_cfa)), ERROR_CFA_NOT_CONTRACT);
 
         for (uint256 i = 0; i < _acceptedTokens.length; i++) {
-            address _acceptedToken = _acceptedTokens[i];
+            address _acceptedToken = address(_acceptedTokens[i]);
             require(isContract(_acceptedToken), ERROR_SUPERTOKEN_NOT_CONTRACT);
 
             acceptedTokens[_acceptedToken] = true;
@@ -65,7 +67,7 @@ contract SuperfluidFinance is AragonApp {
     }
 
     function createFlow(
-        address _token,
+        ISuperToken _token,
         address _receiver,
         int96 _flowRate
     ) external auth(MANAGE_STREAMS_ROLE) isAcceptedToken(_token) {
@@ -79,7 +81,7 @@ contract SuperfluidFinance is AragonApp {
 
         agent.safeExecute(
             host,
-            abi.encodeWithSelector(host.callAgreement.selector, address(cfa), encodedAgreementCall, new bytes(0))
+            abi.encodeWithSelector(host.callAgreement.selector, cfa, encodedAgreementCall, new bytes(0))
         );
     }
 
@@ -88,6 +90,6 @@ contract SuperfluidFinance is AragonApp {
 
         agent = _agent;
 
-        emit NewAgentSet(address(_agent));
+        emit NewAgentSet(_agent);
     }
 }
