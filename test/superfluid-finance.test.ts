@@ -138,9 +138,7 @@ describe('Superfluid Finance', () => {
   describe('initialize(Agent _agent,ISuperfluid _host,IConstantFlowAgreementV1 _cfa,address[] _acceptedTokens)', () => {
     it('should revert when passing an invalid agent', async () => {
       await expect(
-        superfluidFinance.initialize(nonContractAccount.address, host.address, cfav1.address, [
-          superToken.address,
-        ])
+        superfluidFinance.initialize(nonContractAccount.address, host.address, cfav1.address)
       ).to.be.revertedWith('SUPERFLUID_FINANCE_AGENT_NOT_CONTRACT');
     });
 
@@ -149,8 +147,7 @@ describe('Superfluid Finance', () => {
         superfluidFinance.initialize(
           superfluidFinanceAgent.address,
           nonContractAccount.address,
-          cfav1.address,
-          [superToken.address]
+          cfav1.address
         )
       ).to.be.revertedWith('SUPERFLUID_FINANCE_HOST_NOT_CONTRACT');
     });
@@ -160,26 +157,16 @@ describe('Superfluid Finance', () => {
         superfluidFinance.initialize(
           superfluidFinanceAgent.address,
           host.address,
-          nonContractAccount.address,
-          [superToken.address]
+          nonContractAccount.address
         )
       ).to.be.revertedWith('SUPERFLUID_FINANCE_CFA_NOT_CONTRACT');
-    });
-
-    it('should revert when passing an invalid supertoken', async () => {
-      await expect(
-        superfluidFinance.initialize(superfluidFinanceAgent.address, host.address, cfav1.address, [
-          nonContractAccount.address,
-        ])
-      ).to.be.revertedWith('SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT');
     });
 
     it('should initialize the app', async () => {
       await superfluidFinance.initialize(
         superfluidFinanceAgent.address,
         host.address,
-        cfav1.address,
-        [superToken.address]
+        cfav1.address
       );
 
       // await tenderly.persistArtifacts([
@@ -269,10 +256,10 @@ describe('Superfluid Finance', () => {
       ).to.be.revertedWith('APP_AUTH_FAILED');
     });
 
-    it('should revert when trying to create flow using a non-accepted supertoken', async () => {
+    it('should revert when trying to create flow using a non-contract supertoken', async () => {
       await expect(
-        superfluidFinance.createFlow(fakeToken.address, receiver.address, flowRate)
-      ).to.be.revertedWith('SUPERFLUID_FINANCE_TOKEN_NOT_ACCEPTED');
+        superfluidFinance.createFlow(nonContractAccount.address, receiver.address, flowRate)
+      ).to.be.revertedWith('SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT');
     });
   });
 });
