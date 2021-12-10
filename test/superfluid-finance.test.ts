@@ -261,5 +261,11 @@ describe('Superfluid Finance', () => {
         superfluidFinance.createFlow(nonContractAccount.address, receiver.address, flowRate)
       ).to.be.revertedWith('SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT');
     });
+
+    it('should revert when trying to create flow using an invalid supertoken', async () => {
+      await expect(
+        superfluidFinance.createFlow(fakeToken.address, receiver.address, flowRate)
+      ).to.be.revertedWith('SUPERFLUID_FINANCE_INVALID_SUPERTOKEN');
+    });
   });
 });

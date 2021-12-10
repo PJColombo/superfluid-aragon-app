@@ -20,6 +20,7 @@ contract SuperfluidFinance is AragonApp {
     string private constant ERROR_HOST_NOT_CONTRACT = "SUPERFLUID_FINANCE_HOST_NOT_CONTRACT";
     string private constant ERROR_CFA_NOT_CONTRACT = "SUPERFLUID_FINANCE_CFA_NOT_CONTRACT";
     string private constant ERROR_SUPERTOKEN_NOT_CONTRACT = "SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT";
+    string private constant ERROR_INVALID_SUPERTOKEN = "SUPERFLUID_FINANCE_INVALID_SUPERTOKEN";
 
     // Superfluid data
     ISuperfluid private host;
@@ -28,6 +29,14 @@ contract SuperfluidFinance is AragonApp {
     Agent public agent;
 
     event NewAgentSet(Agent agent);
+
+    modifier isValidSuperToken(ISuperToken _token) {
+        require(isContract(address(_token)), ERROR_SUPERTOKEN_NOT_CONTRACT);
+
+        (bool success,) = staticInvoke(address(_token), abi.encodeWithSelector(_token.getHost.selector));
+        require(success, ERROR_INVALID_SUPERTOKEN);
+        _;
+    }
 
     function initialize(
         Agent _agent,
@@ -49,8 +58,7 @@ contract SuperfluidFinance is AragonApp {
         ISuperToken _token,
         address _receiver,
         int96 _flowRate
-    ) external auth(MANAGE_STREAMS_ROLE) {
-        require(isContract(address(_token)), ERROR_SUPERTOKEN_NOT_CONTRACT);
+    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
 
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.createFlow.selector,
@@ -60,17 +68,50 @@ contract SuperfluidFinance is AragonApp {
             new bytes(0)
         );
 
+        callAgreement(encodedAgreementCall);
+    }
+
+    function updateFlow(ISuperToken _token, address _receiver, int96 _flowRate) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+        
+    }
+
+    function setAgent(Agent _agent) external auth(SET_AGENT_ROLE) {
+        require(isContract(address(_agent)), ERROR_AGENT_NOT_CONTRACT);
+        agent = _agent;
+
+        emit NewAgentSet(_agent);
+    }
+
+    function callAgreement(bytes encodedAgreementCall) internal {
         agent.safeExecute(
             host,
             abi.encodeWithSelector(host.callAgreement.selector, cfa, encodedAgreementCall, new bytes(0))
         );
     }
 
-    function setAgent(Agent _agent) external auth(SET_AGENT_ROLE) {
-        require(isContract(address(_agent)), ERROR_AGENT_NOT_CONTRACT);
+    function staticInvoke(address _addr, bytes memory _calldata)
+        private
+        view
+        returns (bool, uint256)
+    {
+        bool success;
+        uint256 ret;
+        assembly {
+            let ptr := mload(0x40)    // free memory pointer
 
-        agent = _agent;
+            success := staticcall(
+                gas,                  // forward all gas
+                _addr,                // address
+                add(_calldata, 0x20), // calldata start
+                mload(_calldata),     // calldata length
+                ptr,                  // write output over free memory
+                0x20                  // uint256 return
+            )
 
-        emit NewAgentSet(_agent);
+            if gt(success, 0) {
+                ret := mload(ptr)
+            }
+        }
+        return (success, ret);
     }
 }
