@@ -60,6 +60,12 @@ export const takeSnapshot = async (): Promise<string> => {
   })) as Promise<string>;
 };
 
+export const useSnapshot = async (snapshotId: string): Promise<string> => {
+  await restoreSnapshot(snapshotId);
+
+  return await takeSnapshot();
+};
+
 export const increase = async (duration: string | BigNumber) => {
   if (!ethers.BigNumber.isBigNumber(duration)) {
     duration = ethers.BigNumber.from(duration);

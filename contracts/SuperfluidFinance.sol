@@ -33,7 +33,7 @@ contract SuperfluidFinance is AragonApp {
     modifier isValidSuperToken(ISuperToken _token) {
         require(isContract(address(_token)), ERROR_SUPERTOKEN_NOT_CONTRACT);
 
-        (bool success,) = staticInvoke(address(_token), abi.encodeWithSelector(_token.getHost.selector));
+        (bool success, ) = staticInvoke(address(_token), abi.encodeWithSelector(_token.getHost.selector));
         require(success, ERROR_INVALID_SUPERTOKEN);
         _;
     }
@@ -59,7 +59,6 @@ contract SuperfluidFinance is AragonApp {
         address _receiver,
         int96 _flowRate
     ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
-
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.createFlow.selector,
             _token,
@@ -71,8 +70,36 @@ contract SuperfluidFinance is AragonApp {
         callAgreement(encodedAgreementCall);
     }
 
-    function updateFlow(ISuperToken _token, address _receiver, int96 _flowRate) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
-        
+    function updateFlow(
+        ISuperToken _token,
+        address _receiver,
+        int96 _flowRate
+    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+        bytes memory encodedAgreementCall = abi.encodeWithSelector(
+            cfa.updateFlow.selector,
+            _token,
+            _receiver,
+            _flowRate,
+            new bytes(0)
+        );
+
+        callAgreement(encodedAgreementCall);
+    }
+
+    function deleteFlow(ISuperToken _token, address _receiver)
+        external
+        auth(MANAGE_STREAMS_ROLE)
+        isValidSuperToken(_token)
+    {
+        bytes memory encodedAgreementCall = abi.encodeWithSelector(
+            cfa.deleteFlow.selector,
+            _token,
+            agent,
+            _receiver,
+            new bytes(0)
+        );
+
+        callAgreement(encodedAgreementCall);
     }
 
     function setAgent(Agent _agent) external auth(SET_AGENT_ROLE) {
@@ -89,23 +116,19 @@ contract SuperfluidFinance is AragonApp {
         );
     }
 
-    function staticInvoke(address _addr, bytes memory _calldata)
-        private
-        view
-        returns (bool, uint256)
-    {
+    function staticInvoke(address _addr, bytes memory _calldata) internal view returns (bool, uint256) {
         bool success;
         uint256 ret;
         assembly {
-            let ptr := mload(0x40)    // free memory pointer
+            let ptr := mload(0x40) // free memory pointer
 
             success := staticcall(
-                gas,                  // forward all gas
-                _addr,                // address
+                gas, // forward all gas
+                _addr, // address
                 add(_calldata, 0x20), // calldata start
-                mload(_calldata),     // calldata length
-                ptr,                  // write output over free memory
-                0x20                  // uint256 return
+                mload(_calldata), // calldata length
+                ptr, // write output over free memory
+                0x20 // uint256 return
             )
 
             if gt(success, 0) {
