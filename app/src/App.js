@@ -1,16 +1,16 @@
-import React from 'react'
-import { useAragonApi } from '@aragon/api-react'
-import { Header, Main, SyncIndicator, Text, textStyle } from '@aragon/ui'
+import { useAragonApi } from '@aragon/api-react';
+import { Header, Main, SyncIndicator, Text, textStyle } from '@aragon/ui';
+import React from 'react';
 
 function App() {
-  const { appState } = useAragonApi()
-  const { isSyncing } = appState
-
+  const { appState, network } = useAragonApi();
+  const { isSyncing } = appState;
+  console.log(appState);
   return (
     <Main>
       {isSyncing && <SyncIndicator />}
       <Header
-        primary="Superfluid Finance"
+        primary="Flow Finance"
         secondary={
           <Text
             css={`
@@ -22,7 +22,7 @@ function App() {
         }
       />
     </Main>
-  )
+  );
 }
 
-export default App
+export default App;

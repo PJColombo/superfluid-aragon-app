@@ -7,7 +7,7 @@ import "./interfaces/IConstantFlowAgreementV1.sol";
 import "./interfaces/ISuperfluid.sol";
 import "./interfaces/ISuperToken.sol";
 
-contract SuperfluidFinance is AragonApp {
+contract FlowFinance is AragonApp {
     /**
     Hardcoded constants to save gas
         bytes32 public constant MANAGE_STREAMS_ROLE = keccak256("MANAGE_STREAMS_ROLE");
@@ -16,15 +16,15 @@ contract SuperfluidFinance is AragonApp {
     bytes32 public constant MANAGE_STREAMS_ROLE = 0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
     bytes32 public constant SET_AGENT_ROLE = 0xf57d195c0663dd0e8a2210bb519e2b7de35301795015198efff16e9a2be238c8;
 
-    string private constant ERROR_AGENT_NOT_CONTRACT = "SUPERFLUID_FINANCE_AGENT_NOT_CONTRACT";
-    string private constant ERROR_HOST_NOT_CONTRACT = "SUPERFLUID_FINANCE_HOST_NOT_CONTRACT";
-    string private constant ERROR_CFA_NOT_CONTRACT = "SUPERFLUID_FINANCE_CFA_NOT_CONTRACT";
-    string private constant ERROR_SUPERTOKEN_NOT_CONTRACT = "SUPERFLUID_FINANCE_SUPERTOKEN_NOT_CONTRACT";
-    string private constant ERROR_INVALID_SUPERTOKEN = "SUPERFLUID_FINANCE_INVALID_SUPERTOKEN";
-    string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "SUPERFLUID_FINANCE_DEPOSIT_AMOUNT_ZERO";
-    string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "SUPERFLUID_FINANCE_SUPERTOKEN_APPROVE_FAILED";
+    string private constant ERROR_AGENT_NOT_CONTRACT = "FLOW_FINANCE_AGENT_NOT_CONTRACT";
+    string private constant ERROR_HOST_NOT_CONTRACT = "FLOW_FINANCE_HOST_NOT_CONTRACT";
+    string private constant ERROR_CFA_NOT_CONTRACT = "FLOW_FINANCE_CFA_NOT_CONTRACT";
+    string private constant ERROR_SUPERTOKEN_NOT_CONTRACT = "FLOW_FINANCE_SUPERTOKEN_NOT_CONTRACT";
+    string private constant ERROR_INVALID_SUPERTOKEN = "FLOW_FINANCE_INVALID_SUPERTOKEN";
+    string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO";
+    string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "FLOW_FINANCE_SUPERTOKEN_APPROVE_FAILED";
     string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED =
-        "SUPERFLUID_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
+        "FLOW_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
 
     // Superfluid data
     ISuperfluid private host;

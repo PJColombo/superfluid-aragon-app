@@ -1,5 +1,5 @@
 {
-  "name": "superfluid-finance",
+  "name": "flow-finance",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -30,7 +30,8 @@
     "coverage": "hardhat coverage",
     "publish:major": "hardhat publish major",
     "publish:minor": "hardhat publish minor",
-    "publish:patch": "hardhat publish patch"
+    "publish:patch": "hardhat publish patch",
+    "start": "hardhat start"
   },
   "dependencies": {
     "@aragon/apps-agent": "^2.0.0-rc.1",
