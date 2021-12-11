@@ -6,8 +6,21 @@ import '@typechain/hardhat';
 import 'dotenv/config';
 import 'hardhat-deploy';
 import 'hardhat-gas-reporter';
-import { HardhatUserConfig } from 'hardhat/types';
+import { HardhatNetworkForkingConfig, HardhatUserConfig } from 'hardhat/types';
 import { accounts, node_url } from './utils/network';
+
+const forkConfig: { chainId?: number; forking?: HardhatNetworkForkingConfig } = {
+  ...(process.env.HARDHAT_FORK_ID && { chainId: parseInt(process.env.HARDHAT_FORK_ID) }),
+  forking: process.env.HARDHAT_FORK
+    ? {
+        url: process.env.HARDHAT_FORK,
+        blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
+          ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
+          : undefined,
+        enabled: true,
+      }
+    : undefined,
+};
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -52,33 +65,17 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      chainId: process.env.HARDHAT_FORK_ID ? parseInt(process.env.HARDHAT_FORK_ID) : undefined,
       initialBaseFeePerGas: 0,
       // process.env.HARDHAT_FORK will specify the network that the fork is made from.
       // this line ensure the use of the corresponding accounts
       accounts: accounts(process.env.HARDHAT_FORK),
-      forking: process.env.HARDHAT_FORK
-        ? {
-            url: process.env.HARDHAT_FORK,
-            blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
-              ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
-              : undefined,
-          }
-        : undefined,
+      ...forkConfig,
     },
     localhost: {
-      chainId: process.env.HARDHAT_FORK_ID ? parseInt(process.env.HARDHAT_FORK_ID) : undefined,
       url: node_url('localhost'),
       // accounts: accounts(),
       // ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D',
-      forking: process.env.HARDHAT_FORK
-        ? {
-            url: process.env.HARDHAT_FORK,
-            blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
-              ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
-              : undefined,
-          }
-        : undefined,
+      ...forkConfig,
     },
     mainnet: {
       url: node_url('mainnet'),
