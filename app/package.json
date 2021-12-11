@@ -1,5 +1,5 @@
 {
-  "name": "aragon-finance",
+  "name": "flow-finance",
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
@@ -43,17 +43,21 @@
     "jest": "^26.1.0",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-bundle-visualiser": "^1.2.0",
-    "prettier": "^1.11.1"
+    "prettier": "^1.11.1",
+    "copyfiles": "^2.2.0"
   },
   "scripts": {
     "test": "jest",
     "lint": "eslint ./src",
-    "start": "npm run sync-assets && npm run watch:script & parcel serve index.html -p 3002 --out-dir build/",
-    "build": "npm run sync-assets && npm run build:script && parcel build index.html --no-cache --out-dir build/ --public-url \".\"",
-    "build:script": "parcel build src/script.js --out-dir build/",
-    "watch:script": "parcel watch src/script.js --out-dir build/ --no-hmr",
-    "sync-assets": "copy-aragon-ui-assets -n aragon-ui ./build && rsync -rtu ./public/ ./build",
-    "now-build": "npm run build"
+    "now-build": "npm run build",
+    "build": "yarn sync-assets && yarn build:app && yarn build:script",
+    "build:app": "parcel build index.html -d ../dist/ --public-url \".\" --no-cache",
+    "build:script": "parcel build src/script.js --out-dir ../dist/ --no-cache",
+    "watch:script": "parcel watch src/script.js --out-dir ../dist/ --no-hmr",
+    "serve": "parcel serve index.html --out-dir ../dist/ --no-cache",
+    "watch": "yarn watch:script",
+    "sync-assets": "copy-aragon-ui-assets ../dist && copyfiles -u 1 './public/**/*' ../dist",
+    "start": "yarn sync-assets && yarn watch:script & yarn serve"
   },
   "browserslist": [
     ">2%",
