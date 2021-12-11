@@ -13,7 +13,7 @@ import {
   IConstantFlowAgreementV1,
   ISuperfluid,
   ISuperToken,
-  Kernel
+  Kernel,
 } from '../typechain';
 import { installNewApp, newDao, toDecimals } from './helpers';
 import { computeFlowRate } from './helpers/superfluid';
@@ -380,10 +380,18 @@ describe('Flow Finance', () => {
       checkFlow(flow, [0, 0, 0, 0]);
     });
 
-    it('should revert when trying to delete a flow without having the MANAGE_STREAMS_ROLE', async () => {
+    it("should allow receiver to delete a flow he's part of", async () => {
+      await flowFinance.connect(receiver).deleteFlow(superToken.address, receiver.address);
+
+      const flow = await cfav1.getFlow(superToken.address, ffAgent.address, receiver.address);
+
+      checkFlow(flow, [0, 0, 0, 0]);
+    });
+
+    it('should revert when trying to delete a flow without having the MANAGE_STREAMS_ROLE nor being the receiver', async () => {
       await expect(
         flowFinance.connect(permissionlessAccount).deleteFlow(superToken.address, receiver.address)
-      ).to.be.revertedWith('APP_AUTH_FAILED');
+      ).to.be.revertedWith('FLOW_FINANCE_SENDER_CAN_NOT_DELETE_FLOW');
     });
 
     it('should revert when trying to delete a flow of a non-contract supertoken', async () => {

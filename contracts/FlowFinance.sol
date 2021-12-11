@@ -25,6 +25,7 @@ contract FlowFinance is AragonApp {
     string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "FLOW_FINANCE_SUPERTOKEN_APPROVE_FAILED";
     string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED =
         "FLOW_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
+    string private constant ERROR_SENDER_CAN_NOT_DELETE_FLOW =  "FLOW_FINANCE_SENDER_CAN_NOT_DELETE_FLOW";
 
     // Superfluid data
     ISuperfluid private host;
@@ -111,10 +112,14 @@ contract FlowFinance is AragonApp {
 
     function deleteFlow(ISuperToken _token, address _receiver)
         external
-        auth(MANAGE_STREAMS_ROLE)
         isInitialized
         isValidSuperToken(_token)
     {
+        bool senderHasPermission = canPerform(msg.sender, MANAGE_STREAMS_ROLE, new uint256[](0));
+        (uint256 timestamp,,,) = cfa.getFlow(_token, agent, msg.sender);
+
+        // Sender is allow to delete the flows he's part of.
+        require(timestamp != 0 || senderHasPermission, ERROR_SENDER_CAN_NOT_DELETE_FLOW);
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.deleteFlow.selector,
             _token,
