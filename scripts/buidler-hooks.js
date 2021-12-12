@@ -16,10 +16,12 @@ const deployFramework = require('@superfluid-finance/ethereum-contracts/scripts/
 const deploySuperToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-super-token');
 const deployTestToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-test-token');
 const SuperfluidSDK = require('@superfluid-finance/js-sdk');
-const { utils, constants } = require('ethers');
+const { utils, BigNumber } = require('ethers');
 
 const TOKENS = ['fDAI', 'fUSDC'];
-const INITIAL_BALANCE = 5000;
+const ONE_TOKEN = BigNumber.from((1e18).toString());
+const INITIAL_BALANCE = ONE_TOKEN.mul(5000);
+const ANY_ENTITY = '0x' + 'F'.repeat(40);
 
 let sf;
 let agent;
@@ -27,12 +29,9 @@ let agent;
 module.exports = {
   // Called before a dao is deployed.
   preDao: async ({ log }, { artifacts, web3 }) => {
-    const [root, testAccount] = await web3.eth.getAccounts();
+    const [root] = await web3.eth.getAccounts();
 
     sf = await setUpSuperfluid(TOKENS, web3, root, handleError, log);
-
-    log(`Minting test tokens for testing accounts...`);
-    await mintTestTokens(sf, testAccount, TOKENS, artifacts, log);
   },
 
   // Called after a dao is deployed.
@@ -44,7 +43,17 @@ module.exports = {
   preInit: async ({ proxy }, { web3, artifacts }) => {},
 
   // Called after the app's proxy is initialized.
-  postInit: async ({ proxy }, { web3, artifacts }) => {},
+  postInit: async ({ proxy, log }, { web3, artifacts }) => {
+    const [, testAccount, receiver0, receiver1, sender] = await web3.eth.getAccounts();
+
+    log(`Minting test tokens for testing accounts...`);
+    await mintTestTokens(sf, testAccount, TOKENS, artifacts, log);
+    await mintTestTokens(sf, receiver0, TOKENS, artifacts, log);
+    await mintTestTokens(sf, sender, TOKENS, artifacts, log);
+
+    log('Send super tokens to agent.');
+    await sendTokensToAgent(sf, proxy, receiver0, receiver1, sender, TOKENS);
+  },
 
   // Called when the start task needs to know the app proxy's init parameters.
   // Must return an array with the proxy's init parameters.
@@ -123,14 +132,24 @@ const setUpAgent = async (dao, artifacts, log = console.log) => {
 
   log(`Proxy address: ${agent.address}.`);
 
-  await acl.createPermission(
-    constants.AddressZero,
-    agent.address,
-    await agent.SAFE_EXECUTE_ROLE(),
-    constants.AddressZero
-  );
+  await createAppPermission(acl, agent.address, await agent.SAFE_EXECUTE_ROLE());
 
-  log("Agent's SAFE_EXECUTE_ROLE set to any entity.");
+  log("Agent's permissions set up");
 
   return agent;
+};
+
+const createAppPermission = (acl, appAddress, appPermission) =>
+  acl.createPermission(ANY_ENTITY, appAddress, appPermission, ANY_ENTITY);
+
+const sendTokensToAgent = async (sf, flowFinance, sender, tokens) => {
+  const testToken = await sf.tokens[tokens[0]];
+  const superToken = sf.superTokens[`${tokens[0]}x`];
+  const amount = INITIAL_BALANCE.div(2);
+
+  await testToken.approve(superToken.address, amount, { from: sender });
+  await superToken.upgrade(amount, { from: sender });
+
+  await superToken.approve(flowFinance.address, amount, { from: sender });
+  await flowFinance.deposit(superToken.address, amount, true, { from: sender });
 };
