@@ -22,4 +22,12 @@ contract ISuperToken is ISuperfluidToken {
     ) external returns (bool);
 
     function balanceOf(address account) external view returns (uint256 balance);
+
+    function decimals() external view returns (uint8);
+
+    function symbol() external view returns (string memory);
+
+    function name() external view returns (string memory);
+
+    function getUnderlyingToken() external view returns (address tokenAddr);
 }

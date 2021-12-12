@@ -23,13 +23,12 @@ contract FlowFinance is AragonApp {
     string private constant ERROR_INVALID_SUPERTOKEN = "FLOW_FINANCE_INVALID_SUPERTOKEN";
     string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO";
     string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "FLOW_FINANCE_SUPERTOKEN_APPROVE_FAILED";
-    string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED =
-        "FLOW_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
-    string private constant ERROR_SENDER_CAN_NOT_DELETE_FLOW =  "FLOW_FINANCE_SENDER_CAN_NOT_DELETE_FLOW";
+    string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED = "FLOW_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
+    string private constant ERROR_SENDER_CAN_NOT_DELETE_FLOW = "FLOW_FINANCE_SENDER_CAN_NOT_DELETE_FLOW";
 
     // Superfluid data
-    ISuperfluid private host;
-    IConstantFlowAgreementV1 private cfa; // Constant Flow Agreement
+    ISuperfluid public host;
+    IConstantFlowAgreementV1 public cfa; // Constant Flow Agreement
 
     Agent public agent;
 
@@ -110,13 +109,9 @@ contract FlowFinance is AragonApp {
         callAgreement(encodedAgreementCall);
     }
 
-    function deleteFlow(ISuperToken _token, address _receiver)
-        external
-        isInitialized
-        isValidSuperToken(_token)
-    {
+    function deleteFlow(ISuperToken _token, address _receiver) external isInitialized isValidSuperToken(_token) {
         bool senderHasPermission = canPerform(msg.sender, MANAGE_STREAMS_ROLE, new uint256[](0));
-        (uint256 timestamp,,,) = cfa.getFlow(_token, agent, msg.sender);
+        (uint256 timestamp, , , ) = cfa.getFlow(_token, agent, msg.sender);
 
         // Sender is allow to delete the flows he's part of.
         require(timestamp != 0 || senderHasPermission, ERROR_SENDER_CAN_NOT_DELETE_FLOW);
