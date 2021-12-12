@@ -44,7 +44,7 @@ module.exports = {
 
   // Called after the app's proxy is initialized.
   postInit: async ({ proxy, log }, { web3, artifacts }) => {
-    const [, testAccount, receiver0, receiver1, sender] = await web3.eth.getAccounts();
+    const [, testAccount, receiver0, sender] = await web3.eth.getAccounts();
 
     log(`Minting test tokens for testing accounts...`);
     await mintTestTokens(sf, testAccount, TOKENS, artifacts, log);
@@ -52,7 +52,7 @@ module.exports = {
     await mintTestTokens(sf, sender, TOKENS, artifacts, log);
 
     log('Send super tokens to agent.');
-    await sendTokensToAgent(sf, proxy, receiver0, receiver1, sender, TOKENS);
+    await sendTokensToAgent(sf, proxy, sender, TOKENS);
   },
 
   // Called when the start task needs to know the app proxy's init parameters.
