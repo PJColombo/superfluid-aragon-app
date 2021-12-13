@@ -3,26 +3,36 @@ import superTokenABI from '../abi/SuperToken.json';
 
 const superTokenContracts = new Map();
 
-export const handleFlowUpdated = async (state, event, app) => {
+export const handleFlowUpdated = async (state, event, app, settings) => {
   const agentAddress = state.agentAddress;
 
   if (!isAgentInFlow(agentAddress, event)) {
     return state;
   }
 
-  const { token: tokenAddress, sender } = event.returnValues;
+  const { token: tokenAddress, sender, receiver } = event.returnValues;
+
   const tokenContract = getSuperTokenContract(tokenAddress, app);
 
   let tokenEntry;
 
   if (state.superTokens[tokenAddress]) {
-    tokenEntry = state.superTokens[tokenEntry];
+    tokenEntry = state.superTokens[tokenAddress];
   } else {
     tokenEntry = await newSuperTokenEntry(tokenContract);
   }
 
-  const flowType = addressesEqual(sender, agentAddress) ? 'outFlows' : 'inFlows';
-  const updatedTokenEntryFlow = updateTokenEntryFlow(tokenEntry, event, flowType);
+  const flowsType = addressesEqual(sender, agentAddress) ? 'outFlows' : 'inFlows';
+  console.log(settings);
+  const flowDataPromise = settings.superfluid.cfa.contract
+    .getFlow(tokenAddress, sender, receiver)
+    .toPromise();
+  const updatedTokenEntryFlow = updateTokenEntryFlow(
+    tokenEntry[flowsType],
+    event,
+    flowsType,
+    await flowDataPromise
+  );
 
   return {
     ...state,
@@ -30,7 +40,7 @@ export const handleFlowUpdated = async (state, event, app) => {
       ...state.superTokens,
       [tokenAddress]: {
         ...tokenEntry,
-        balance: await tokenContract.balanceOf(agentAddress),
+        balance: await tokenContract.balanceOf(agentAddress).toPromise(),
         ...updatedTokenEntryFlow,
       },
     },
@@ -105,7 +115,7 @@ const newSuperTokenEntry = async tokenContract => {
   };
 };
 
-const updateTokenEntryFlow = (flowsEntry, event, flowType) => {
+const updateTokenEntryFlow = (flowsEntry, event, flowsType, { timestamp }) => {
   const {
     sender,
     receiver,
@@ -113,22 +123,22 @@ const updateTokenEntryFlow = (flowsEntry, event, flowType) => {
     totalSenderFlowRate,
     totalReceiverFlowRate,
   } = event.returnValues;
-  const flowEntity = [flowType === 'outFlows' ? receiver : sender];
+  const flowEntity = [flowsType === 'outFlows' ? receiver : sender];
+  const updatedFlowEntityEntry = { flowRate, timestamp };
 
   let updatedFlows;
-
   // Create flow case
   if (!flowsEntry[flowEntity]) {
     updatedFlows = {
       ...flowsEntry,
-      [flowEntity]: flowRate,
+      [flowEntity]: updatedFlowEntityEntry,
     };
   }
   // Update flow case
   else if (flowsEntry[flowEntity] && flowRate > 0) {
     updatedFlows = {
       ...flowsEntry,
-      [flowEntity]: flowRate,
+      [flowEntity]: updatedFlowEntityEntry,
     };
   }
   // Delete flow case
@@ -140,7 +150,7 @@ const updateTokenEntryFlow = (flowsEntry, event, flowType) => {
   }
 
   return {
-    netFlow: flowType === 'outFlows' ? totalSenderFlowRate : totalReceiverFlowRate,
-    ...updatedFlows,
+    netFlow: flowsType === 'outFlows' ? totalSenderFlowRate : totalReceiverFlowRate,
+    [flowsType]: updatedFlows,
   };
 };

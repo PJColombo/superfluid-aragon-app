@@ -84,10 +84,9 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
 
   const currentBlock = await app.web3Eth('getBlockNumber').toPromise();
   const cacheBlockHeight = Math.max(currentBlock - REORG_SAFETY_BLOCK_AGE, 0); // clamp to 0 for safety
-
   const pastEvents$ = contract
     .pastEvents({
-      ...(!!filters && { filters }),
+      ...(!!filters && { filters: { ...filters } }),
       // When using cache, fetch events from the next block after cache
       fromBlock: cachedBlockNumber ? cachedBlockNumber + 1 : undefined,
       toBlock: cacheBlockHeight,
@@ -112,7 +111,7 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
     );
   const lastEvents$ = contract
     .pastEvents({
-      ...(!!filters && { filters }),
+      ...(!!filters && { filters: { ...filters } }),
       fromBlock: cacheBlockHeight + 1,
       toBlock: currentBlock,
     })
@@ -124,11 +123,13 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
         event: EXTERNAL_SUBSCRIPTION_SYNCED,
         returnValues: {
           address: contractAddress,
+          from: cacheBlockHeight + 1,
+          toBlock: currentBlock,
         },
       })
     );
   const currentEvents$ = contract.events({
-    ...(!!filters && { filters }),
+    ...(!!filters && { filters: { ...filters } }),
     fromBlock: currentBlock,
   });
 

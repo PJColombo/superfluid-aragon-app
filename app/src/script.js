@@ -47,7 +47,7 @@ const initialize = async agentAddress => {
       try {
         // Superfluid events
         if (eventName === 'FlowUpdated') {
-          return handleFlowUpdated(state, event, app);
+          return handleFlowUpdated(state, event, app, settings);
         }
 
         // Agent events
