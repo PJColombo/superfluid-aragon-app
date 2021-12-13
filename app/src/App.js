@@ -3,7 +3,7 @@ import { Button, GU, Header, IconAdd, IconArrowDown, Main, SyncIndicator } from 
 import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
-import { NewDeposit, CreateFlow } from './components/SidePanels';
+import { CreateFlow } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
@@ -44,7 +44,6 @@ function App() {
               }
             />
             <Balances superTokens={superTokens} />
-            <NewDeposit panelState={newDepositPanel} />
             <CreateFlow
               panelState={newFlowPanel}
               superTokens={superTokens}
