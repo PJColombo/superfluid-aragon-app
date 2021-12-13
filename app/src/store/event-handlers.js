@@ -3,7 +3,7 @@ import superTokenABI from '../abi/SuperToken.json';
 
 const superTokenContracts = new Map();
 
-export const handleFlowUpdated = async (state, event, app, settings) => {
+export const handleFlowUpdated = async (state, event, app, { superfluid: { cfa } }) => {
   const agentAddress = state.agentAddress;
 
   if (!isAgentInFlow(agentAddress, event)) {
@@ -23,15 +23,13 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
   }
 
   const flowsType = addressesEqual(sender, agentAddress) ? 'outFlows' : 'inFlows';
-  console.log(settings);
-  const flowDataPromise = settings.superfluid.cfa.contract
-    .getFlow(tokenAddress, sender, receiver)
-    .toPromise();
+  const flowData = await cfa.contract.getFlow(tokenAddress, sender, receiver).toPromise();
+
   const updatedTokenEntryFlow = updateTokenEntryFlow(
     tokenEntry[flowsType],
     event,
     flowsType,
-    await flowDataPromise
+    flowData
   );
 
   return {
@@ -115,7 +113,7 @@ const newSuperTokenEntry = async tokenContract => {
   };
 };
 
-const updateTokenEntryFlow = (flowsEntry, event, flowsType, { timestamp }) => {
+const updateTokenEntryFlow = (flowsEntry, event, flowsType, { timestamp } = {}) => {
   const {
     sender,
     receiver,
