@@ -4,16 +4,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { AragonApi } from '@aragon/api-react';
 import App from './App';
-
-const reducer = state => {
-  if (state === null) {
-    return { isSyncing: true };
-  }
-  return state;
-};
+import appStateReducer from './app-state-reducer';
 
 ReactDOM.render(
-  <AragonApi reducer={reducer}>
+  <AragonApi reducer={appStateReducer}>
     <App />
   </AragonApi>,
   document.getElementById('root')
