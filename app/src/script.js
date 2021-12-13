@@ -57,10 +57,10 @@ const initialize = async agentAddress => {
 
         // App events
         switch (eventName) {
-          case events.SYNC_STATUS_SYNCING:
-            return { ...state, isSyncing: true };
-          case events.SYNC_STATUS_SYNCED:
-            return { ...state, isSyncing: false };
+          // case events.SYNC_STATUS_SYNCING:
+          //   return { ...state, isSyncing: true };
+          // case events.SYNC_STATUS_SYNCED:
+          //   return { ...state, isSyncing: false };
 
           // Custom external subscriptions events
           case EXTERNAL_SUBSCRIPTION_SYNCING:
