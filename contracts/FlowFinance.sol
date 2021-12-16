@@ -77,6 +77,12 @@ contract FlowFinance is AragonApp {
         agent.deposit(_token, _amount);
     }
 
+    /**
+     * @notice Create a new `_token.symbol(): string` flow with a rate of `@tokenAmount(_token, _flowRate, false)` tokens per second to `_receiver`.
+     * @param _token Address of super token
+     * @param _receiver Receiver of the flow
+     * @param _flowRate Flow's rate of tokens per second
+     */
     function createFlow(
         ISuperToken _token,
         address _receiver,
@@ -93,6 +99,12 @@ contract FlowFinance is AragonApp {
         callAgreement(encodedAgreementCall);
     }
 
+    /**
+     * @notice Update `_token.symbol(): string` flow to `_receiver`  with a new rate of `@tokenAmount(_token, _flowRate, false)` tokens per second.
+     * @param _token Address of super token
+     * @param _receiver Receiver of the flow
+     * @param _flowRate Flow's rate of tokens per second
+     */
     function updateFlow(
         ISuperToken _token,
         address _receiver,
@@ -109,6 +121,11 @@ contract FlowFinance is AragonApp {
         callAgreement(encodedAgreementCall);
     }
 
+    /**
+     * @notice Delete `_token.symbol(): string` flow to `_receiver`.
+     * @param _token Address of super token
+     * @param _receiver Receiver of the flow
+     */
     function deleteFlow(ISuperToken _token, address _receiver) external isInitialized isValidSuperToken(_token) {
         bool senderHasPermission = canPerform(msg.sender, MANAGE_STREAMS_ROLE, new uint256[](0));
         (uint256 timestamp, , , ) = cfa.getFlow(_token, agent, msg.sender);
