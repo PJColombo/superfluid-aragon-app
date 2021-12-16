@@ -1,4 +1,4 @@
-import { addressesEqual, Button, Field } from '@aragon/ui';
+import { addressesEqual, Button, Field, LoadingRing } from '@aragon/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import TokenSelector from '../../TokenSelector';
 import BaseSidePanel from '../BaseSidePanel';
@@ -22,9 +22,10 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
 
   const [flowRate, setFlowRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState();
+  const [waitingTxPanel, setWaitingTxPanel] = useState(false);
   const recipientInputRef = useRef();
   const disabled = Boolean(
-    errorMessage || !recipient || !selectedToken.address || !Number(flowRate)
+    errorMessage || !recipient || !selectedToken.address || !Number(flowRate) || waitingTxPanel
   );
 
   const reset = () => {
@@ -32,6 +33,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
     setSelectedToken(INITIAL_TOKEN);
     setFlowRate(0);
     setErrorMessage();
+    setWaitingTxPanel(false);
   };
 
   const handleTokenChange = useCallback(
@@ -68,6 +70,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
     } else if (flowRate <= 0) {
       setErrorMessage("Flow rate can't be zero.");
     } else {
+      setWaitingTxPanel(true);
       onCreateFlow(selectedToken.address, recipient, flowRate);
     }
   };
@@ -112,7 +115,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
           `}
         >
           <Button disabled={disabled} mode="strong" type="submit" wide>
-            Create
+            {waitingTxPanel && <LoadingRing />} Create
           </Button>
         </div>
         {errorMessage && <ValidationError messages={[errorMessage]} />}

@@ -22,7 +22,7 @@ export const useUpdateFlow = (onDone = noop) => {
         res = await api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
       }
     } catch (err) {
-      console.err(err);
+      console.error(err);
     }
     console.log(res);
     onDone();
