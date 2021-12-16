@@ -13,14 +13,8 @@ const TokenSelector = ({
   const [customToken, setCustomToken] = useState('');
   const tokenItems = useMemo(() => {
     const items = [
-      tokens.map(({ address, metadata: { name, symbol } }) => (
-        <TokenSelectorInstance
-          key={address}
-          address={address}
-          name={name}
-          symbol={symbol}
-          showIcon={false}
-        />
+      tokens.map(({ address, name, symbol }) => (
+        <TokenSelectorInstance key={address} address={address} name={name} symbol={symbol} />
       )),
     ];
 

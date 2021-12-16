@@ -1,12 +1,12 @@
 import { useNetwork } from '@aragon/api-react';
-import { GU } from '@aragon/ui';
-import IdentityBadge from '@aragon/ui/dist/IdentityBadge';
+import { GU, IdentityBadge } from '@aragon/ui';
 import React from 'react';
 import styled from 'styled-components';
-import { tokenIconUrl } from '../../helpers/icon-helpers';
+import { superTokenIconUrl } from '../../helpers';
 
 const TokenSelectorInstance = React.memo(({ address, name, symbol, showIcon = true }) => {
   const network = useNetwork();
+  const networkType = network && network.type;
 
   return (
     <div
@@ -16,7 +16,7 @@ const TokenSelectorInstance = React.memo(({ address, name, symbol, showIcon = tr
       `}
     >
       {showIcon ? (
-        <Icon src={tokenIconUrl(address, symbol, network && network.type)} />
+        <Icon src={superTokenIconUrl(address, symbol, networkType)} />
       ) : (
         <div
           css={`

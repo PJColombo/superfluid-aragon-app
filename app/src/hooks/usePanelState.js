@@ -1,5 +1,5 @@
+import { noop } from '@aragon/ui';
 import { useCallback, useMemo, useState } from 'react';
-import { noop } from '../helpers';
 
 // Handles the state of a panel.
 // Pass `onTransitionEnd` to the same SidePanel prop.
