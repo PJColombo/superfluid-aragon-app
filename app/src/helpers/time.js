@@ -5,4 +5,4 @@ export const WEEK = 7 * DAY;
 export const MONTH = 30 * DAY;
 export const YEAR = 365 * DAY;
 
-export const timestamp = () => Date.now() / 1000;
+export const getCurrentTimestamp = () => Math.floor(Date.now() / 1000);

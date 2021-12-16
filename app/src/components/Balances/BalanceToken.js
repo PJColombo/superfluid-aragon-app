@@ -1,30 +1,25 @@
 import { useNetwork } from '@aragon/api-react';
-import { formatTokenAmount, GU, Help, textStyle, useTheme } from '@aragon/ui';
+import { formatTokenAmount, GU, IconArrowDown, IconArrowUp, textStyle, useTheme } from '@aragon/ui';
 import React from 'react';
 import { superTokenIconUrl } from '../../helpers';
+import DynamicFlowAmount from '../DynamicFlowAmount';
 
 const BalanceToken = ({
-  address,
-  amount,
-  compact,
-  convertedAmount,
-  decimals,
-  symbol,
-  verified = false,
+  item: {
+    address,
+    amount,
+    compact,
+    convertedAmount,
+    netFlow,
+    lastUpdateTimestamp,
+    decimals,
+    symbol,
+    verified = false,
+  },
   showIcon = true,
 }) => {
   const theme = useTheme();
   const network = useNetwork();
-
-  const amountFormatted = formatTokenAmount(amount, decimals, {
-    digits: decimals,
-  });
-
-  const amountFormattedRounded = formatTokenAmount(amount, decimals, {
-    digits: 3,
-  });
-
-  const amountWasRounded = amountFormatted !== amountFormattedRounded;
 
   return (
     <div css="display: inline-block">
@@ -57,23 +52,17 @@ const BalanceToken = ({
             ${textStyle('title2')}
             margin: ${(compact ? 1 : 1.5) * GU}px 0;
             display: flex;
+            align-items: center;
           `}
         >
-          {amountWasRounded && '~'}
-          <SplitAmount amountFormatted={amountFormattedRounded} />
-          {amountWasRounded && (
-            <div
-              css={`
-                display: flex;
-                align-items: center;
-                margin-left: ${1 * GU}px;
-              `}
-            >
-              <Help hint="This is an approximation, see the complete amount">
-                Total: {amountFormatted} {symbol}
-              </Help>
-            </div>
+          {netFlow.isNeg() ? (
+            <IconArrowDown color={theme.negative} />
+          ) : (
+            <IconArrowUp color={theme.positive} />
           )}
+          <DynamicFlowAmount baseAmount={amount} rate={netFlow} lastTimestamp={lastUpdateTimestamp}>
+            <SplitAmount decimals={decimals} />
+          </DynamicFlowAmount>
         </div>
         <div
           css={`
@@ -88,8 +77,11 @@ const BalanceToken = ({
   );
 };
 
-function SplitAmount({ amountFormatted }) {
-  const [integer, fractional] = amountFormatted.split('.');
+function SplitAmount({ dynamicAmount, decimals }) {
+  const [integer, fractional] = formatTokenAmount(dynamicAmount, decimals, { digits: 6 }).split(
+    '.'
+  );
+
   return (
     <span>
       <span>{integer}</span>

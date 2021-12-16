@@ -1,11 +1,10 @@
 import { useApi, useAppState, useAragonApi } from '@aragon/api-react';
 import { addressesEqual, noop } from '@aragon/ui';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import usePanelState from './hooks/usePanelState';
-import cfaV1ABI from './abi/CFAv1.json';
 import { toDecimals } from './helpers';
 
-export const useUpdateFlow = (onDone = noop, cfa) => {
+export const useUpdateFlow = (onDone = noop) => {
   const api = useApi();
   const { appState } = useAragonApi();
 
@@ -44,26 +43,9 @@ export function useAppLogic() {
   const convertPanel = usePanelState();
   const createFlowPanel = usePanelState();
   const transferPanel = usePanelState();
-  const api = useApi();
-  const [cfa, setCFA] = useState();
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    const fetchCFA = async () => {
-      const cfa = api.external(await api.call('cfa').toPromise(), cfaV1ABI);
-      console.log('here');
-      console.log(cfa);
-      setCFA(cfa);
-    };
-
-    fetchCFA();
-  }, [api]);
 
   const actions = {
-    updateFlow: useUpdateFlow(createFlowPanel.requestClose, cfa),
+    updateFlow: useUpdateFlow(createFlowPanel.requestClose),
     deleteFlow: useDeleteFlow(),
   };
 

@@ -1,6 +1,7 @@
 import { addressesEqual } from '../helpers/web3-helpers';
 import { calculateFlowAmount, isFlowEqual } from './helpers';
 import superTokenABI from '../abi/SuperToken.json';
+import { getCurrentTimestamp } from '../helpers';
 
 const superTokenContracts = new Map();
 
@@ -77,7 +78,7 @@ const updateSuperTokens = async (
   { superTokens: oldSuperTokens, agentAddress },
   tokenAddress,
   tokenContract,
-  { netFlow } = {}
+  netFlow
 ) => {
   const newSuperTokens = [...oldSuperTokens];
   let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
@@ -88,6 +89,7 @@ const updateSuperTokens = async (
       ? await newSuperToken(tokenContract)
       : oldSuperTokens[superTokenIndex]),
     address: tokenAddress,
+    lastUpdateTimestamp: getCurrentTimestamp(),
     balance: await tokenContract.balanceOf(agentAddress).toPromise(),
   };
 
@@ -115,14 +117,14 @@ const updateFlows = async (state, event, flowsType, cfaContract) => {
 
   // Create flow case
   if (!flowExists) {
-    newFlows[0] = {
+    newFlows.push({
       ...flowEntity,
       superTokenAddress: tokenAddress,
       accumulatedAmount: 0,
       creationTimestamp: timestamp,
       lastTimestamp: timestamp,
       flowRate,
-    };
+    });
   }
   // Update flow case
   else if (flowExists && flowRate > 0) {

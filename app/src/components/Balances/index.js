@@ -8,13 +8,14 @@ import BalanceToken from './BalanceToken';
 function useBalanceItems(superTokens) {
   const balanceItems = useMemo(() => {
     return superTokens.map(
-      ({ address, balance: amount, decimals, symbol, netFlow }) => {
+      ({ address, balance: amount, decimals, symbol, netFlow, lastUpdateTimestamp }) => {
         return {
           address,
           amount,
           convertedAmount: new BN('-1'),
           decimals,
           symbol,
+          lastUpdateTimestamp,
           netFlow,
           // verified,
         };
@@ -73,34 +74,27 @@ const Balances = ({ superTokens }) => {
                   : ''}
               `}
             >
-              {balanceItems.map(
-                ({ address, amount, convertedAmount, decimals, symbol, verified }) => (
-                  <li
-                    key={address}
-                    css={`
-                      flex-shrink: 0;
-                      display: block;
-                      min-width: ${20 * GU}px;
-                      padding-right: ${4 * GU}px;
-                      ${compact ? `margin-bottom: ${3 * GU}px;` : ''}
-                      &:last-of-type {
-                        min-width: unset;
-                        margin-bottom: 0;
-                      }
-                    `}
-                  >
-                    <BalanceToken
-                      address={address}
-                      amount={amount}
-                      compact={compact}
-                      convertedAmount={convertedAmount}
-                      decimals={decimals}
-                      symbol={symbol}
-                      verified={verified}
-                    />
-                  </li>
-                )
-              )}
+              {balanceItems.map(balanceItem => (
+                <li
+                  key={balanceItem.address}
+                  css={`
+                    flex-shrink: 0;
+                    display: block;
+                    min-width: ${20 * GU}px;
+                    padding-right: ${4 * GU}px;
+                    ${compact ? `margin-bottom: ${3 * GU}px;` : ''}
+                    &:last-of-type {
+                      min-width: unset;
+                      margin-bottom: 0;
+                    }
+                  `}
+                >
+                  <BalanceToken
+                    item={balanceItem}
+                    // verified={verified}
+                  />
+                </li>
+              ))}
             </ul>
           )}
         </div>
