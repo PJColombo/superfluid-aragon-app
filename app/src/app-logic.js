@@ -1,23 +1,31 @@
-import { useApi, useAppState } from '@aragon/api-react';
-import { noop } from '@aragon/ui';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useApi, useAppState, useAragonApi } from '@aragon/api-react';
+import { addressesEqual, noop } from '@aragon/ui';
+import { useCallback, useEffect, useState } from 'react';
 import usePanelState from './hooks/usePanelState';
 import cfaV1ABI from './abi/CFAv1.json';
-import { toDecimals } from './helpers/math-helpers';
+import { toDecimals } from './helpers';
 
 export const useUpdateFlow = (onDone = noop, cfa) => {
   const api = useApi();
+  const { appState } = useAragonApi();
+
   return useCallback(async (tokenAddress, receiver, flowRate) => {
     const normalizedFlowRate = toDecimals(flowRate);
-    const agentAddress = await api.call('agent').toPromise();
-    const flow = await cfa.getFlow(tokenAddress, agentAddress, receiver).toPromise();
+    const flow = appState.outFlows.find(
+      f => addressesEqual(f.receiver, receiver) && addressesEqual(f.superTokenAddress, tokenAddress)
+    );
 
-    if (flow?.timestamp > 0) {
-      api.updateFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
-    } else {
-      api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+    let res;
+    try {
+      if (flow) {
+        res = await api.updateFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+      } else {
+        res = await api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+      }
+    } catch (err) {
+      console.err(err);
     }
-
+    console.log(res);
     onDone();
   });
 };
@@ -33,8 +41,9 @@ export const useDeleteFlow = (onDone = noop) => {
 // Handles the main logic of the app.
 export function useAppLogic() {
   const { isSyncing } = useAppState();
-  const newFlowPanel = usePanelState();
-  const newDepositPanel = usePanelState();
+  const convertPanel = usePanelState();
+  const createFlowPanel = usePanelState();
+  const transferPanel = usePanelState();
   const api = useApi();
   const [cfa, setCFA] = useState();
 
@@ -45,6 +54,8 @@ export function useAppLogic() {
 
     const fetchCFA = async () => {
       const cfa = api.external(await api.call('cfa').toPromise(), cfaV1ABI);
+      console.log('here');
+      console.log(cfa);
       setCFA(cfa);
     };
 
@@ -52,14 +63,15 @@ export function useAppLogic() {
   }, [api]);
 
   const actions = {
-    updateFlow: useUpdateFlow(newFlowPanel.requestClose, cfa),
+    updateFlow: useUpdateFlow(createFlowPanel.requestClose, cfa),
     deleteFlow: useDeleteFlow(),
   };
 
   return {
     actions,
     isSyncing,
-    newFlowPanel,
-    newDepositPanel,
+    convertPanel,
+    createFlowPanel,
+    transferPanel,
   };
 }

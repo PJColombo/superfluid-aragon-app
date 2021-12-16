@@ -1,4 +1,4 @@
-import Aragon, { events } from '@aragon/api';
+import Aragon from '@aragon/api';
 import agentABI from './abi/Agent.json';
 
 import 'regenerator-runtime/runtime';
@@ -11,6 +11,10 @@ import {
   subscribeToExternals,
 } from './store/helpers';
 import { handleFlowUpdated, handleSetAgent, handleVaultEvent } from './store/event-handlers';
+import { sha3 } from 'web3-utils';
+import AbiCoder from 'web3-eth-abi';
+
+const FLOW_UPDATED_SIGNATURE = 'FlowUpdated(address,address,address,int96,int256,int256,bytes)';
 
 const app = new Aragon();
 
@@ -99,37 +103,56 @@ const initialize = async agentAddress => {
 };
 
 const initializeState = (agentAddress, settings) => async cachedState => {
+  console.log('Cached State:');
+  console.log(cachedState);
+
   const {
     superfluid: { cfa },
   } = settings;
-  console.log('Initializing state');
-  console.log(cachedState);
+  const blockNumbersCache =
+    cachedState && cachedState.blockNumbersCache
+      ? cachedState.blockNumbersCache
+      : await initializeBlockNumbersCache(cachedState, agentAddress, settings);
+  const nextState = {
+    agentAddress,
+    superTokens: [],
+    inFlows: [],
+    outFlows: [],
+    blockNumbersCache,
+    ...cachedState,
+    isSyncing: true,
+  };
+  const topicsReceiver = [
+    sha3(FLOW_UPDATED_SIGNATURE),
+    null,
+    null,
+    AbiCoder.encodeParameter('address', agentAddress),
+  ];
+  const topicsSender = [
+    sha3(FLOW_UPDATED_SIGNATURE),
+    null,
+    AbiCoder.encodeParameter('address', agentAddress),
+  ];
 
-  const blockNumbersCache = await getBlockNumbersCache(cachedState, agentAddress, settings);
   // Store subscriptions for when setting a new agent
   subscribeToExternals(
     app,
     [getExternal(agentAddress, agentABI), cfa, cfa],
-    [undefined, { sender: agentAddress }, { receiver: agentAddress }],
-    blockNumbersCache
+    [undefined, topicsReceiver, topicsSender],
+    nextState.blockNumbersCache
   );
 
-  return {
-    ...cachedState,
-    agentAddress,
-    superTokens: {},
-    isSyncing: true,
-    // subscriptions,
-    blockNumbersCache: {},
-  };
+  console.log('Returning new Initial State');
+  console.log(nextState);
+  return nextState;
 };
 
-const getBlockNumbersCache = async (cachedState, agentAddress, settings) => {
+const initializeBlockNumbersCache = async (cachedState, agentAddress, settings) => {
   if (cachedState && cachedState.blockNumbersCache) {
     return cachedState.blockNumbersCache;
   } else {
     const agent = app.external(agentAddress, agentABI);
-    const initializationBlock = await agent.getInitializationBlock().toPromise();
+    const initializationBlock = parseInt(await agent.getInitializationBlock().toPromise());
 
     return {
       [agentAddress]: initializationBlock,

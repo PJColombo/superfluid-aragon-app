@@ -2,13 +2,13 @@ import { GU, textStyle, useLayout, useTheme } from '@aragon/ui';
 import Box from '@aragon/ui/dist/Box';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
-import BalanceToken from '../BalanceToken';
+import BalanceToken from './BalanceToken';
 
 // Prepare the balances for the BalanceToken component
 function useBalanceItems(superTokens) {
   const balanceItems = useMemo(() => {
     return superTokens.map(
-      ({ address, balance: amount, metadata: { decimals, symbol }, netFlow }) => {
+      ({ address, balance: amount, decimals, symbol, netFlow }) => {
         return {
           address,
           amount,

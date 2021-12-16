@@ -1,15 +1,15 @@
 import { useAragonApi } from '@aragon/api-react';
-import { Button, GU, Header, IconAdd, IconArrowDown, Main, SyncIndicator } from '@aragon/ui';
+import { Bar, Button, GU, Header, IconAdd, IconCoin, Main, SyncIndicator } from '@aragon/ui';
 import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
-import { CreateFlow } from './components/SidePanels';
+import { Convert, CreateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
   const { guiStyle, appState } = useAragonApi();
-  const { superTokens } = appState;
-  const { actions, isSyncing, newFlowPanel, newDepositPanel } = useAppLogic();
+  const { superTokens, inFlows, outFlows } = appState;
+  const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { updateFlow } = actions;
   const { appearance } = guiStyle;
 
@@ -30,25 +30,32 @@ function App() {
                 >
                   <Button
                     mode="strong"
-                    onClick={newDepositPanel.requestOpen}
-                    label="Deposit"
-                    icon={<IconArrowDown />}
-                  />
-                  <Button
-                    mode="strong"
-                    onClick={newFlowPanel.requestOpen}
+                    onClick={createFlowPanel.requestOpen}
                     label="Create Flow"
                     icon={<IconAdd />}
                   />
                 </div>
               }
             />
+            <Bar
+              primary={
+                <Button
+                  label="Convert Tokens"
+                  icon={<IconCoin />}
+                  display="label"
+                  onClick={convertPanel.requestOpen}
+                />
+              }
+              secondary={<Button label="Transfer" onClick={transferPanel.requestOpen} />}
+            />
             <Balances superTokens={superTokens} />
+            <Convert panelState={convertPanel} superTokens={superTokens} onConvert={() => {}} />
             <CreateFlow
-              panelState={newFlowPanel}
+              panelState={createFlowPanel}
               superTokens={superTokens}
               onCreateFlow={updateFlow}
             />
+            <Transfer panelState={transferPanel} superTokens={superTokens} />
           </React.Fragment>
         )}
       </IdentityProvider>

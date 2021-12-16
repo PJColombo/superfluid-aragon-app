@@ -1,15 +1,13 @@
 import { BN } from 'bn.js';
 
-const processFlows = (flows, isOutFlow) =>
-  Object.keys(flows).map(key => {
-    const flowEntry = flows[key];
-
-    return {
-      [isOutFlow ? 'receiver' : 'sender']: key,
-      ...flowEntry,
-      flowRate: new BN(flowEntry.flowRate),
-    };
-  });
+const processFlows = flows =>
+  flows.map(flow => ({
+    ...flow,
+    accumulatedAmount: new BN(flow.accumulatedAmount),
+    creationTimestamp: new Date(flow.creationTimestamp),
+    flowRate: new BN(flow.flowRate),
+    lastTimestamp: new Date(flow.lastTimestamp),
+  }));
 
 const appStateReducer = state => {
   if (state === null) {
@@ -18,17 +16,13 @@ const appStateReducer = state => {
 
   return {
     ...state,
-    superTokens: Object.keys(state.superTokens).map(key => {
-      const superToken = state.superTokens[key];
-
-      return {
-        ...superToken,
-        address: key,
-        balance: new BN(superToken.balance),
-        inFlows: processFlows(superToken.inFlows, false),
-        outFlows: processFlows(superToken.outFlows, true),
-      };
-    }),
+    superTokens: state.superTokens.map(superToken => ({
+      ...superToken,
+      balance: new BN(superToken.balance),
+      netFlow: new BN(superToken.netFlow),
+    })),
+    inFlows: processFlows(state.inFlows),
+    outFlows: processFlows(state.outFlows),
   };
 };
 

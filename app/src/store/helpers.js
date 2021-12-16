@@ -1,8 +1,10 @@
+import { addressesEqual } from '@aragon/ui';
 import { concat, from } from 'rxjs';
 import { endWith, first, mergeMap, startWith } from 'rxjs/operators';
 import cfaV1ABI from '../abi/CFAv1.json';
 
 const REORG_SAFETY_BLOCK_AGE = 100;
+
 // Custom subscription events to external contracts
 export const EXTERNAL_SUBSCRIPTION_SYNCING = 'EXTERNAL_SUBSCRIPTION_SYNCING';
 export const EXTERNAL_SUBSCRIPTION_CACHED = 'EXTERNAL_SUBSCRIPTION_CACHED';
@@ -68,25 +70,35 @@ export const retryEvery = async (
   return attempt();
 };
 
-export const subscribeToExternals = (app, externalApps, filters, blockNumbersCache) =>
+export const subscribeToExternals = (app, externalApps, topics, blockNumbersCache) =>
   Promise.all(
     externalApps.map((externalApp, index) =>
-      subscribeToExternal(app, externalApp, filters[index], blockNumbersCache)
+      subscribeToExternal(app, externalApp, topics[index], blockNumbersCache)
     )
   );
 
-export const subscribeToExternal = async (app, external, filters, blockNumbersCache) => {
+export const subscribeToExternal = async (app, external, topics, blockNumbersCache) => {
+  const topicsField = !!topics && { topics };
   const contractAddress = external.address;
   const contract = external.contract;
   const cachedBlockNumber = blockNumbersCache[contractAddress];
 
-  console.log(`Subscribing to ${contractAddress} with cached block number ${cachedBlockNumber}…`);
-
   const currentBlock = await app.web3Eth('getBlockNumber').toPromise();
-  const cacheBlockHeight = Math.max(currentBlock - REORG_SAFETY_BLOCK_AGE, 0); // clamp to 0 for safety
+  const cacheBlockHeight = Math.max(
+    currentBlock - REORG_SAFETY_BLOCK_AGE,
+    cachedBlockNumber + 1 || 0
+  ); // clamp to 0 for safety
+
+  console.log(
+    `Subscribing to ${contractAddress}.
+      - Caching events from ${cachedBlockNumber} to ${cacheBlockHeight}.
+      - Listening to past events from ${cacheBlockHeight + 1} to ${currentBlock}.
+      - Listening to current events from ${currentBlock}.`
+  );
+
   const pastEvents$ = contract
     .pastEvents({
-      ...(!!filters && { filters: { ...filters } }),
+      ...topicsField,
       // When using cache, fetch events from the next block after cache
       fromBlock: cachedBlockNumber ? cachedBlockNumber + 1 : undefined,
       toBlock: cacheBlockHeight,
@@ -111,9 +123,9 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
     );
   const lastEvents$ = contract
     .pastEvents({
-      ...(!!filters && { filters: { ...filters } }),
+      ...topicsField,
       fromBlock: cacheBlockHeight + 1,
-      toBlock: currentBlock,
+      toBlock: currentBlock - 1,
     })
     .pipe(
       mergeMap(pastEvents => {
@@ -124,12 +136,12 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
         returnValues: {
           address: contractAddress,
           from: cacheBlockHeight + 1,
-          toBlock: currentBlock,
+          toBlock: currentBlock - 1,
         },
       })
     );
   const currentEvents$ = contract.events({
-    ...(!!filters && { filters: { ...filters } }),
+    ...topicsField,
     fromBlock: currentBlock,
   });
 
@@ -141,3 +153,13 @@ export const subscribeToExternal = async (app, external, filters, blockNumbersCa
     app.emitTrigger(event, { ...returnValues, contractAddress: address })
   );
 };
+
+export const isFlowEqual = (flow, event, flowType) => {
+  const field = flowType === 'inFlows' ? 'sender' : 'receiver';
+  return (
+    addressesEqual(flow.superTokenAddress, event.token) && addressesEqual(flow[field], event[field])
+  );
+};
+
+export const calculateFlowAmount = (currentTimestamp, lastTimestamp, flowRate) =>
+  currentTimestamp.sub(lastTimestamp).mul(flowRate);

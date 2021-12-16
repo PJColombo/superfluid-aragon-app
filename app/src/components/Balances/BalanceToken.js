@@ -1,7 +1,7 @@
 import { useNetwork } from '@aragon/api-react';
 import { formatTokenAmount, GU, Help, textStyle, useTheme } from '@aragon/ui';
 import React from 'react';
-import { tokenIconUrl } from './helpers/icon-helpers';
+import { superTokenIconUrl } from '../../helpers';
 
 const BalanceToken = ({
   address,
@@ -11,8 +11,8 @@ const BalanceToken = ({
   decimals,
   symbol,
   verified = false,
+  showIcon = true,
 }) => {
-  console.log(symbol);
   const theme = useTheme();
   const network = useNetwork();
 
@@ -38,12 +38,12 @@ const BalanceToken = ({
           font-weight: bold;
         `}
       >
-        {verified && address && (
+        {showIcon && (
           <img
             alt=""
             width="20"
             height="20"
-            src={tokenIconUrl(address, symbol, network && network.type)}
+            src={superTokenIconUrl(address, symbol, network && network.type)}
             css={`
               margin-right: ${0.75 * GU}px;
             `}
