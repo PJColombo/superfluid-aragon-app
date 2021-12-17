@@ -10,48 +10,25 @@ import {
   useTheme,
 } from '@aragon/ui';
 import { compareDesc, format } from 'date-fns';
+import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
 import { toChecksumAddress } from 'web3-utils';
+import { MONTH } from '../../helpers';
 import useFilteredFlows from '../../hooks/useFilteredFlows';
+import DynamicFlowAmount from '../DynamicFlowAmount';
 import LocalIdentityBadge from '../LocalIdentityBadge';
 import { ContextMenuDeleteFlow, ContextMenuUpdateFlow } from './ContextMenus';
 import FlowsFilters from './FlowsFilters';
 
 const formatDate = date => format(date, 'yyyy-MM-dd');
+const MONTH_BN = new BN(MONTH);
 
-function useFlowItems(superTokens) {
-  const balanceItems = useMemo(() => {
-    let flows = []
-    // amount, entity, isIncoming, flowRate, token
-    for (const { address, balance: amount, metadata: { decimals, symbols }, netflow, inFlows, outFlows } of superTokens) {
-      for(const { flowRate, sender } in inFlows) {
-        flows.push({ isIncoming: true, flowRate: flowRate, token: {decimals, symbols }, sender })
-      }
-    }
-
-    return superTokens.map(
-      ({ address, balance: amount, metadata: { decimals, symbol }, netFlow }) => {
-        return {
-          address,
-          amount,
-          convertedAmount: new BN('-1'),
-          decimals,
-          symbol,
-          netFlow,
-          // verified,
-        };
-      },
-      [superTokens]
-    );
-  });
-  return balanceItems;
-}
-export default React.memo(({ tokens, flows }) => {
+export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   const { appState } = useAragonApi();
   const connectedAccount = useConnectedAccount();
   const { layoutName } = useLayout();
   const theme = useTheme();
-  const { isSyncing, superTokens } = appState
+  const { isSyncing } = appState;
 
   const {
     emptyResultsViaFilters,
@@ -67,7 +44,6 @@ export default React.memo(({ tokens, flows }) => {
     flowTypes,
   } = useFilteredFlows({ flows, tokens });
 
-  const { isSyncing } = appState;
   const tokenDetails = tokens.reduce((details, { address, decimals, symbol }) => {
     details[toChecksumAddress(address)] = {
       decimals,
@@ -77,7 +53,7 @@ export default React.memo(({ tokens, flows }) => {
   }, {});
   const compactMode = layoutName === 'small';
 
-  const sortedTransfers = useMemo(
+  const sortedFlows = useMemo(
     () =>
       filteredFlows.sort(({ date: dateLeft }, { date: dateRight }) =>
         // Sort by date descending
@@ -105,7 +81,7 @@ export default React.memo(({ tokens, flows }) => {
             ${textStyle('title2')};
           `}
         >
-          No Flows yet.
+          No flows yet.
         </p>
       }
       page={page}
@@ -144,20 +120,25 @@ export default React.memo(({ tokens, flows }) => {
       }
       fields={[
         { label: 'To/From', priority: 3 },
+        { label: 'Start/End Date', priority: 3 },
         { label: 'Type', priority: 1 },
         { label: 'Token', priority: 2 },
-        { label: 'Flow Rate', priority: 2 },
-        { label: 'Total', priority: 3 },
+        { label: 'Incoming/Outgoing (Per Month)', priority: 2 },
+        { label: 'Total So Far', priority: 3 },
       ]}
-      entries={sortedTransfers}
-      renderEntry={({ amount, entity, isIncoming, flowRate, token }) => {
-        const { symbol, decimals } = tokenDetails[toChecksumAddress(token)];
-
-        const formattedAmount = formatTokenAmount(isIncoming ? amount : amount.neg(), decimals, {
-          displaySign: true,
-          digits: 5,
-          symbol,
-        });
+      entries={sortedFlows}
+      renderEntry={({
+        accumulatedAmount,
+        creationDate,
+        entity,
+        flowRate,
+        lastUpdateDate,
+        isIncoming,
+        superTokenAddress,
+      }) => {
+        const formattedDate = format(creationDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
+        const { symbol, decimals } = tokenDetails[toChecksumAddress(superTokenAddress)];
+        const monthlyFlowRate = flowRate.mul(MONTH_BN);
 
         return [
           <div
@@ -176,15 +157,31 @@ export default React.memo(({ tokens, flows }) => {
               entity={entity}
             />
           </div>,
+          <time
+            dateTime={formattedDate}
+            title={formattedDate}
+            css={`
+              padding-right: ${2 * GU}px;
+              white-space: nowrap;
+            `}
+          >
+            {formatDate(creationDate)}
+          </time>,
+          <div>{isIncoming ? 'Incoming' : 'Outgoing'}</div>,
+          <div title={superTokenAddress}>{symbol}</div>,
           <div
             css={`
+              color: ${isIncoming ? theme.positive : theme.negative};
               padding: ${1 * GU}px ${0.5 * GU}px;
               overflow-wrap: break-word;
               word-break: break-word;
               hyphens: auto;
             `}
           >
-            {flowRate}
+            {formatTokenAmount(isIncoming ? monthlyFlowRate : monthlyFlowRate.neg(), 18, {
+              digits: 2,
+              displaySign: true,
+            })}
           </div>,
           <span
             css={`
@@ -192,16 +189,54 @@ export default React.memo(({ tokens, flows }) => {
               color: ${isIncoming ? theme.positive : theme.negative};
             `}
           >
-            {formattedAmount}
+            <DynamicFlowAmount
+              baseAmount={accumulatedAmount}
+              rate={flowRate}
+              lastDate={lastUpdateDate}
+            >
+              <TotalEntry decimals={decimals} isIncoming={isIncoming} />
+            </DynamicFlowAmount>
           </span>,
         ];
       }}
-      renderEntryActions={({ entity, transactionHash }) => (
+      renderEntryActions={({ superTokenAddress, entity }) => (
         <ContextMenu zIndex={1}>
-          <ContextMenuUpdateFlow onUpdateFlow={transactionHash} />
-          <ContextMenuDeleteFlow onDeleteFlow={entity} />
+          <ContextMenuUpdateFlow onUpdateFlow={() => onUpdateFlow(superTokenAddress, entity)} />
+          <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
         </ContextMenu>
       )}
     />
   );
 });
+
+const TotalEntry = ({ dynamicAmount, isIncoming, decimals }) => {
+  const [integer, fractional] = formatTokenAmount(
+    isIncoming ? dynamicAmount : dynamicAmount.neg(),
+    decimals,
+    {
+      digits: 6,
+      displaySign: true,
+    }
+  ).split('.');
+
+  return (
+    <span>
+      <span
+        css={`
+          ${textStyle('body1')};
+        `}
+      >
+        {integer}
+      </span>
+      {fractional && (
+        <span
+          css={`
+            ${textStyle('body3')}
+          `}
+        >
+          .{fractional}
+        </span>
+      )}
+    </span>
+  );
+};

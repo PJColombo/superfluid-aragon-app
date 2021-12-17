@@ -3,14 +3,15 @@ import { Bar, Button, GU, Header, IconAdd, IconCoin, Main, SyncIndicator } from 
 import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
+import Flows from './components/Flows';
 import { Convert, CreateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
   const { guiStyle, appState } = useAragonApi();
-  const { superTokens } = appState;
+  const { superTokens, flows } = appState;
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
-  const { updateFlow } = actions;
+  const { deleteFlow, updateFlow } = actions;
   const { appearance } = guiStyle;
 
   return (
@@ -49,6 +50,12 @@ function App() {
               secondary={<Button label="Transfer" onClick={transferPanel.requestOpen} />}
             />
             <Balances superTokens={superTokens} />
+            <Flows
+              flows={flows}
+              tokens={superTokens}
+              onUpdateFlow={createFlowPanel.requestOpen}
+              onDeleteFlow={deleteFlow}
+            />
             <Convert panelState={convertPanel} superTokens={superTokens} onConvert={() => {}} />
             <CreateFlow
               panelState={createFlowPanel}

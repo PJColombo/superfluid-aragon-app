@@ -1,11 +1,11 @@
 import { ContextMenuItem, GU, IconEdit, IconRemove, useTheme } from '@aragon/ui';
 import React from 'react';
 
-export const ContextMenuDeleteFlow = ({ onRemoveFlow }) => {
+export const ContextMenuDeleteFlow = ({ onDeleteFlow }) => {
   const theme = useTheme();
 
   return (
-    <ContextMenuItem onClick={onRemoveFlow}>
+    <ContextMenuItem onClick={onDeleteFlow}>
       <IconRemove
         css={`
           color: ${theme.surfaceContentSecondary};
@@ -22,7 +22,7 @@ export const ContextMenuDeleteFlow = ({ onRemoveFlow }) => {
   );
 };
 
-export const ContextMenuUpdateFlow = ({ onRemoveFlow: onUpdateFlow }) => {
+export const ContextMenuUpdateFlow = ({ onUpdateFlow }) => {
   const theme = useTheme();
 
   return (
