@@ -116,8 +116,7 @@ const initializeState = (agentAddress, settings) => async cachedState => {
   const nextState = {
     agentAddress,
     superTokens: [],
-    inFlows: [],
-    outFlows: [],
+    flows: [],
     blockNumbersCache,
     ...cachedState,
     isSyncing: true,

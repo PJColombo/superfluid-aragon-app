@@ -154,12 +154,12 @@ export const subscribeToExternal = async (app, external, topics, blockNumbersCac
   );
 };
 
-export const isFlowEqual = (flow, event, flowType) => {
-  const field = flowType === 'inFlows' ? 'sender' : 'receiver';
-  return (
-    addressesEqual(flow.superTokenAddress, event.token) && addressesEqual(flow[field], event[field])
-  );
-};
+export const getFlowEventEntity = ({ returnValues: { sender, receiver } }, isIncomingFlow) =>
+  isIncomingFlow ? sender : receiver;
+
+export const isFlowEqual = (flow, event) =>
+  addressesEqual(flow.superTokenAddress, event.token) &&
+  addressesEqual(flow.entity, getFlowEventEntity(event, flow.isIncoming));
 
 export const calculateFlowAmount = (currentTimestamp, lastTimestamp, flowRate) =>
   currentTimestamp.sub(lastTimestamp).mul(flowRate);

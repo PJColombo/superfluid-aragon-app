@@ -1,5 +1,5 @@
 import { addressesEqual } from '../helpers/web3-helpers';
-import { calculateFlowAmount, isFlowEqual } from './helpers';
+import { calculateFlowAmount, getFlowEventEntity, isFlowEqual } from './helpers';
 import superTokenABI from '../abi/SuperToken.json';
 import { getCurrentTimestamp } from '../helpers';
 
@@ -20,7 +20,6 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
   }
 
   const tokenContract = getSuperTokenContract(tokenAddress, app);
-  const flowsType = addressesEqual(sender, agentAddress) ? 'outFlows' : 'inFlows';
 
   const [newSuperTokens, newFlows] = await Promise.all([
     updateSuperTokens(
@@ -29,13 +28,13 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
       tokenContract,
       addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
     ),
-    updateFlows(state, event, flowsType, settings.superfluid.cfa.contract),
+    updateFlows(state, event, settings.superfluid.cfa.contract),
   ]);
 
   return {
     ...state,
     superTokens: newSuperTokens,
-    [flowsType]: newFlows,
+    flows: newFlows,
   };
 };
 
@@ -106,19 +105,21 @@ const updateSuperTokens = async (
   return newSuperTokens;
 };
 
-const updateFlows = async (state, event, flowsType, cfaContract) => {
+const updateFlows = async (state, event, cfaContract) => {
+  const { agentAddress } = state;
   const { sender, receiver, flowRate, token: tokenAddress } = event.returnValues;
-  const newFlows = [...state[flowsType]];
+  const newFlows = [...state.flows];
 
+  const isIncoming = addressesEqual(receiver, agentAddress);
   const { timestamp } = await cfaContract.getFlow(tokenAddress, sender, receiver).toPromise();
-  const flowIndex = state[flowsType].findIndex(flow => isFlowEqual(flow, event, flowsType));
-  const flowEntity = flowsType === 'outFlows' ? { receiver } : { sender };
+  const flowIndex = newFlows.findIndex(flow => isFlowEqual(flow, event));
   const flowExists = !!newFlows[flowIndex];
 
   // Create flow case
   if (!flowExists) {
     newFlows.push({
-      ...flowEntity,
+      isIncoming,
+      entity: getFlowEventEntity(event, isIncoming),
       superTokenAddress: tokenAddress,
       accumulatedAmount: 0,
       creationTimestamp: timestamp,
@@ -141,7 +142,7 @@ const updateFlows = async (state, event, flowsType, cfaContract) => {
   }
   // Delete flow case
   else {
-    delete newFlows[flowEntity];
+    delete newFlows[flowIndex];
   }
 
   return newFlows;
