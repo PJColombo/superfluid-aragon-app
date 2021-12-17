@@ -4,6 +4,7 @@ import TokenSelectorInstance from './TokenSelectorInstance';
 
 const TokenSelector = ({
   tokens,
+  disabled = false,
   label = 'Token',
   labelCustomToken = 'Token address or symbol',
   selectedIndex = -1,
@@ -58,6 +59,7 @@ const TokenSelector = ({
           onChange={handleChange}
           required
           wide
+          disabled={disabled}
         />
       </Field>
 

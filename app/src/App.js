@@ -4,7 +4,7 @@ import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
 import Flows from './components/Flows';
-import { Convert, CreateFlow, Transfer } from './components/SidePanels';
+import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
@@ -57,7 +57,7 @@ function App() {
               onDeleteFlow={deleteFlow}
             />
             <Convert panelState={convertPanel} superTokens={superTokens} onConvert={() => {}} />
-            <CreateFlow
+            <UpdateFlow
               panelState={createFlowPanel}
               superTokens={superTokens}
               onCreateFlow={updateFlow}

@@ -205,7 +205,11 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
       }}
       renderEntryActions={({ superTokenAddress, entity }) => (
         <ContextMenu zIndex={1}>
-          <ContextMenuUpdateFlow onUpdateFlow={() => onUpdateFlow(superTokenAddress, entity)} />
+          <ContextMenuUpdateFlow
+            onUpdateFlow={() =>
+              onUpdateFlow({ updateSuperTokenAddress: superTokenAddress, updateRecipient: entity })
+            }
+          />
           <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
         </ContextMenu>
       )}

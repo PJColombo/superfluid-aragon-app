@@ -30,7 +30,14 @@ const FlowRateField = ({ onChange = noop }) => {
           gap: ${1.5 * GU}px;
         `}
       >
-        <TextInput.Number value={rateValue} min={0} step="any" wide onChange={handleInputChange} />
+        <TextInput
+          type="number"
+          value={rateValue}
+          min={0}
+          step="any"
+          wide
+          onChange={handleInputChange}
+        />
         <div
           css={`
             width: 40%;

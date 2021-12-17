@@ -19,7 +19,6 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
   const { connectedAccount } = useConnectedAccount();
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_TOKEN);
-
   const [flowRate, setFlowRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState();
   const [waitingTxPanel, setWaitingTxPanel] = useState(false);
@@ -27,6 +26,8 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
   const disabled = Boolean(
     errorMessage || !recipient || !selectedToken.address || !Number(flowRate) || waitingTxPanel
   );
+  const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
+  const isFlowUpdate = Boolean(updateSuperTokenAddress && updateRecipient);
 
   const reset = () => {
     setRecipient('');
@@ -35,6 +36,9 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
     setErrorMessage();
     setWaitingTxPanel(false);
   };
+
+  const findSuperTokenIndexByAddress = address =>
+    superTokens.findIndex(superToken => addressesEqual(superToken.address, address));
 
   const handleTokenChange = useCallback(
     value => {
@@ -76,7 +80,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
   };
   // handle reset when opening
   useEffect(() => {
-    if (panelState.didOpen) {
+    if (panelState.didOpen && !isFlowUpdate) {
       // reset to default values
       // Focus the right input after some time to avoid the panel transition to
       // be skipped by the browser.
@@ -88,9 +92,15 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
   }, [panelState.didOpen]);
 
   return (
-    <BaseSidePanel title="Create Flow" panelState={panelState}>
+    <BaseSidePanel title={isFlowUpdate ? 'Update Flow' : 'Create Flow'} panelState={panelState}>
       <form onSubmit={handleSubmit}>
-        <Field label="Recipient (must be a valid Ethereum address)" css="height: 60px">
+        <Field
+          label="Recipient (must be a valid Ethereum address)"
+          css={`
+            height: 60px;
+            ${isFlowUpdate && 'pointer-events: none;'}
+          `}
+        >
           <LocalIdentitiesAutoComplete
             ref={recipientInputRef}
             onChange={handleRecipientChange}
@@ -98,14 +108,19 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
               // Allow spaces to be trimmable
               ` *${addressPattern} *`
             }
-            value={recipient}
+            value={isFlowUpdate ? updateRecipient : recipient}
             required
             wide
           />
         </Field>
         <TokenSelector
           tokens={superTokens}
-          selectedIndex={selectedToken.index}
+          selectedIndex={
+            isFlowUpdate
+              ? findSuperTokenIndexByAddress(updateSuperTokenAddress)
+              : selectedToken.index
+          }
+          disabled={isFlowUpdate}
           onChange={handleTokenChange}
         />
         <FlowRateField onChange={handleFlowRateChange} />
@@ -115,7 +130,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
           `}
         >
           <Button disabled={disabled} mode="strong" type="submit" wide>
-            {waitingTxPanel && <LoadingRing />} Create
+            {waitingTxPanel && <LoadingRing />} {isFlowUpdate ? 'Update' : 'Create'}
           </Button>
         </div>
         {errorMessage && <ValidationError messages={[errorMessage]} />}
