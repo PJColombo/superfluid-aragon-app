@@ -1,6 +1,5 @@
 import { useNetwork } from '@aragon/api-react';
 import { formatTokenAmount, GU, IconArrowDown, IconArrowUp, textStyle, useTheme } from '@aragon/ui';
-import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React from 'react';
 import { superTokenIconUrl } from '../../helpers';
 import DynamicFlowAmount from '../DynamicFlowAmount';

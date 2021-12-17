@@ -34,10 +34,12 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
     emptyResultsViaFilters,
     filteredFlows,
     handleClearFilters,
+    handleDateRangeChange,
     handleTokenChange,
     handleFlowTypeChange,
     page,
     setPage,
+    selectedDateRange,
     selectedToken,
     selectedFlowType,
     symbols,
@@ -108,6 +110,8 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
           </div>
           {!compactMode && (
             <FlowsFilters
+              dateRangeFilter={selectedDateRange}
+              onDateRangeChange={handleDateRangeChange}
               onTokenChange={handleTokenChange}
               onFlowTypeChange={handleFlowTypeChange}
               tokenFilter={selectedToken}

@@ -17,17 +17,16 @@ export const useUpdateFlow = (onDone = noop) => {
         addressesEqual(f.superTokenAddress, tokenAddress)
     );
 
-    let res;
     try {
       if (flow) {
-        res = await api.updateFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+        await api.updateFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
       } else {
-        res = await api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+        await api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
       }
     } catch (err) {
       console.error(err);
     }
-    console.log(res);
+
     onDone();
   });
 };

@@ -15,7 +15,7 @@ function useFilteredFlows({ flows, tokens }) {
 
   useEffect(() => setPage(0), [selectedDateRange, selectedFlowType, selectedToken]);
 
-  const handleSelectedDateRangeChange = useCallback(range => {
+  const handleDateRangeChange = useCallback(range => {
     setSelectedDateRange(range);
   }, []);
 
@@ -71,7 +71,7 @@ function useFilteredFlows({ flows, tokens }) {
         // All good, we can include the flow ✌️
         return true;
       }),
-    [selectedFlowType, selectedToken, tokensToFilter, flows]
+    [selectedDateRange, selectedFlowType, selectedToken, tokensToFilter, flows]
   );
   const symbols = tokensToFilter.map(({ symbol }) => symbol);
   const emptyResultsViaFilters = !filteredFlows && (selectedToken > 0 || selectedFlowType > 0);
@@ -80,11 +80,12 @@ function useFilteredFlows({ flows, tokens }) {
     emptyResultsViaFilters,
     filteredFlows,
     handleClearFilters,
-    handleSelectedDateRangeChange,
+    handleDateRangeChange,
     handleTokenChange,
     handleFlowTypeChange,
     page,
     setPage,
+    selectedDateRange,
     selectedToken,
     selectedFlowType,
     symbols,

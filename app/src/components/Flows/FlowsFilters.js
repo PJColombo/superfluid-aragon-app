@@ -1,12 +1,14 @@
 import React from 'react';
-import { DropDown, GU } from '@aragon/ui';
+import { DateRangePicker, DropDown, GU } from '@aragon/ui';
 
 const FlowsFilters = ({
+  dateRangeFilter,
   onTokenChange,
   symbols,
   tokenFilter,
   flowTypes,
   flowTypeFilter,
+  onDateRangeChange,
   onFlowTypeChange,
 }) => {
   return (
@@ -33,6 +35,12 @@ const FlowsFilters = ({
         selected={tokenFilter}
         onChange={onTokenChange}
         width="128px"
+      />
+      <DateRangePicker
+        startDate={dateRangeFilter.start}
+        endDate={dateRangeFilter.end}
+        onChange={onDateRangeChange}
+        format={'YYYY-MM-DD'}
       />
     </div>
   );
