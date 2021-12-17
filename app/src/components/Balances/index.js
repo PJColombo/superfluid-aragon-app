@@ -8,14 +8,14 @@ import BalanceToken from './BalanceToken';
 function useBalanceItems(superTokens) {
   const balanceItems = useMemo(() => {
     return superTokens.map(
-      ({ address, balance: amount, decimals, symbol, netFlow, lastUpdateTimestamp }) => {
+      ({ address, balance: amount, decimals, symbol, netFlow, lastUpdateDate }) => {
         return {
           address,
           amount,
           convertedAmount: new BN('-1'),
           decimals,
           symbol,
-          lastUpdateTimestamp,
+          lastUpdateDate,
           netFlow,
           // verified,
         };

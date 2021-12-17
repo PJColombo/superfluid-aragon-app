@@ -10,8 +10,11 @@ export const useUpdateFlow = (onDone = noop) => {
 
   return useCallback(async (tokenAddress, receiver, flowRate) => {
     const normalizedFlowRate = toDecimals(flowRate);
-    const flow = appState.outFlows.find(
-      f => addressesEqual(f.receiver, receiver) && addressesEqual(f.superTokenAddress, tokenAddress)
+    const flow = appState.flows.find(
+      f =>
+        !f.isIncoming &&
+        addressesEqual(f.entity, receiver) &&
+        addressesEqual(f.superTokenAddress, tokenAddress)
     );
 
     let res;
@@ -31,8 +34,8 @@ export const useUpdateFlow = (onDone = noop) => {
 
 export const useDeleteFlow = (onDone = noop) => {
   const api = useApi();
-  return useCallback((tokenAddress, sender, receiver) => {
-    api.deleteFlow(tokenAddress, sender, receiver).toPromise();
+  return useCallback((tokenAddress, receiver) => {
+    api.deleteFlow(tokenAddress, receiver).toPromise();
     onDone();
   });
 };

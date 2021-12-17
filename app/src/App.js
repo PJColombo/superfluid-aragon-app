@@ -8,7 +8,7 @@ import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
   const { guiStyle, appState } = useAragonApi();
-  const { superTokens, inFlows, outFlows } = appState;
+  const { superTokens } = appState;
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { updateFlow } = actions;
   const { appearance } = guiStyle;

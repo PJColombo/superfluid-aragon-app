@@ -1,17 +1,16 @@
 import React from 'react';
 import { Redraw } from '@aragon/ui';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
-import { getCurrentTimestamp } from '../helpers';
+import { differenceInSeconds } from 'date-fns';
 
 const RENDER_EVERY = 1000;
 
-const getAmount = (baseAmount, rate, lastTimestamp) => {
-  return baseAmount.add(rate.mul(new BN(getCurrentTimestamp() - lastTimestamp)));
-};
+const getAmount = (baseAmount, rate, lastDate) =>
+  baseAmount.add(rate.mul(new BN(differenceInSeconds(new Date(), lastDate))));
 
-const DynamicFlowAmount = ({ children, baseAmount = new BN(0), rate, lastTimestamp }) => {
+const DynamicFlowAmount = ({ children, baseAmount = new BN(0), rate, lastDate }) => {
   const renderAmount = () => {
-    const amount = getAmount(baseAmount, rate, lastTimestamp);
+    const amount = getAmount(baseAmount, rate, lastDate);
 
     return (
       <>
