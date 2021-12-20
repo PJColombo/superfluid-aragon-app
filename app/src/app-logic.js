@@ -1,4 +1,4 @@
-import { useApi, useAppState, useAragonApi } from '@aragon/api-react';
+import { useApi, useAppState } from '@aragon/api-react';
 import { addressesEqual, noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import usePanelState from './hooks/usePanelState';
@@ -6,11 +6,11 @@ import { toDecimals } from './helpers';
 
 export const useUpdateFlow = (onDone = noop) => {
   const api = useApi();
-  const { appState } = useAragonApi();
+  const { flows } = useAppState();
 
   return useCallback(async (tokenAddress, receiver, flowRate) => {
     const normalizedFlowRate = toDecimals(flowRate);
-    const flow = appState.flows.find(
+    const flow = flows.find(
       f =>
         !f.isIncoming &&
         addressesEqual(f.entity, receiver) &&
