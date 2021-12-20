@@ -6,7 +6,7 @@ import ValidationError from '../../ValidationError';
 import { addressPattern } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import { isAddress } from 'web3-utils';
-import { useConnectedAccount } from '@aragon/api-react';
+import { useAppState } from '@aragon/api-react';
 import FlowRateField from './FlowRateField';
 
 const NULL_SELECTED_TOKEN = -1;
@@ -15,67 +15,69 @@ const INITIAL_TOKEN = {
   index: NULL_SELECTED_TOKEN,
 };
 
-export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
-  const { connectedAccount } = useConnectedAccount();
+export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
+  const { agentAddress } = useAppState();
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_TOKEN);
   const [flowRate, setFlowRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState();
-  const [waitingTxPanel, setWaitingTxPanel] = useState(false);
   const recipientInputRef = useRef();
-  const disabled = Boolean(
-    errorMessage || !recipient || !selectedToken.address || !Number(flowRate) || waitingTxPanel
-  );
   const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
   const isFlowUpdate = Boolean(updateSuperTokenAddress && updateRecipient);
+  const disableSubmit = Boolean(
+    errorMessage ||
+      (!recipient && !updateRecipient) ||
+      (!selectedToken.address && !updateSuperTokenAddress) ||
+      !Number(flowRate) ||
+      panelState.waitTxPanel
+  );
 
-  const reset = () => {
+  const clear = () => {
     setRecipient('');
     setSelectedToken(INITIAL_TOKEN);
     setFlowRate(0);
     setErrorMessage();
-    setWaitingTxPanel(false);
   };
 
   const findSuperTokenIndexByAddress = address =>
     superTokens.findIndex(superToken => addressesEqual(superToken.address, address));
 
-  const handleTokenChange = useCallback(
-    value => {
-      setSelectedToken(value);
-      setErrorMessage('');
-    },
-    [setSelectedToken]
-  );
+  const handleTokenChange = useCallback(value => {
+    setSelectedToken(value);
+    setErrorMessage('');
+  }, []);
 
-  const handleRecipientChange = useCallback(
-    value => {
-      setRecipient(value);
-      setErrorMessage('');
-    },
-    [setRecipient]
-  );
+  const handleRecipientChange = useCallback(value => {
+    setRecipient(value);
+    setErrorMessage('');
+  }, []);
 
-  const handleFlowRateChange = useCallback(
-    value => {
-      setFlowRate(value);
-      setErrorMessage('');
-    },
-    [setFlowRate]
-  );
+  const handleFlowRateChange = useCallback(value => {
+    setFlowRate(value);
+    setErrorMessage('');
+  }, []);
 
   const handleSubmit = async event => {
     event.preventDefault();
 
-    if (!isAddress(recipient)) {
-      setErrorMessage('Recipient must be a valid Ethereum address.');
-    } else if (addressesEqual(connectedAccount, recipient)) {
-      setErrorMessage("You can't create a flow to your own wallet.");
-    } else if (flowRate <= 0) {
+    if (flowRate <= 0) {
       setErrorMessage("Flow rate can't be zero.");
+    }
+
+    if (isFlowUpdate) {
+      panelState.requestTransaction(onUpdateFlow, [
+        updateSuperTokenAddress,
+        updateRecipient,
+        flowRate,
+      ]);
     } else {
-      setWaitingTxPanel(true);
-      onCreateFlow(selectedToken.address, recipient, flowRate);
+      if (!isAddress(recipient)) {
+        setErrorMessage('Recipient must be a valid Ethereum address.');
+      } else if (addressesEqual(agentAddress, recipient)) {
+        setErrorMessage("You can't create a flow to the app's agent.");
+      } else {
+        panelState.requestTransaction(onUpdateFlow, [selectedToken.address, recipient, flowRate]);
+      }
     }
   };
   // handle reset when opening
@@ -87,7 +89,7 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
       recipientInputRef && setTimeout(() => recipientInputRef.current.focus(), 100);
     }
     return () => {
-      reset();
+      clear();
     };
   }, [panelState.didOpen]);
 
@@ -124,15 +126,9 @@ export default React.memo(({ panelState, superTokens, onCreateFlow }) => {
           onChange={handleTokenChange}
         />
         <FlowRateField onChange={handleFlowRateChange} />
-        <div
-          css={`
-            width: 100%;
-          `}
-        >
-          <Button disabled={disabled} mode="strong" type="submit" wide>
-            {waitingTxPanel && <LoadingRing />} {isFlowUpdate ? 'Update' : 'Create'}
-          </Button>
-        </div>
+        <Button disabled={disableSubmit} mode="strong" type="submit" wide>
+          {panelState.waitTxPanel && <LoadingRing />} {isFlowUpdate ? 'Update' : 'Create'}
+        </Button>
         {errorMessage && <ValidationError messages={[errorMessage]} />}
       </form>
     </BaseSidePanel>

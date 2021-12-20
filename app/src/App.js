@@ -13,12 +13,13 @@ function App() {
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { deleteFlow, updateFlow } = actions;
   const { appearance } = guiStyle;
+  const disableButtons = isSyncing;
 
   return (
     <Main theme={appearance} assetsUrl="./aragon-ui">
       <IdentityProvider>
         <SyncIndicator visible={isSyncing} shift={50} />
-        {!isSyncing && (
+        {
           <React.Fragment>
             <Header
               primary="Flow Finance"
@@ -34,21 +35,34 @@ function App() {
                     onClick={createFlowPanel.requestOpen}
                     label="Create Flow"
                     icon={<IconAdd />}
+                    disabled={disableButtons}
                   />
                 </div>
               }
             />
-            <Bar
-              primary={
-                <Button
-                  label="Convert Tokens"
-                  icon={<IconCoin />}
-                  display="label"
-                  onClick={convertPanel.requestOpen}
-                />
-              }
-              secondary={<Button label="Transfer" onClick={transferPanel.requestOpen} />}
-            />
+            <div
+              css={`
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: ${3 * GU}px;
+              `}
+            >
+              <Button
+                label="Convert Tokens"
+                icon={<IconCoin />}
+                display="label"
+                onClick={convertPanel.requestOpen}
+                disabled={disableButtons}
+              />
+              <Button
+                label="Transfer"
+                onClick={transferPanel.requestOpen}
+                disabled={disableButtons}
+              />
+            </div>
+
             <Balances superTokens={superTokens} />
             <Flows
               flows={flows}
@@ -60,11 +74,11 @@ function App() {
             <UpdateFlow
               panelState={createFlowPanel}
               superTokens={superTokens}
-              onCreateFlow={updateFlow}
+              onUpdateFlow={updateFlow}
             />
             <Transfer panelState={transferPanel} superTokens={superTokens} />
           </React.Fragment>
-        )}
+        }
       </IdentityProvider>
     </Main>
   );
