@@ -1,4 +1,5 @@
-import { GU, textStyle, useLayout, useTheme } from '@aragon/ui';
+import { useAppState } from '@aragon/api-react';
+import { GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
 import Box from '@aragon/ui/dist/Box';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
@@ -27,6 +28,7 @@ function useBalanceItems(superTokens) {
 }
 
 const Balances = ({ superTokens }) => {
+  const { isSyncing } = useAppState();
   const theme = useTheme();
   const { layoutName } = useLayout();
   const balanceItems = useBalanceItems(superTokens);
@@ -59,7 +61,18 @@ const Balances = ({ superTokens }) => {
                 color: ${theme.content};
               `}
             >
-              No token balances yet.
+              {isSyncing ? (
+                <div
+                  css={`
+                    display: flex;
+                    gap: ${1 * GU}px;
+                  `}
+                >
+                  <LoadingRing /> Loading balances.
+                </div>
+              ) : (
+                'No token balances yet.'
+              )}
             </div>
           ) : (
             <ul
