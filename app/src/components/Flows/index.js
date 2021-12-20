@@ -9,6 +9,7 @@ import {
   useLayout,
   useTheme,
 } from '@aragon/ui';
+import TokenBadge from '@aragon/ui/dist/TokenBadge';
 import { compareDesc, format } from 'date-fns';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
@@ -24,7 +25,7 @@ const formatDate = date => format(date, 'yyyy-MM-dd');
 const MONTH_BN = new BN(MONTH);
 
 export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
-  const { appState } = useAragonApi();
+  const { appState, network } = useAragonApi();
   const connectedAccount = useConnectedAccount();
   const { layoutName } = useLayout();
   const theme = useTheme();
@@ -77,15 +78,12 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   return (
     <DataView
       status={dataViewStatus}
-      statusEmpty={
-        <p
-          css={`
-            ${textStyle('title2')};
-          `}
-        >
-          No flows yet.
-        </p>
-      }
+      emptyState={{
+        default: { title: 'No flows yet.' },
+        loading: {
+          title: 'Loading flows',
+        },
+      }}
       page={page}
       onPageChange={setPage}
       onStatusEmptyClear={handleClearFilters}
@@ -141,7 +139,7 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
         superTokenAddress,
       }) => {
         const formattedDate = format(creationDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
-        const { symbol, decimals } = tokenDetails[toChecksumAddress(superTokenAddress)];
+        const { decimals, symbol } = tokenDetails[toChecksumAddress(superTokenAddress)];
         const monthlyFlowRate = flowRate.mul(MONTH_BN);
 
         return [
@@ -172,7 +170,7 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
             {formatDate(creationDate)}
           </time>,
           <div>{isIncoming ? 'Incoming' : 'Outgoing'}</div>,
-          <div title={superTokenAddress}>{symbol}</div>,
+          <TokenBadge address={superTokenAddress} symbol={symbol} networkType={network.type} />,
           <div
             css={`
               color: ${isIncoming ? theme.positive : theme.negative};
@@ -187,10 +185,11 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
               displaySign: true,
             })}
           </div>,
-          <span
+          <div
             css={`
               font-weight: 600;
               color: ${isIncoming ? theme.positive : theme.negative};
+              min-width: 80%;
             `}
           >
             <DynamicFlowAmount
@@ -198,9 +197,9 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
               rate={flowRate}
               lastDate={lastUpdateDate}
             >
-              <TotalEntry decimals={decimals} isIncoming={isIncoming} />
+              <TotalSoFar decimals={decimals} isIncoming={isIncoming} />
             </DynamicFlowAmount>
-          </span>,
+          </div>,
         ];
       }}
       renderEntryActions={({ superTokenAddress, entity }) => (
@@ -217,7 +216,7 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   );
 });
 
-const TotalEntry = ({ dynamicAmount, isIncoming, decimals }) => {
+const TotalSoFar = ({ dynamicAmount, isIncoming, decimals }) => {
   const [integer, fractional] = formatTokenAmount(
     isIncoming ? dynamicAmount : dynamicAmount.neg(),
     decimals,
