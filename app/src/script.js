@@ -1,12 +1,11 @@
-import Aragon from '@aragon/api';
+import Aragon, { events } from '@aragon/api';
 import agentABI from './abi/Agent.json';
 
 import 'regenerator-runtime/runtime';
 import {
   createSettings,
+  EXTERNAL_SUBSCRIPTIONS_SYNCED,
   EXTERNAL_SUBSCRIPTION_CACHED,
-  EXTERNAL_SUBSCRIPTION_SYNCED,
-  EXTERNAL_SUBSCRIPTION_SYNCING,
   retryEvery,
   subscribeToExternals,
 } from './store/helpers';
@@ -46,7 +45,7 @@ const initialize = async agentAddress => {
   return app.store(
     async (state, event) => {
       const { event: eventName } = event;
-      console.log('Receiving event: ', eventName);
+      console.log('Reciving event: ', eventName, ' at block ', event.returnValues._blockNumber);
 
       try {
         // Superfluid events
@@ -61,31 +60,23 @@ const initialize = async agentAddress => {
 
         // App events
         switch (eventName) {
-          // case events.SYNC_STATUS_SYNCING:
-          //   return { ...state, isSyncing: true };
-          // case events.SYNC_STATUS_SYNCED:
-          //   return { ...state, isSyncing: false };
-
-          // Custom external subscriptions events
-          case EXTERNAL_SUBSCRIPTION_SYNCING:
+          case events.SYNC_STATUS_SYNCING:
             return { ...state, isSyncing: true };
+          // Custom external subscriptions events
           case EXTERNAL_SUBSCRIPTION_CACHED:
-            const { address: externalAddress, blockNumber } = event.returnValues;
+            const { _address: externalAddress, blockNumber } = event.returnValues;
+            console.log(`Reciving subscription event: ${externalAddress}`);
             return {
               ...state,
-              isSyncing: true,
               blockNumbersCache: {
                 ...state.blockNumbersCache,
                 [externalAddress]: blockNumber,
               },
             };
-          case EXTERNAL_SUBSCRIPTION_SYNCED: {
-            return {
-              ...state,
-              isSyncing: false,
-            };
-          }
+          case EXTERNAL_SUBSCRIPTIONS_SYNCED:
+            console.log(`Reciving subscription event: ${event.returnValues.address}`);
 
+            return { ...state, isSyncing: false };
           // Flow Finance events
           case 'SetAgent':
             return handleSetAgent(state, event);
@@ -109,18 +100,24 @@ const initializeState = (agentAddress, settings) => async cachedState => {
   const {
     superfluid: { cfa },
   } = settings;
+  const initialBlock =
+    cachedState && cachedState.initialBlock
+      ? cachedState.initialBlock
+      : await getInitialBlock(agentAddress);
   const blockNumbersCache =
     cachedState && cachedState.blockNumbersCache
       ? cachedState.blockNumbersCache
-      : await initializeBlockNumbersCache(cachedState, agentAddress, settings);
+      : await initializeBlockNumbersCache(cachedState, initialBlock, agentAddress, settings);
   const nextState = {
     agentAddress,
     superTokens: [],
     flows: [],
     blockNumbersCache,
+    initialBlock,
     ...cachedState,
     isSyncing: true,
   };
+
   const topicsReceiver = [
     sha3(FLOW_UPDATED_SIGNATURE),
     null,
@@ -132,13 +129,13 @@ const initializeState = (agentAddress, settings) => async cachedState => {
     null,
     AbiCoder.encodeParameter('address', agentAddress),
   ];
-
   // Store subscriptions for when setting a new agent
   subscribeToExternals(
     app,
     [getExternal(agentAddress, agentABI), cfa, cfa],
     [undefined, topicsReceiver, topicsSender],
-    nextState.blockNumbersCache
+    nextState.blockNumbersCache,
+    initialBlock
   );
 
   console.log('Returning new Initial State');
@@ -146,16 +143,22 @@ const initializeState = (agentAddress, settings) => async cachedState => {
   return nextState;
 };
 
-const initializeBlockNumbersCache = async (cachedState, agentAddress, settings) => {
+const getInitialBlock = async agentAddress => {
+  const agent = app.external(agentAddress, agentABI);
+  return parseInt(await agent.getInitializationBlock().toPromise());
+};
+const initializeBlockNumbersCache = async (
+  cachedState,
+  initializationBlock,
+  agentAddress,
+  settings
+) => {
   if (cachedState && cachedState.blockNumbersCache) {
     return cachedState.blockNumbersCache;
-  } else {
-    const agent = app.external(agentAddress, agentABI);
-    const initializationBlock = parseInt(await agent.getInitializationBlock().toPromise());
-
-    return {
-      [agentAddress]: initializationBlock,
-      [settings.superfluid.cfa.address]: initializationBlock,
-    };
   }
+
+  return {
+    [agentAddress]: initializationBlock,
+    [settings.superfluid.cfa.address]: initializationBlock,
+  };
 };

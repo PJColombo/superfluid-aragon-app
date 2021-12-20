@@ -1,13 +1,13 @@
 import { addressesEqual } from '../helpers/web3-helpers';
-import { calculateFlowAmount, getFlowEventEntity, isFlowEqual } from './helpers';
+import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
 import superTokenABI from '../abi/SuperToken.json';
-import { getCurrentTimestamp } from '../helpers';
 
 const superTokenContracts = new Map();
 
 export const handleFlowUpdated = async (state, event, app, settings) => {
   const { agentAddress } = state;
   const {
+    _blockNumber,
     sender,
     receiver,
     token: tokenAddress,
@@ -20,15 +20,17 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
   }
 
   const tokenContract = getSuperTokenContract(tokenAddress, app);
+  const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
   const [newSuperTokens, newFlows] = await Promise.all([
     updateSuperTokens(
       state,
       tokenAddress,
       tokenContract,
-      addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
+      addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate,
+      timestamp
     ),
-    updateFlows(state, event, settings.superfluid.cfa.contract),
+    updateFlows(state, event, timestamp, settings.superfluid.cfa.contract),
   ]);
 
   return {
@@ -39,12 +41,13 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
 };
 
 export const handleVaultEvent = async (state, event, app) => {
-  const { token: tokenAddress } = event.returnValues;
+  const { token: tokenAddress, _blockNumber } = event.returnValues;
   const tokenContract = getSuperTokenContract(tokenAddress, app);
+  const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
   return {
     ...state,
-    superTokens: await updateSuperTokens(state, tokenAddress, tokenContract),
+    superTokens: await updateSuperTokens(state, tokenAddress, tokenContract, timestamp),
   };
 };
 
@@ -77,7 +80,8 @@ const updateSuperTokens = async (
   { superTokens: oldSuperTokens, agentAddress },
   tokenAddress,
   tokenContract,
-  netFlow
+  netFlow,
+  updateTimestamp
 ) => {
   const newSuperTokens = [...oldSuperTokens];
   let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
@@ -88,7 +92,7 @@ const updateSuperTokens = async (
       ? await newSuperToken(tokenContract)
       : oldSuperTokens[superTokenIndex]),
     address: tokenAddress,
-    lastUpdateTimestamp: getCurrentTimestamp(),
+    lastUpdateTimestamp: updateTimestamp,
     balance: await tokenContract.balanceOf(agentAddress).toPromise(),
   };
 
@@ -105,13 +109,12 @@ const updateSuperTokens = async (
   return newSuperTokens;
 };
 
-const updateFlows = async (state, event, cfaContract) => {
+const updateFlows = async (state, event, updateTimestamp) => {
   const { agentAddress } = state;
-  const { sender, receiver, flowRate, token: tokenAddress } = event.returnValues;
+  const { receiver, flowRate, token: tokenAddress } = event.returnValues;
   const newFlows = [...state.flows];
 
   const isIncoming = addressesEqual(receiver, agentAddress);
-  const { timestamp } = await cfaContract.getFlow(tokenAddress, sender, receiver).toPromise();
   const flowIndex = newFlows.findIndex(flow => isFlowEqual(flow, event));
   const flowExists = !!newFlows[flowIndex];
 
@@ -121,9 +124,9 @@ const updateFlows = async (state, event, cfaContract) => {
       isIncoming,
       entity: getFlowEventEntity(event, isIncoming),
       superTokenAddress: tokenAddress,
-      accumulatedAmount: 0,
-      creationTimestamp: timestamp,
-      lastTimestamp: timestamp,
+      accumulatedAmount: '0',
+      creationTimestamp: updateTimestamp,
+      lastTimestamp: updateTimestamp,
       flowRate,
     });
   }
@@ -131,12 +134,8 @@ const updateFlows = async (state, event, cfaContract) => {
   else if (flowExists && flowRate > 0) {
     newFlows[flowIndex] = {
       ...newFlows[flowIndex],
-      accumulatedAmount: calculateFlowAmount(
-        timestamp,
-        newFlows[flowIndex].creationTimestamp,
-        flowRate
-      ),
-      lastTimestamp: timestamp,
+      accumulatedAmount: calculateNewAccumulatedAmount(state.flows[flowIndex], updateTimestamp),
+      lastTimestamp: updateTimestamp,
       flowRate,
     };
   }
