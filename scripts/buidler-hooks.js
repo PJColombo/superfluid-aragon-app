@@ -19,8 +19,9 @@ const SuperfluidSDK = require('@superfluid-finance/js-sdk');
 const { utils, BigNumber } = require('ethers');
 
 const TOKENS = ['fDAI', 'fUSDC'];
+const SUPER_TOKENS = TOKENS.map((t) => `${t}x`);
 const ONE_TOKEN = BigNumber.from((1e18).toString());
-const INITIAL_BALANCE = ONE_TOKEN.mul(5000);
+const INITIAL_BALANCE = ONE_TOKEN.mul(15000);
 const ANY_ENTITY = '0x' + 'F'.repeat(40);
 
 let sf;
@@ -44,15 +45,17 @@ module.exports = {
 
   // Called after the app's proxy is initialized.
   postInit: async ({ proxy, log }, { web3, artifacts }) => {
-    const [, testAccount, receiver0, sender] = await web3.eth.getAccounts();
+    const [testAccount, receiver0, sender] = await web3.eth.getAccounts();
 
+    const accounts = [testAccount, receiver0, sender];
     log(`Minting test tokens for testing accounts...`);
-    await mintTestTokens(sf, testAccount, TOKENS, artifacts, log);
-    await mintTestTokens(sf, receiver0, TOKENS, artifacts, log);
-    await mintTestTokens(sf, sender, TOKENS, artifacts, log);
+    await mintTestTokens(sf, accounts, TOKENS, artifacts, log);
+
+    log(`Upgrading testing accounts tokens to super tokens...`);
+    await upgradeTokens(sf, TOKENS, accounts, INITIAL_BALANCE.div(3), log);
 
     log('Send super tokens to agent.');
-    await sendTokensToAgent(sf, proxy, sender, TOKENS);
+    await sendTokensToAgent(sf, proxy, sender, TOKENS, INITIAL_BALANCE.div(3));
   },
 
   // Called when the start task needs to know the app proxy's init parameters.
@@ -71,7 +74,7 @@ const handleError = (err) => {
   }
 };
 
-const mintTestTokens = async (sf, recipient, tokens, artifacts, log = console.log) => {
+const mintTestTokens = async (sf, recipients, tokens, artifacts, log = console.log) => {
   const FakeToken = artifacts.require('FakeToken');
   for (tokenName of tokens) {
     /**
@@ -79,10 +82,37 @@ const mintTestTokens = async (sf, recipient, tokens, artifacts, log = console.lo
      * doesn't have the mint() function
      */
     const fakeToken = await FakeToken.at(sf.tokens[tokenName].address);
-    await fakeToken.methods['mint(address,uint256)'](recipient, INITIAL_BALANCE);
 
-    log(`${INITIAL_BALANCE} tokens minted for test account: ${recipient}`);
+    for (recipient of recipients) {
+      await fakeToken.methods['mint(address,uint256)'](recipient, INITIAL_BALANCE);
+
+      log(`${INITIAL_BALANCE} ${tokenName} tokens minted for test account: ${recipient}`);
+    }
   }
+};
+
+const upgradeTokens = async (sf, tokens, accounts, amount, log = console.log) => {
+  for (let i = 0; i < tokens.length; i++) {
+    const testToken = sf.tokens[tokens[i]];
+    const superToken = sf.superTokens[`${tokens[i]}x`];
+
+    for (account of accounts) {
+      await testToken.approve(superToken.address, amount, { from: account });
+      await superToken.upgrade(amount, { from: account });
+      log(`${amount} tokens ${superToken.address} upgraded for ${account}`);
+    }
+  }
+};
+
+const sendTokensToAgent = async (sf, flowFinance, sender, tokens, amount) => {
+  const testToken = sf.tokens[tokens[0]];
+  const superToken = sf.superTokens[`${tokens[0]}x`];
+
+  await testToken.approve(superToken.address, amount, { from: sender });
+  await superToken.upgrade(amount, { from: sender });
+
+  await superToken.approve(flowFinance.address, amount, { from: sender });
+  await flowFinance.deposit(superToken.address, amount, true, { from: sender });
 };
 
 const setUpSuperfluid = async (tokens, web3, deployer, cb = () => {}, log = console.log) => {
@@ -141,15 +171,3 @@ const setUpAgent = async (dao, artifacts, log = console.log) => {
 
 const createAppPermission = (acl, appAddress, appPermission) =>
   acl.createPermission(ANY_ENTITY, appAddress, appPermission, ANY_ENTITY);
-
-const sendTokensToAgent = async (sf, flowFinance, sender, tokens) => {
-  const testToken = await sf.tokens[tokens[0]];
-  const superToken = sf.superTokens[`${tokens[0]}x`];
-  const amount = INITIAL_BALANCE.div(2);
-
-  await testToken.approve(superToken.address, amount, { from: sender });
-  await superToken.upgrade(amount, { from: sender });
-
-  await superToken.approve(flowFinance.address, amount, { from: sender });
-  await flowFinance.deposit(superToken.address, amount, true, { from: sender });
-};
