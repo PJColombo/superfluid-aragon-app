@@ -1,9 +1,16 @@
 import { BN } from 'bn.js';
 import { timestampToDate } from './helpers';
 
+const INITIAL_STATE = {
+  agentAddress: '',
+  flows: [],
+  superTokens: [],
+  isSyncing: true,
+};
+
 const appStateReducer = state => {
   if (state === null) {
-    return { isSyncing: true };
+    return { ...INITIAL_STATE };
   }
 
   return {
@@ -13,6 +20,7 @@ const appStateReducer = state => {
       balance: new BN(superToken.balance),
       lastUpdateDate: timestampToDate(superToken.lastUpdateTimestamp),
       netFlow: new BN(superToken.netFlow),
+      decimals: parseInt(superToken.decimals),
     })),
     flows: state.flows.map(flow => ({
       ...flow,

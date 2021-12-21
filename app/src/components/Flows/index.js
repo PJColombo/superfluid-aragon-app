@@ -24,7 +24,7 @@ import FlowsFilters from './FlowsFilters';
 const formatDate = date => format(date, 'yyyy-MM-dd');
 const MONTH_BN = new BN(MONTH);
 
-export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
+export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   const { appState, network } = useAragonApi();
   const connectedAccount = useConnectedAccount();
   const { layoutName } = useLayout();
@@ -203,7 +203,7 @@ export default React.memo(({ flows, tokens, onUpdateFlow, onDeleteFlow }) => {
         ];
       }}
       renderEntryActions={({ superTokenAddress, entity }) => (
-        <ContextMenu zIndex={1}>
+        <ContextMenu disabled={disableMenu} zIndex={1}>
           <ContextMenuUpdateFlow
             onUpdateFlow={() =>
               onUpdateFlow({ updateSuperTokenAddress: superTokenAddress, updateRecipient: entity })

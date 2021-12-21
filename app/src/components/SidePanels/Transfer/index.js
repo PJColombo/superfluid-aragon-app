@@ -1,9 +1,14 @@
 import { GU, SidePanel, Tabs } from '@aragon/ui';
 import React, { useState } from 'react';
 import BaseSidePanel from '../BaseSidePanel';
+import Deposit from './Deposit';
+import Withdrawal from './Withdrawal';
 
-const Transfer = React.memo(({ panelState, onTransfer }) => {
-  const [selectedTab, setSelectedTab] = useState(0);
+const DEFAULT_SELECTED_TAB = 0;
+
+const Transfer = React.memo(({ panelState, superTokens, onDeposit, onWithdrawal }) => {
+  const [selectedTab, setSelectedTab] = useState(DEFAULT_SELECTED_TAB);
+
   return (
     <BaseSidePanel disableMargin panelState={panelState} title="Transfer Super Tokens">
       <div
@@ -11,8 +16,13 @@ const Transfer = React.memo(({ panelState, onTransfer }) => {
           margin: 0 -${SidePanel.HORIZONTAL_PADDING}px ${3 * GU}px;
         `}
       >
-        <Tabs items={['Deposit', 'Withdraw']} selected={selectedTab} onChange={setSelectedTab} />
+        <Tabs items={['Deposit', 'Withdrawal']} selected={selectedTab} onChange={setSelectedTab} />
       </div>
+      {selectedTab === 0 ? (
+        <Deposit superTokens={superTokens} onDeposit={onDeposit} />
+      ) : (
+        <Withdrawal superTokens={superTokens} onWithdrawal={onWithdrawal} />
+      )}
     </BaseSidePanel>
   );
 });

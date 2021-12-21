@@ -16,12 +16,13 @@ import { isSuperToken, loadTokenData, loadTokenHolderBalance } from '../../helpe
 import TokenSelectorInstance from './TokenSelectorInstance';
 
 export const INITIAL_TOKEN = {
-  index: 0,
+  index: -2,
   address: '',
   data: {},
 };
 
-const getTokenIndex = (index, allowCustomToken) => (allowCustomToken ? index - 1 : index);
+const toTokenItemsIndex = (index, allowCustomToken) => (allowCustomToken ? index + 1 : index);
+const fromTokenItemsIndex = (index, allowCustomToken) => (allowCustomToken ? index - 1 : index);
 
 const TokenSelector = ({
   tokens,
@@ -44,27 +45,30 @@ const TokenSelector = ({
 
     return allowCustomToken ? ['Other…', ...items] : items;
   }, [allowCustomToken, tokens]);
-  const token = tokens[getTokenIndex(selectedIndex, allowCustomToken)];
+  const token = tokens[selectedIndex];
+  const tokenItemsIndex = toTokenItemsIndex(selectedIndex, allowCustomToken);
   const selectedToken =
-    selectedIndex === 0
+    tokenItemsIndex === 0
       ? customToken
-      : selectedIndex > 0
+      : tokenItemsIndex > 0
       ? {
-          index: selectedIndex,
+          index: tokenItemsIndex,
           address: token.address,
           data: { decimals: token.decimals, symbol: token.symbol },
         }
       : null;
-  const customTokenEnabled = allowCustomToken && selectedIndex === 0;
+  const customTokenEnabled = allowCustomToken && tokenItemsIndex === 0;
 
   const handleDropDownChange = useCallback(
     index => {
       setCustomToken(INITIAL_TOKEN);
       setUserBalance();
 
+      const adjustedIndex = fromTokenItemsIndex(index, allowCustomToken);
+
       onChange({
-        index,
-        address: customTokenEnabled ? '' : tokens[getTokenIndex(index, allowCustomToken)]?.address,
+        index: adjustedIndex,
+        address: allowCustomToken && index === 0 ? '' : tokens[adjustedIndex].address,
       });
     },
     [allowCustomToken, customToken.address, tokens, onChange]
@@ -74,7 +78,7 @@ const TokenSelector = ({
     setCustomToken({ ...INITIAL_TOKEN, address: value });
     setUserBalance();
 
-    onChange({ ...INITIAL_TOKEN, address: value, index: 0 });
+    onChange({ address: value, index: fromTokenItemsIndex(0) });
   });
 
   useEffect(() => {
@@ -114,7 +118,7 @@ const TokenSelector = ({
           header="Token"
           placeholder="Select a token"
           items={tokenItems}
-          selected={selectedIndex}
+          selected={tokenItemsIndex}
           onChange={handleDropDownChange}
           required
           wide
@@ -136,7 +140,7 @@ const TokenSelector = ({
       )}
       {!!userBalance && (
         <SelectedTokenBalance
-          token={selectedIndex === 0 ? customToken : selectedToken}
+          token={tokenItemsIndex === 0 ? customToken : selectedToken}
           userBalance={userBalance}
           networkType={network.type}
         />
