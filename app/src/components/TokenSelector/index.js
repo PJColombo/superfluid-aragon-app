@@ -71,15 +71,18 @@ const TokenSelector = ({
         address: allowCustomToken && index === 0 ? '' : tokens[adjustedIndex].address,
       });
     },
-    [allowCustomToken, customToken.address, tokens, onChange]
+    [allowCustomToken, tokens, onChange]
   );
 
-  const handleCustomTokenAddressChange = useCallback(({ target: { value } }) => {
-    setCustomToken({ ...INITIAL_TOKEN, address: value });
-    setUserBalance();
+  const handleCustomTokenAddressChange = useCallback(
+    ({ target: { value } }) => {
+      setCustomToken({ ...INITIAL_TOKEN, address: value });
+      setUserBalance();
 
-    onChange({ address: value, index: fromTokenItemsIndex(0) });
-  });
+      onChange({ address: value, index: fromTokenItemsIndex(0) });
+    },
+    [onChange]
+  );
 
   useEffect(() => {
     const fetchTokenData = async (address, index, holder) => {
@@ -102,14 +105,15 @@ const TokenSelector = ({
       }
     };
 
-    const { address, index } = selectedToken || {};
+    const tokenAddress = selectedToken?.address;
+    const tokenIndex = selectedToken?.index;
 
-    if (!address || !isAddress(address) || !connectedAccount) {
+    if (!tokenAddress || !isAddress(tokenAddress) || !connectedAccount) {
       return;
     }
 
-    fetchTokenData(address, index, connectedAccount);
-  }, [connectedAccount, selectedToken?.index, selectedToken?.address]);
+    fetchTokenData(selectedToken.address, tokenIndex, connectedAccount);
+  }, [api, connectedAccount, selectedToken?.index, selectedToken?.address, onError]);
 
   return (
     <React.Fragment>

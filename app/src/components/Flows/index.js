@@ -26,10 +26,10 @@ const MONTH_BN = new BN(MONTH);
 
 export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   const { appState, network } = useAragonApi();
+  const { isSyncing } = appState;
   const connectedAccount = useConnectedAccount();
   const { layoutName } = useLayout();
   const theme = useTheme();
-  const { isSyncing } = appState;
 
   const {
     emptyResultsViaFilters,
@@ -62,14 +62,14 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
         // Sort by date descending
         compareDesc(dateLeft, dateRight)
       ),
-    [filteredFlows, compareDesc]
+    [filteredFlows]
   );
 
   const dataViewStatus = useMemo(() => {
     if (emptyResultsViaFilters && flows.length > 0) {
       return 'empty-filters';
     }
-    if (appState.isSyncing) {
+    if (isSyncing) {
       return 'loading';
     }
     return 'default';

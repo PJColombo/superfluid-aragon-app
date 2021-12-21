@@ -1,5 +1,5 @@
 import { useAragonApi } from '@aragon/api-react';
-import { Bar, Button, GU, Header, IconAdd, IconCoin, Main, SyncIndicator } from '@aragon/ui';
+import { Button, GU, Header, IconAdd, IconCoin, Main, SyncIndicator } from '@aragon/ui';
 import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
@@ -8,12 +8,12 @@ import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
-  const { guiStyle, appState } = useAragonApi();
+  const { guiStyle, appState, connectedAccount } = useAragonApi();
   const { superTokens, flows } = appState;
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
-  const { deleteFlow, updateFlow } = actions;
+  const { deleteFlow, deposit, updateFlow } = actions;
   const { appearance } = guiStyle;
-  const disableButtons = isSyncing;
+  const disableButtons = isSyncing || !connectedAccount;
 
   return (
     <Main theme={appearance} assetsUrl="./aragon-ui">
@@ -69,6 +69,7 @@ function App() {
               tokens={superTokens}
               onUpdateFlow={createFlowPanel.requestOpen}
               onDeleteFlow={deleteFlow}
+              disableMenu={disableButtons}
             />
             <Convert panelState={convertPanel} superTokens={superTokens} onConvert={() => {}} />
             <UpdateFlow
@@ -76,7 +77,7 @@ function App() {
               superTokens={superTokens}
               onUpdateFlow={updateFlow}
             />
-            <Transfer panelState={transferPanel} superTokens={superTokens} />
+            <Transfer panelState={transferPanel} superTokens={superTokens} onDeposit={deposit} />
           </React.Fragment>
         }
       </IdentityProvider>

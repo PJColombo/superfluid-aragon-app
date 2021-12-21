@@ -19,7 +19,7 @@ const FlowRateField = ({ onChange = noop }) => {
       setRateValue(value);
       onChange(computeFlowRate(value, RATE_IN_SECONDS[selectedRate]));
     },
-    [selectedRate, setRateValue]
+    [selectedRate, setRateValue, onChange]
   );
 
   return (

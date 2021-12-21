@@ -85,7 +85,7 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
     return () => {
       clear();
     };
-  }, [panelState.didOpen]);
+  }, [panelState.didOpen, isFlowUpdate]);
 
   return (
     <BaseSidePanel title={isFlowUpdate ? 'Update Flow' : 'Create Flow'} panelState={panelState}>

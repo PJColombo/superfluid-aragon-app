@@ -23,7 +23,7 @@ function useBalanceItems(superTokens) {
       },
       [superTokens]
     );
-  });
+  }, [superTokens]);
   return balanceItems;
 }
 
