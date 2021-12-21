@@ -27,8 +27,8 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
       state,
       tokenAddress,
       tokenContract,
-      addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate,
-      timestamp
+      timestamp,
+      addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
     ),
     updateFlows(state, event, timestamp, settings.superfluid.cfa.contract),
   ]);
@@ -80,8 +80,8 @@ const updateSuperTokens = async (
   { superTokens: oldSuperTokens, agentAddress },
   tokenAddress,
   tokenContract,
-  netFlow,
-  updateTimestamp
+  updateTimestamp,
+  netFlow
 ) => {
   const newSuperTokens = [...oldSuperTokens];
   let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
