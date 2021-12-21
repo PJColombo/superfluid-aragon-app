@@ -1,6 +1,6 @@
 import { addressesEqual, Button, Field, LoadingRing } from '@aragon/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import TokenSelector from '../../TokenSelector';
+import TokenSelector, { INITIAL_TOKEN } from '../../TokenSelector';
 import BaseSidePanel from '../BaseSidePanel';
 import ValidationError from '../../ValidationError';
 import { addressPattern } from '../../../helpers';
@@ -8,12 +8,6 @@ import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import { isAddress } from 'web3-utils';
 import { useAppState } from '@aragon/api-react';
 import FlowRateField from './FlowRateField';
-
-const NULL_SELECTED_TOKEN = -1;
-const INITIAL_TOKEN = {
-  address: '',
-  index: NULL_SELECTED_TOKEN,
-};
 
 export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
   const { agentAddress } = useAppState();
