@@ -8,7 +8,7 @@ node_modules
 
 
 # build dir
-abi
+/abi
 dist
 cache
 artifacts

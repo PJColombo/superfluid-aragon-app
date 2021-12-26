@@ -1,0 +1,83 @@
+[
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "getFlow",
+    "outputs": [
+      {
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "name": "flowRate",
+        "type": "int96"
+      },
+      {
+        "name": "deposit",
+        "type": "uint256"
+      },
+      {
+        "name": "owedDeposit",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "flowRate",
+        "type": "int96"
+      },
+      {
+        "indexed": false,
+        "name": "totalSenderFlowRate",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "name": "totalReceiverFlowRate",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "name": "userData",
+        "type": "bytes"
+      }
+    ],
+    "name": "FlowUpdated",
+    "type": "event"
+  }
+]
