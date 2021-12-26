@@ -73,7 +73,13 @@ export const retryEvery = async (
   return attempt();
 };
 
-export const subscribeToExternals = (app, externalApps, topics, blockNumbersCache, initialBlock) =>
+export const subscribeToExternals = (
+  app,
+  externalApps,
+  topics = [],
+  blockNumbersCache,
+  initialBlock
+) =>
   Promise.all(
     externalApps.map((externalApp, index) =>
       subscribeToExternal(
@@ -83,8 +89,7 @@ export const subscribeToExternals = (app, externalApps, topics, blockNumbersCach
         blockNumbersCache,
         initialBlock,
         index === 0 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCING }] : [],
-        index === externalApps.length - 1 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCED }] : [],
-        index
+        index === externalApps.length - 1 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCED }] : []
       )
     )
   );
@@ -96,11 +101,9 @@ export const subscribeToExternal = async (
   blockNumbersCache,
   initialBlock = 0,
   customInitialEvents = [],
-  customFinalEvents = [],
-  index
+  customFinalEvents = []
 ) => {
   const topicsField = !!topics && { topics };
-  console.log({ ...topicsField });
   const contractAddress = external.address;
   const contract = external.contract;
   const cachedBlockNumber = blockNumbersCache[contractAddress];
@@ -126,18 +129,6 @@ export const subscribeToExternal = async (
       - Listening to current events from ${currentBlock}.`
   );
 
-  console.log(
-    ...[
-      ...customInitialEvents,
-      {
-        event: EXTERNAL_SUBSCRIPTION_SYNCING,
-        returnValues: {
-          address: contractAddress,
-          blockNumber: cachedPastEventsFromBlock,
-        },
-      },
-    ]
-  );
   const pastEvents$ = contract
     .pastEvents({
       ...topicsField,
@@ -192,12 +183,13 @@ export const subscribeToExternal = async (
     fromBlock: currentBlock,
   });
 
-  return concat(
-    pastEvents$,
-    lastEvents$,
-    currentEvents$
-  ).subscribe(({ event, returnValues, address, blockNumber }) =>
-    app.emitTrigger(event, { ...returnValues, _address: address, _blockNumber: blockNumber })
+  return concat(pastEvents$, lastEvents$, currentEvents$).subscribe(
+    ({ event, returnValues, address, blockNumber }) =>
+      app.emitTrigger(event, {
+        ...returnValues,
+        _address: address,
+        _blockNumber: blockNumber,
+      })
   );
 };
 

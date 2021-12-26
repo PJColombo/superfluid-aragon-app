@@ -65,7 +65,6 @@ const initialize = async agentAddress => {
           // Custom external subscriptions events
           case EXTERNAL_SUBSCRIPTION_CACHED:
             const { _address: externalAddress, blockNumber } = event.returnValues;
-            console.log(`Reciving subscription event: ${externalAddress}`);
             return {
               ...state,
               blockNumbersCache: {
@@ -74,8 +73,6 @@ const initialize = async agentAddress => {
               },
             };
           case EXTERNAL_SUBSCRIPTIONS_SYNCED:
-            console.log(`Reciving subscription event: ${event.returnValues.address}`);
-
             return { ...state, isSyncing: false };
           // Flow Finance events
           case 'SetAgent':

@@ -1,6 +1,7 @@
 import { addressesEqual } from '../helpers/web3-helpers';
 import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
-import superTokenABI from '../abi/SuperToken.json';
+import erc20Abi from '../abi/ERC20.json';
+import superTokenABI from '../abi/SuperToken.js';
 
 const superTokenContracts = new Map();
 
@@ -19,14 +20,13 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
     return state;
   }
 
-  const tokenContract = getSuperTokenContract(tokenAddress, app);
   const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
   const [newSuperTokens, newFlows] = await Promise.all([
     updateSuperTokens(
       state,
+      app,
       tokenAddress,
-      tokenContract,
       timestamp,
       addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
     ),
@@ -42,12 +42,11 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
 
 export const handleVaultEvent = async (state, event, app) => {
   const { token: tokenAddress, _blockNumber } = event.returnValues;
-  const tokenContract = getSuperTokenContract(tokenAddress, app);
   const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
   return {
     ...state,
-    superTokens: await updateSuperTokens(state, tokenAddress, tokenContract, timestamp),
+    superTokens: await updateSuperTokens(state, app, tokenAddress, timestamp),
   };
 };
 
@@ -58,9 +57,7 @@ export const handleSetAgent = async (
 ) => {
   console.log('Should unsubscribe from previous agent and subscribe to the new one');
 
-  // Cancel all old agent's subscriptions
-
-  // Subscribe to new agent
+  // TODO: Implement handler (cancel all old agent's subscriptions and subscribe to the new one)
 };
 
 const isAgentSender = (agentAddress, sender, receiver) => {
@@ -78,23 +75,31 @@ const getSuperTokenContract = (tokenAddress, app) => {
 
 const updateSuperTokens = async (
   { superTokens: oldSuperTokens, agentAddress },
+  app,
   tokenAddress,
-  tokenContract,
   updateTimestamp,
   netFlow
 ) => {
+  const tokenContract = getSuperTokenContract(tokenAddress, app);
   const newSuperTokens = [...oldSuperTokens];
   let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
     addressesEqual(tokenAddress, address)
   );
-  const updatedToken = {
-    ...(superTokenIndex === -1
-      ? await newSuperToken(tokenContract)
-      : oldSuperTokens[superTokenIndex]),
-    address: tokenAddress,
-    lastUpdateTimestamp: updateTimestamp,
-    balance: await tokenContract.balanceOf(agentAddress).toPromise(),
-  };
+  let updatedToken;
+
+  if (superTokenIndex === -1) {
+    updatedToken = {
+      ...(await newSuperToken(tokenContract, app)),
+    };
+  } else {
+    updatedToken = {
+      ...oldSuperTokens[superTokenIndex],
+    };
+  }
+
+  updatedToken.address = tokenAddress;
+  updatedToken.lastUpdateTimestamp = updateTimestamp;
+  updatedToken.balance = await tokenContract.balanceOf(agentAddress).toPromise();
 
   if (typeof netFlow !== 'undefined') {
     updatedToken.netFlow = netFlow;
@@ -147,19 +152,31 @@ const updateFlows = async (state, event, updateTimestamp) => {
   return newFlows;
 };
 
-const newSuperToken = async tokenContract => {
-  const [name, decimals, symbol, underlyingToken] = await Promise.all([
+const newSuperToken = async (tokenContract, app) => {
+  const [name, decimals, symbol, underlyingTokenAddress] = await Promise.all([
     tokenContract.name().toPromise(),
     tokenContract.decimals().toPromise(),
     tokenContract.symbol().toPromise(),
     tokenContract.getUnderlyingToken().toPromise(),
   ]);
 
+  const underlyingTokenContract = app.external(underlyingTokenAddress, erc20Abi);
+  const [underlyingName, underlyingDecimals, underlyingSymbol] = await Promise.all([
+    underlyingTokenContract.name().toPromise(),
+    underlyingTokenContract.decimals().toPromise(),
+    underlyingTokenContract.symbol().toPromise(),
+  ]);
+
   return {
     decimals,
     name,
     symbol,
-    underlyingToken,
+    underlyingToken: {
+      address: underlyingTokenAddress,
+      name: underlyingName,
+      decimals: underlyingDecimals,
+      symbol: underlyingSymbol,
+    },
     netFlow: 0,
     balance: 0,
   };
