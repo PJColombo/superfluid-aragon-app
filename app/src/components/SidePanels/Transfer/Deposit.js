@@ -2,17 +2,17 @@ import { Button, Field, GU, Info, TextInput } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toDecimals } from '../../../helpers';
 import SuperTokensLink from '../../SuperTokensLink';
-import TokenSelector, { INITIAL_TOKEN } from '../../TokenSelector';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import ValidationError from '../../ValidationError';
 
 const Deposit = ({ superTokens, onDeposit }) => {
-  const [selectedToken, setSelectedToken] = useState(INITIAL_TOKEN);
+  const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [amount, setAmount] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const disableSubmit = Boolean(errorMessage || !selectedToken.address || !amount);
 
   const clear = () => {
-    setSelectedToken(INITIAL_TOKEN);
+    setSelectedToken(INITIAL_SELECTED_TOKEN);
     setAmount(0);
     setErrorMessage('');
   };
@@ -29,10 +29,15 @@ const Deposit = ({ superTokens, onDeposit }) => {
   const handleSubmit = async event => {
     event.preventDefault();
 
-    const adjustedAmount = toDecimals(amount, superTokens[selectedToken.index].decimals);
+    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
 
     onDeposit(selectedToken.address, adjustedAmount, true);
   };
+
+  const handleTokenSelectorError = useCallback(
+    (msg, ...params) => setErrorMessage(msg ?? 'Token provided must be a valid Super Token.'),
+    []
+  );
 
   // handle reset when opening
   useEffect(() => {
@@ -46,9 +51,10 @@ const Deposit = ({ superTokens, onDeposit }) => {
       <form onSubmit={handleSubmit}>
         <TokenSelector
           tokens={superTokens}
-          selectedIndex={selectedToken.index}
+          selectedToken={selectedToken}
           onChange={handleTokenChange}
-          onError={setErrorMessage}
+          onError={handleTokenSelectorError}
+          loadUserBalance
           allowCustomToken
         />
         <Field label="Amount" required>
@@ -57,8 +63,8 @@ const Deposit = ({ superTokens, onDeposit }) => {
             value={amount}
             min={0}
             step="any"
-            wide
             onChange={handleAmountChange}
+            wide
           />
         </Field>
         <Button mode="strong" type="submit" disabled={disableSubmit} wide>
@@ -74,7 +80,7 @@ const Deposit = ({ superTokens, onDeposit }) => {
         <Info>
           The Flow Finance app expects to receive {<SuperTokensLink />}. <br />
           If you don&apos;t have any, go to the &quot;Convert Token&quot; side panel to convert some
-          of your ERC20 to their Super Token counterpart.
+          of your ERC20 to their Super Token version.
         </Info>
       </div>
     </div>

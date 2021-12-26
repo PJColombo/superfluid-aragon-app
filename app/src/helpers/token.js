@@ -1,9 +1,9 @@
-import superTokenABI from '../abi/SuperToken.json';
+import superTokenABI from '../abi/SuperToken.js';
 
 export const isSuperToken = async (tokenAddress, app) => {
-  const superToken = app.external(tokenAddress, superTokenABI);
-
   try {
+    const superToken = app.external(tokenAddress, superTokenABI);
+
     await superToken.getHost().toPromise();
     return true;
   } catch (err) {

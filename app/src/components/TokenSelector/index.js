@@ -4,7 +4,6 @@ import {
   Field,
   formatTokenAmount,
   GU,
-  isAddress,
   noop,
   TextInput,
   textStyle,
@@ -12,13 +11,15 @@ import {
   useTheme,
 } from '@aragon/ui';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { isAddress } from 'web3-utils';
 import { isSuperToken, loadTokenData, loadTokenHolderBalance } from '../../helpers';
 import TokenSelectorInstance from './TokenSelectorInstance';
 
-export const INITIAL_TOKEN = {
+export const INITIAL_SELECTED_TOKEN = {
   index: -2,
   address: '',
   data: {},
+  loadingData: false,
 };
 
 const toTokenItemsIndex = (index, allowCustomToken) => (allowCustomToken ? index + 1 : index);
@@ -28,92 +29,113 @@ const TokenSelector = ({
   tokens,
   disabled = false,
   label = 'Token',
-  selectedIndex,
+  customTokenLabel = 'Token address',
+  selectedToken,
   allowCustomToken = false,
+  loadUserBalance = false,
   onChange,
+  validateToken = isSuperToken,
   onError = noop,
 }) => {
   const { api, connectedAccount, network } = useAragonApi();
-  const [customToken, setCustomToken] = useState(INITIAL_TOKEN);
-  const [userBalance, setUserBalance] = useState();
+  const [customTokenAddress, setCustomTokenAddress] = useState('');
   const tokenItems = useMemo(() => {
-    const items = [
-      tokens.map(({ address, name, symbol }) => (
-        <TokenSelectorInstance key={address} address={address} name={name} symbol={symbol} />
-      )),
-    ];
+    const items = tokens.map(({ address, name, symbol }) => (
+      <TokenSelectorInstance key={address} address={address} name={name} symbol={symbol} />
+    ));
 
     return allowCustomToken ? ['Other…', ...items] : items;
   }, [allowCustomToken, tokens]);
-  const token = tokens[selectedIndex];
-  const tokenItemsIndex = toTokenItemsIndex(selectedIndex, allowCustomToken);
-  const selectedToken =
-    tokenItemsIndex === 0
-      ? customToken
-      : tokenItemsIndex > 0
-      ? {
-          index: tokenItemsIndex,
-          address: token.address,
-          data: { decimals: token.decimals, symbol: token.symbol },
-        }
-      : null;
-  const customTokenEnabled = allowCustomToken && tokenItemsIndex === 0;
+  const adjustedTokenIndex = toTokenItemsIndex(selectedToken.index, allowCustomToken);
+  const customTokenEnabled = allowCustomToken && adjustedTokenIndex === 0;
 
   const handleDropDownChange = useCallback(
     index => {
-      setCustomToken(INITIAL_TOKEN);
-      setUserBalance();
+      setCustomTokenAddress('');
 
-      const adjustedIndex = fromTokenItemsIndex(index, allowCustomToken);
+      const tokenIndex = fromTokenItemsIndex(index, allowCustomToken);
+      const token = tokens[tokenIndex];
 
       onChange({
-        index: adjustedIndex,
-        address: allowCustomToken && index === 0 ? '' : tokens[adjustedIndex].address,
+        index: tokenIndex,
+        address: token ? token.address : '',
+        data: token ? { decimals: token.decimals, name: token.name, symbol: token.symbol } : {},
+        loadingData: loadUserBalance,
       });
     },
-    [allowCustomToken, tokens, onChange]
+    [allowCustomToken, loadUserBalance, tokens, onChange]
   );
 
   const handleCustomTokenAddressChange = useCallback(
     ({ target: { value } }) => {
-      setCustomToken({ ...INITIAL_TOKEN, address: value });
-      setUserBalance();
-
-      onChange({ address: value, index: fromTokenItemsIndex(0) });
+      setCustomTokenAddress(value);
+      onChange({ index: -1, address: value, data: {}, loadingData: true });
     },
     [onChange]
   );
 
   useEffect(() => {
-    const fetchTokenData = async (address, index, holder) => {
-      if (!(await isSuperToken(address, api))) {
-        onError('Token is not a valid Super Token.');
+    const fetchTokenData = async (address, selectedToken, holder, isCustomToken) => {
+      if (!(await validateToken(address, api))) {
+        onError(undefined, address);
         return;
       }
 
-      const accountBalance = await loadTokenHolderBalance(address, holder, api);
-      if (index === 0) {
-        const [decimals, , symbol] = await loadTokenData(address, api);
+      let tokenData = {};
+      let userBalance;
+      try {
+        if (isCustomToken) {
+          const [decimals, name, symbol] = await loadTokenData(address, api);
 
-        setCustomToken(prevCustomToken => ({ ...prevCustomToken, data: { decimals, symbol } }));
-      }
+          tokenData = { decimals, name, symbol };
+        } else {
+          tokenData = { ...selectedToken.data };
+        }
 
-      setUserBalance(accountBalance);
+        if (loadUserBalance) {
+          const userBalance = await loadTokenHolderBalance(address, holder, api);
+          tokenData.userBalance = userBalance;
+        }
 
-      if (accountBalance === '0') {
-        onError(`You don't have enough tokens to deposit.`);
+        onChange({
+          ...selectedToken,
+          address,
+          data: tokenData,
+          loadingData: false,
+        });
+
+        if (userBalance === '0') {
+          onError(`You don't have enough tokens to deposit.`);
+        }
+      } catch (err) {
+        onChange({ ...selectedToken, address, data: tokenData, loadingData: false });
+        console.error(err);
       }
     };
+    const isCustomToken =
+      !!customTokenAddress && customTokenAddress.length && selectedToken.index < 0;
+    const tokenAddress = isCustomToken ? customTokenAddress : selectedToken.address;
 
-    const tokenAddress = selectedToken?.address;
-    const tokenIndex = selectedToken?.index;
-
-    if (!tokenAddress || !isAddress(tokenAddress) || !connectedAccount) {
+    if (
+      !selectedToken.loadingData ||
+      !tokenAddress ||
+      !isAddress(tokenAddress) ||
+      !connectedAccount
+    ) {
       return;
     }
 
-    fetchTokenData(selectedToken.address, tokenIndex, connectedAccount);
-  }, [api, connectedAccount, selectedToken?.index, selectedToken?.address, onError]);
+    fetchTokenData(tokenAddress, selectedToken, connectedAccount, isCustomToken);
+  }, [
+    api,
+    connectedAccount,
+    customTokenAddress,
+    loadUserBalance,
+    selectedToken,
+    validateToken,
+    onChange,
+    onError,
+  ]);
 
   return (
     <React.Fragment>
@@ -122,7 +144,7 @@ const TokenSelector = ({
           header="Token"
           placeholder="Select a token"
           items={tokenItems}
-          selected={tokenItemsIndex}
+          selected={adjustedTokenIndex}
           onChange={handleDropDownChange}
           required
           wide
@@ -132,9 +154,9 @@ const TokenSelector = ({
 
       {customTokenEnabled && (
         <>
-          <Field label="Token address">
+          <Field label={customTokenLabel}>
             <TextInput
-              value={customToken.address}
+              value={customTokenAddress}
               onChange={handleCustomTokenAddressChange}
               required
               wide
@@ -142,50 +164,46 @@ const TokenSelector = ({
           </Field>
         </>
       )}
-      {!!userBalance && (
-        <SelectedTokenBalance
-          token={tokenItemsIndex === 0 ? customToken : selectedToken}
-          userBalance={userBalance}
-          networkType={network.type}
-        />
-      )}
+      {loadUserBalance && <SelectedTokenBalance token={selectedToken} networkType={network.type} />}
     </React.Fragment>
   );
 };
 
-const SelectedTokenBalance = React.memo(({ token, userBalance, networkType }) => {
+const SelectedTokenBalance = ({ token, networkType }) => {
   const theme = useTheme();
-  const { address, data: { decimals, symbol } = {} } = token;
+  const { address, data: { decimals, symbol, userBalance } = {} } = token;
+
+  if (!isAddress(address) || !userBalance) {
+    return null;
+  }
 
   return (
     <div
       css={`
-        ${textStyle('body3')}
+        ${textStyle('body3')};
         color: ${theme.surfaceContentSecondary};
         /* Adjust for Field's bottom margin */
         margin: -${2 * GU}px 0 ${3 * GU}px;
       `}
     >
-      {!isAddress(address) || !userBalance ? null : (
-        <div
+      <div
+        css={`
+          display: flex;
+          align-items: center;
+        `}
+      >
+        You have {userBalance === '0' ? 'no' : formatTokenAmount(userBalance, decimals)}{' '}
+        <span
           css={`
-            display: flex;
-            align-items: center;
+            margin: 0 ${0.5 * GU}px;
           `}
         >
-          You have {!userBalance ? 'no' : formatTokenAmount(userBalance, decimals)}{' '}
-          <span
-            css={`
-              margin: 0 ${0.5 * GU}px;
-            `}
-          >
-            <TokenBadge address={address} symbol={symbol} networkType={networkType} />
-          </span>
-          available.
-        </div>
-      )}
+          <TokenBadge address={address} symbol={symbol} networkType={networkType} />
+        </span>
+        available.
+      </div>
     </div>
   );
-});
+};
 
 export default TokenSelector;

@@ -1,6 +1,6 @@
 import { addressesEqual, Button, Field, LoadingRing } from '@aragon/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import TokenSelector, { INITIAL_TOKEN } from '../../TokenSelector';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import BaseSidePanel from '../BaseSidePanel';
 import ValidationError from '../../ValidationError';
 import { addressPattern } from '../../../helpers';
@@ -12,7 +12,7 @@ import FlowRateField from './FlowRateField';
 export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
   const { agentAddress } = useAppState();
   const [recipient, setRecipient] = useState('');
-  const [selectedToken, setSelectedToken] = useState(INITIAL_TOKEN);
+  const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState(0);
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
@@ -28,13 +28,13 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
 
   const clear = () => {
     setRecipient('');
-    setSelectedToken(INITIAL_TOKEN);
+    setSelectedToken(INITIAL_SELECTED_TOKEN);
     setFlowRate(0);
     setErrorMessage();
   };
 
-  const findSuperTokenIndexByAddress = address =>
-    superTokens.findIndex(superToken => addressesEqual(superToken.address, address));
+  const findSuperTokenByAddress = address =>
+    superTokens.find(superToken => addressesEqual(superToken.address, address));
 
   const handleTokenChange = useCallback(value => {
     setSelectedToken(value);
@@ -111,10 +111,8 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
         </Field>
         <TokenSelector
           tokens={superTokens}
-          selectedIndex={
-            isFlowUpdate
-              ? findSuperTokenIndexByAddress(updateSuperTokenAddress)
-              : selectedToken.index
+          selectedToken={
+            isFlowUpdate ? findSuperTokenByAddress(updateSuperTokenAddress) : selectedToken
           }
           disabled={isFlowUpdate}
           onChange={handleTokenChange}

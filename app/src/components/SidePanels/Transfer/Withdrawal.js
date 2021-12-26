@@ -3,10 +3,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { addressPattern } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SuperTokensLink from '../../SuperTokensLink';
-import TokenSelector, { INITIAL_TOKEN } from '../../TokenSelector';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 
 const Withdrawal = ({ superTokens, onWithdrawal }) => {
-  const [selectedToken, setSelectedToken] = useState(INITIAL_TOKEN);
+  const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -15,7 +15,7 @@ const Withdrawal = ({ superTokens, onWithdrawal }) => {
   const disableSubmit = Boolean(errorMessage || !recipient || !amount);
 
   const clear = () => {
-    setSelectedToken(INITIAL_TOKEN);
+    setSelectedToken(INITIAL_SELECTED_TOKEN);
     setRecipient('');
     setAmount(0);
     setErrorMessage('');
@@ -72,7 +72,7 @@ const Withdrawal = ({ superTokens, onWithdrawal }) => {
         </Field>
         <TokenSelector
           tokens={superTokens}
-          selectedIndex={selectedToken.index}
+          selectedToken={selectedToken}
           onChange={handleTokenChange}
         />
         <Field label="Amount" required>
