@@ -1,7 +1,7 @@
 {
   "name": "Flow Finance",
   "author": "Blossom Labs",
-  "description": "Manage an organization's fluid payments",
+  "description": "Manage an organization's fluid assets",
   "details_url": "/meta/details.md",
   "source_url": "https://github.com/BlossomLabs/aragon-superfluid",
   "icons": [
