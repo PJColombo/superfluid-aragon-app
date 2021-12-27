@@ -11,7 +11,7 @@ function App() {
   const { guiStyle, appState, connectedAccount } = useAragonApi();
   const { superTokens, flows } = appState;
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
-  const { deleteFlow, deposit, updateFlow } = actions;
+  const { convertTokens, deleteFlow, deposit, updateFlow } = actions;
   const { appearance } = guiStyle;
   const disableButtons = isSyncing || !connectedAccount;
 
@@ -31,6 +31,18 @@ function App() {
                   `}
                 >
                   <Button
+                    label="Convert"
+                    icon={<IconCoin />}
+                    display="label"
+                    onClick={convertPanel.requestOpen}
+                    disabled={disableButtons}
+                  />
+                  <Button
+                    label="Transfer"
+                    onClick={transferPanel.requestOpen}
+                    disabled={disableButtons}
+                  />
+                  <Button
                     mode="strong"
                     onClick={createFlowPanel.requestOpen}
                     label="Create Flow"
@@ -40,28 +52,6 @@ function App() {
                 </div>
               }
             />
-            <div
-              css={`
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: ${3 * GU}px;
-              `}
-            >
-              <Button
-                label="Convert Tokens"
-                icon={<IconCoin />}
-                display="label"
-                onClick={convertPanel.requestOpen}
-                disabled={disableButtons}
-              />
-              <Button
-                label="Transfer"
-                onClick={transferPanel.requestOpen}
-                disabled={disableButtons}
-              />
-            </div>
 
             <Balances superTokens={superTokens} />
             <Flows
@@ -71,7 +61,11 @@ function App() {
               onDeleteFlow={deleteFlow}
               disableMenu={disableButtons}
             />
-            <Convert panelState={convertPanel} superTokens={superTokens} onConvert={() => {}} />
+            <Convert
+              panelState={convertPanel}
+              superTokens={superTokens}
+              onConvert={convertTokens}
+            />
             <UpdateFlow
               panelState={createFlowPanel}
               superTokens={superTokens}

@@ -27,7 +27,7 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
   const requestClose = useCallback(() => {
     setVisible(false);
     setWaitTxPanel(false);
-    // Wait a little bit for the sidepanel close animation to end
+    // Wait a little bit for the side panel close animation to end
     setTimeout(() => setParams({}), 1000);
   }, [setVisible]);
 
@@ -47,8 +47,10 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
 
   const requestTransaction = useCallback((fn, params) => {
     setWaitTxPanel(true);
-    fn(...params);
-  });
+    fn(...params)
+      .then(() => setWaitTxPanel(false))
+      .catch(() => setWaitTxPanel(false));
+  }, []);
 
   return useMemo(
     () => ({

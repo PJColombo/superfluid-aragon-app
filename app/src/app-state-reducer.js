@@ -17,6 +17,10 @@ const appStateReducer = state => {
     ...state,
     superTokens: state.superTokens.map(superToken => ({
       ...superToken,
+      underlyingToken: {
+        ...superToken.underlyingToken,
+        decimals: parseInt(superToken.underlyingToken.decimals),
+      },
       balance: new BN(superToken.balance),
       lastUpdateDate: timestampToDate(superToken.lastUpdateTimestamp),
       netFlow: new BN(superToken.netFlow),

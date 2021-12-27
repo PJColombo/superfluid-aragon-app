@@ -1,8 +1,10 @@
 import { useApi, useAppState } from '@aragon/api-react';
 import { addressesEqual, noop } from '@aragon/ui';
 import { useCallback } from 'react';
+import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
 import { toDecimals } from './helpers';
+import { UPGRADE, DOWNGRADE } from './super-token-operations';
 
 export const useUpdateFlow = (onDone = noop) => {
   const api = useApi();
@@ -30,7 +32,7 @@ export const useUpdateFlow = (onDone = noop) => {
 
       onDone();
     },
-    [api]
+    [api, flows, onDone]
   );
 };
 
@@ -41,7 +43,7 @@ export const useDeleteFlow = (onDone = noop) => {
       api.deleteFlow(tokenAddress, receiver).toPromise();
       onDone();
     },
-    [api]
+    [api, onDone]
   );
 };
 
@@ -52,12 +54,37 @@ export const useDeposit = (onDone = noop) => {
     async (tokenAddress, amount, isExternalDeposit) => {
       const intentParams = {
         token: { address: tokenAddress, value: amount },
-        // gas: 500000,
       };
       await api.deposit(tokenAddress, amount, isExternalDeposit, intentParams).toPromise();
       onDone();
     },
-    [api]
+    [api, onDone]
+  );
+};
+
+export const useConvertTokens = (onDone = noop) => {
+  const api = useApi();
+
+  return useCallback(
+    async (operation, superTokenAddress, amount) => {
+      const superToken = api.external(superTokenAddress, superTokenAbi);
+      const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
+
+      const intentParams = {
+        token: { address: underlyingTokenAddress, value: amount },
+      };
+
+      if (operation === UPGRADE) {
+        await superToken.upgrade(amount, intentParams).toPromise();
+      } else if (operation === DOWNGRADE) {
+        await superToken.downgrade(amount, intentParams).toPromise();
+      } else {
+        throw new Error('Convert operation unknown');
+      }
+
+      onDone();
+    },
+    [api, onDone]
   );
 };
 
@@ -72,6 +99,7 @@ export function useAppLogic() {
     updateFlow: useUpdateFlow(createFlowPanel.requestClose),
     deleteFlow: useDeleteFlow(),
     deposit: useDeposit(transferPanel.requestClose),
+    convertTokens: useConvertTokens(convertPanel.requestClose),
   };
 
   return {

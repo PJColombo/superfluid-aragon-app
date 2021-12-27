@@ -4,7 +4,6 @@ import {
   Field,
   formatTokenAmount,
   GU,
-  noop,
   TextInput,
   textStyle,
   TokenBadge,
@@ -15,6 +14,8 @@ import { isAddress } from 'web3-utils';
 import { isSuperToken, loadTokenData, loadTokenHolderBalance } from '../../helpers';
 import TokenSelectorInstance from './TokenSelectorInstance';
 
+const CUSTOM_TOKEN_INDEX = -1;
+
 export const INITIAL_SELECTED_TOKEN = {
   index: -2,
   address: '',
@@ -22,20 +23,24 @@ export const INITIAL_SELECTED_TOKEN = {
   loadingData: false,
 };
 
+export const INVALID_TOKEN_ERROR = Symbol('INVALID_TOKEN_ERROR');
+export const NO_TOKEN_BALANCE_ERROR = Symbol('NO_TOKEN_BALANCE_ERROR');
+export const FETCH_TOKEN_ERROR = Symbol('FETCH_TOKEN_ERROR');
+
 const toTokenItemsIndex = (index, allowCustomToken) => (allowCustomToken ? index + 1 : index);
 const fromTokenItemsIndex = (index, allowCustomToken) => (allowCustomToken ? index - 1 : index);
 
 const TokenSelector = ({
   tokens,
   disabled = false,
-  label = 'Token',
-  customTokenLabel = 'Token address',
+  label = 'Super Token',
+  customTokenLabel = 'Super Token address',
   selectedToken,
   allowCustomToken = false,
   loadUserBalance = false,
   onChange,
+  processCustomToken = address => address,
   validateToken = isSuperToken,
-  onError = noop,
 }) => {
   const { api, connectedAccount, network } = useAragonApi();
   const [customTokenAddress, setCustomTokenAddress] = useState('');
@@ -69,51 +74,54 @@ const TokenSelector = ({
   const handleCustomTokenAddressChange = useCallback(
     ({ target: { value } }) => {
       setCustomTokenAddress(value);
-      onChange({ index: -1, address: value, data: {}, loadingData: true });
+      onChange({ index: CUSTOM_TOKEN_INDEX, address: value, data: {}, loadingData: true });
     },
     [onChange]
   );
 
   useEffect(() => {
     const fetchTokenData = async (address, selectedToken, holder, isCustomToken) => {
-      if (!(await validateToken(address, api))) {
-        onError(undefined, address);
+      if (isCustomToken && !(await validateToken(address, api))) {
+        onChange({ ...selectedToken, loadingData: false, error: INVALID_TOKEN_ERROR });
         return;
       }
 
-      let tokenData = {};
-      let userBalance;
+      const processedAddress = isCustomToken ? await processCustomToken(address, api) : address;
+      let updatedToken = { ...selectedToken, address: processedAddress, loadingData: false };
       try {
         if (isCustomToken) {
-          const [decimals, name, symbol] = await loadTokenData(address, api);
+          const [decimals, name, symbol] = await loadTokenData(processedAddress, api);
 
-          tokenData = { decimals, name, symbol };
+          updatedToken.data = { decimals, name, symbol };
         } else {
-          tokenData = { ...selectedToken.data };
+          updatedToken.data = { ...selectedToken.data };
         }
 
         if (loadUserBalance) {
-          const userBalance = await loadTokenHolderBalance(address, holder, api);
-          tokenData.userBalance = userBalance;
+          const userBalance = await loadTokenHolderBalance(processedAddress, holder, api);
+          updatedToken.data.userBalance = userBalance;
         }
 
+        if (!updatedToken.data.userBalance || updatedToken.data.userBalance === '0') {
+          updatedToken.error = NO_TOKEN_BALANCE_ERROR;
+        }
+        onChange(updatedToken);
+      } catch (err) {
+        updatedToken.error = FETCH_TOKEN_ERROR;
         onChange({
           ...selectedToken,
-          address,
-          data: tokenData,
+          address: processedAddress,
           loadingData: false,
+          error: FETCH_TOKEN_ERROR,
         });
-
-        if (userBalance === '0') {
-          onError(`You don't have enough tokens to deposit.`);
-        }
-      } catch (err) {
-        onChange({ ...selectedToken, address, data: tokenData, loadingData: false });
         console.error(err);
       }
     };
+
     const isCustomToken =
-      !!customTokenAddress && customTokenAddress.length && selectedToken.index < 0;
+      !!customTokenAddress &&
+      customTokenAddress.length &&
+      selectedToken.index === CUSTOM_TOKEN_INDEX;
     const tokenAddress = isCustomToken ? customTokenAddress : selectedToken.address;
 
     if (
@@ -132,16 +140,16 @@ const TokenSelector = ({
     customTokenAddress,
     loadUserBalance,
     selectedToken,
+    processCustomToken,
     validateToken,
     onChange,
-    onError,
   ]);
 
   return (
     <React.Fragment>
       <Field label={label}>
         <DropDown
-          header="Token"
+          header={label}
           placeholder="Select a token"
           items={tokenItems}
           selected={adjustedTokenIndex}

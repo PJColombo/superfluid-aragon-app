@@ -1,9 +1,12 @@
 import { GU, SidePanel, Tabs } from '@aragon/ui';
 import React, { useState } from 'react';
 import BaseSidePanel from '../BaseSidePanel';
+import Downgrade from './Downgrade';
+import Upgrade from './Upgrade';
 
-const Transfer = React.memo(({ panelState, onTransfer }) => {
+const Convert = React.memo(({ panelState, superTokens, onConvert }) => {
   const [selectedTab, setSelectedTab] = useState(0);
+
   return (
     <BaseSidePanel disableMargin panelState={panelState} title="Convert Tokens">
       <div
@@ -13,8 +16,13 @@ const Transfer = React.memo(({ panelState, onTransfer }) => {
       >
         <Tabs items={['Upgrade', 'Downgrade']} selected={selectedTab} onChange={setSelectedTab} />
       </div>
+      {selectedTab === 0 ? (
+        <Upgrade panelState={panelState} superTokens={superTokens} onConvert={onConvert} />
+      ) : (
+        <Downgrade panelState={panelState} superTokens={superTokens} onConvert={onConvert} />
+      )}
     </BaseSidePanel>
   );
 });
 
-export default Transfer;
+export default Convert;
