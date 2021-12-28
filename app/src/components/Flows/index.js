@@ -4,6 +4,7 @@ import {
   DataView,
   formatTokenAmount,
   GU,
+  Help,
   textStyle,
   useLayout,
   useTheme,
@@ -57,10 +58,10 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
 
   const sortedFlows = useMemo(
     () =>
-      filteredFlows.sort(({ date: dateLeft }, { date: dateRight }) =>
+      filteredFlows.sort(({ creationDate: dateLeft }, { creationDate: dateRight }) => {
         // Sort by date descending
-        compareDesc(dateLeft, dateRight)
-      ),
+        return compareDesc(dateLeft, dateRight);
+      }),
     [filteredFlows]
   );
 
@@ -124,8 +125,11 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
         { label: 'Start/End Date', priority: 3 },
         { label: 'Type', priority: 1 },
         { label: 'Token', priority: 2 },
-        { label: 'Incoming/Outgoing (Per Month)', priority: 2 },
-        { label: 'Total So Far', priority: 3 },
+        {
+          label: <span title="Incoming/Outgoing">INC/OG (Per Month)</span>,
+          priority: 2,
+        },
+        { label: 'Total So Far', priority: 3, align: 'start' },
       ]}
       entries={sortedFlows}
       renderEntry={({
@@ -134,6 +138,7 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
         entity,
         flowRate,
         lastUpdateDate,
+        isCancelled,
         isIncoming,
         superTokenAddress,
       }) => {
@@ -158,16 +163,22 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
               entity={entity}
             />
           </div>,
-          <time
-            dateTime={formattedDate}
-            title={formattedDate}
+          <div
             css={`
-              padding-right: ${2 * GU}px;
-              white-space: nowrap;
+              display: flex;
+              flex-wrap: wrap;
             `}
           >
-            {formatDate(creationDate)}
-          </time>,
+            <FlowDate date={creationDate} dateTime={formattedDate} />
+            <span
+              css={`
+                margin: 0 ${1 * GU}px;
+              `}
+            >
+              -
+            </span>
+            {isCancelled ? <FlowDate date={lastUpdateDate} dateTime={formattedDate} /> : 'Present'}
+          </div>,
           <div>{isIncoming ? 'Incoming' : 'Outgoing'}</div>,
           <TokenBadge address={superTokenAddress} symbol={symbol} networkType={network.type} />,
           <div
@@ -191,29 +202,54 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
               min-width: 80%;
             `}
           >
-            <DynamicFlowAmount
-              baseAmount={accumulatedAmount}
-              rate={flowRate}
-              lastDate={lastUpdateDate}
-            >
-              <TotalSoFar decimals={decimals} isIncoming={isIncoming} />
-            </DynamicFlowAmount>
+            {isCancelled ? (
+              <TotalSoFar
+                dynamicAmount={accumulatedAmount}
+                decimals={decimals}
+                isIncoming={isIncoming}
+              />
+            ) : (
+              <DynamicFlowAmount
+                baseAmount={accumulatedAmount}
+                rate={flowRate}
+                lastDate={lastUpdateDate}
+              >
+                <TotalSoFar decimals={decimals} isIncoming={isIncoming} />
+              </DynamicFlowAmount>
+            )}
           </div>,
         ];
       }}
-      renderEntryActions={({ superTokenAddress, entity }) => (
-        <ContextMenu disabled={disableMenu} zIndex={1}>
-          <ContextMenuUpdateFlow
-            onUpdateFlow={() =>
-              onUpdateFlow({ updateSuperTokenAddress: superTokenAddress, updateRecipient: entity })
-            }
-          />
-          <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
-        </ContextMenu>
-      )}
+      renderEntryActions={({ superTokenAddress, entity, isCancelled }) =>
+        isCancelled ? null : (
+          <ContextMenu disabled={disableMenu} zIndex={1}>
+            <ContextMenuUpdateFlow
+              onUpdateFlow={() =>
+                onUpdateFlow({
+                  updateSuperTokenAddress: superTokenAddress,
+                  updateRecipient: entity,
+                })
+              }
+            />
+            <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
+          </ContextMenu>
+        )
+      }
     />
   );
 });
+
+const FlowDate = ({ dateTime, date }) => (
+  <time
+    dateTime={dateTime}
+    title={dateTime}
+    css={`
+      white-space: nowrap;
+    `}
+  >
+    {formatDate(date)}
+  </time>
+);
 
 const TotalSoFar = ({ dynamicAmount, isIncoming, decimals }) => {
   const [integer, fractional] = formatTokenAmount(
@@ -226,7 +262,11 @@ const TotalSoFar = ({ dynamicAmount, isIncoming, decimals }) => {
   ).split('.');
 
   return (
-    <span>
+    <div
+      css={`
+        display: flex;
+      `}
+    >
       <span
         css={`
           ${textStyle('body1')};
@@ -235,14 +275,16 @@ const TotalSoFar = ({ dynamicAmount, isIncoming, decimals }) => {
         {integer}
       </span>
       {fractional && (
-        <span
+        <div
           css={`
-            ${textStyle('body3')}
+            ${textStyle('body3')};
+            min-width: ${9 * GU}px;
+            align-self: center;
           `}
         >
           .{fractional}
-        </span>
+        </div>
       )}
-    </span>
+    </div>
   );
 };

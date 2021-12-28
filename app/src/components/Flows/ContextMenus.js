@@ -16,7 +16,7 @@ export const ContextMenuDeleteFlow = ({ onDeleteFlow }) => {
           margin-left: ${1 * GU}px;
         `}
       >
-        Remove Flow
+        Cancel Flow
       </span>
     </ContextMenuItem>
   );

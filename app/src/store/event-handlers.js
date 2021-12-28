@@ -126,6 +126,7 @@ const updateFlows = async (state, event, updateTimestamp) => {
   // Create flow case
   if (!flowExists) {
     newFlows.push({
+      isCancelled: false,
       isIncoming,
       entity: getFlowEventEntity(event, isIncoming),
       superTokenAddress: tokenAddress,
@@ -146,7 +147,12 @@ const updateFlows = async (state, event, updateTimestamp) => {
   }
   // Delete flow case
   else {
-    delete newFlows[flowIndex];
+    newFlows[flowIndex] = {
+      ...newFlows[flowIndex],
+      accumulatedAmount: calculateNewAccumulatedAmount(state.flows[flowIndex], updateTimestamp),
+      lastTimestamp: updateTimestamp,
+      isCancelled: true,
+    };
   }
 
   return newFlows;
