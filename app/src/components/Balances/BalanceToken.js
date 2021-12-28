@@ -85,18 +85,24 @@ function SplitAmount({ dynamicAmount, decimals }) {
   );
 
   return (
-    <span>
+    <div
+      css={`
+        display: flex;
+      `}
+    >
       <span>{integer}</span>
       {fractional && (
-        <span
+        <div
           css={`
-            ${textStyle('body3')}
+            ${textStyle('body3')};
+            min-width: ${9 * GU}px;
+            align-self: center;
           `}
         >
           .{fractional}
-        </span>
+        </div>
       )}
-    </span>
+    </div>
   );
 }
 
