@@ -8,12 +8,11 @@ import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
-  const { guiStyle, appState, connectedAccount } = useAragonApi();
+  const { guiStyle, appState } = useAragonApi();
   const { superTokens, flows } = appState;
   const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { convertTokens, deleteFlow, deposit, updateFlow } = actions;
   const { appearance } = guiStyle;
-  const disableButtons = isSyncing || !connectedAccount;
 
   return (
     <Main theme={appearance} assetsUrl="./aragon-ui">
@@ -35,19 +34,13 @@ function App() {
                     icon={<IconCoin />}
                     display="label"
                     onClick={convertPanel.requestOpen}
-                    disabled={disableButtons}
                   />
-                  <Button
-                    label="Transfer"
-                    onClick={transferPanel.requestOpen}
-                    disabled={disableButtons}
-                  />
+                  <Button label="Transfer" onClick={transferPanel.requestOpen} />
                   <Button
                     mode="strong"
                     onClick={createFlowPanel.requestOpen}
                     label="Create Flow"
                     icon={<IconAdd />}
-                    disabled={disableButtons}
                   />
                 </div>
               }
@@ -59,7 +52,6 @@ function App() {
               tokens={superTokens}
               onUpdateFlow={createFlowPanel.requestOpen}
               onDeleteFlow={deleteFlow}
-              disableMenu={disableButtons}
             />
             <Convert
               panelState={convertPanel}
