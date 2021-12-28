@@ -4,7 +4,6 @@ import {
   DataView,
   formatTokenAmount,
   GU,
-  Help,
   textStyle,
   useLayout,
   useTheme,
@@ -37,13 +36,16 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
     handleClearFilters,
     handleDateRangeChange,
     handleTokenChange,
+    handleFlowStateChange,
     handleFlowTypeChange,
     page,
     setPage,
     selectedDateRange,
     selectedToken,
+    selectedFlowState,
     selectedFlowType,
     symbols,
+    flowStates,
     flowTypes,
   } = useFilteredFlows({ flows, tokens });
 
@@ -54,14 +56,29 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
     };
     return details;
   }, {});
-  const compactMode = layoutName === 'small';
+  const compactMode = layoutName === 'small' || layoutName === 'medium';
 
   const sortedFlows = useMemo(
     () =>
-      filteredFlows.sort(({ creationDate: dateLeft }, { creationDate: dateRight }) => {
-        // Sort by date descending
-        return compareDesc(dateLeft, dateRight);
-      }),
+      filteredFlows.sort(
+        (
+          { creationDate: dateLeft, isCancelled: isCancelledLeft },
+          { creationDate: dateRight, isCancelled: isCancelledRight }
+        ) => {
+          // Open flows have priority over close ones
+          if (!isCancelledLeft && isCancelledRight) {
+            return -1;
+          } else if (isCancelledLeft && !isCancelledRight) {
+            return 1;
+          } else if (isCancelledLeft && isCancelledRight) {
+            return 0;
+          }
+          // Sort by date descending
+          else {
+            return compareDesc(dateLeft, dateRight);
+          }
+        }
+      ),
     [filteredFlows]
   );
 
@@ -77,6 +94,7 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
 
   return (
     <DataView
+      mode={compactMode ? 'list' : 'table'}
       status={dataViewStatus}
       emptyState={{
         default: { title: 'No flows yet.' },
@@ -111,9 +129,12 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
               dateRangeFilter={selectedDateRange}
               onDateRangeChange={handleDateRangeChange}
               onTokenChange={handleTokenChange}
+              onFlowStateChange={handleFlowStateChange}
               onFlowTypeChange={handleFlowTypeChange}
               tokenFilter={selectedToken}
+              flowStateFilter={selectedFlowState}
               flowTypeFilter={selectedFlowType}
+              flowStates={flowStates}
               flowTypes={flowTypes}
               symbols={symbols}
             />
@@ -121,15 +142,19 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
         </React.Fragment>
       }
       fields={[
-        { label: 'To/From', priority: 3 },
-        { label: 'Start/End Date', priority: 3 },
-        { label: 'Type', priority: 1 },
-        { label: 'Token', priority: 2 },
+        { label: 'To/From', priority: 6 },
+        { label: 'Start/End Date', priority: 5 },
+        { label: 'Type', priority: 4 },
+        { label: 'Token', priority: 3 },
         {
-          label: <span title="Incoming/Outgoing">INC/OG (Per Month)</span>,
+          label: (
+            <span title="Incoming/Outgoing">
+              {compactMode ? 'Incoming/Outgoing' : 'INC/OG'} (Per Month)
+            </span>
+          ),
           priority: 2,
         },
-        { label: 'Total So Far', priority: 3, align: 'start' },
+        { label: 'Total So Far', align: 'start', priority: 1 },
       ]}
       entries={sortedFlows}
       renderEntry={({
@@ -185,8 +210,6 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
             css={`
               color: ${isIncoming ? theme.positive : theme.negative};
               padding: ${1 * GU}px ${0.5 * GU}px;
-              overflow-wrap: break-word;
-              word-break: break-word;
               hyphens: auto;
             `}
           >
@@ -199,7 +222,6 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
             css={`
               font-weight: 600;
               color: ${isIncoming ? theme.positive : theme.negative};
-              min-width: 80%;
             `}
           >
             {isCancelled ? (

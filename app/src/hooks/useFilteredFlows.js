@@ -1,15 +1,26 @@
 import { endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FLOW_TYPES, FLOW_TYPES_LABELS, Incoming, Outgoing } from '../flow-types';
+import {
+  Close,
+  FLOW_STATES,
+  FLOW_STATES_LABELS,
+  FLOW_TYPES,
+  FLOW_TYPES_LABELS,
+  Incoming,
+  Open,
+  Outgoing,
+} from '../flow';
 import { addressesEqual } from '../helpers';
 
 const UNSELECTED_TOKEN_FILTER = -1;
+const UNSELECTED_FLOW_STATE_FILTER = -1;
 const UNSELECTED_FLOW_TYPE_FILTER = -1;
 const UNSELECTED_DATE_RANGE_FILTER = { start: null, end: null };
 
 function useFilteredFlows({ flows, tokens }) {
   const [page, setPage] = useState(0);
   const [selectedDateRange, setSelectedDateRange] = useState(UNSELECTED_DATE_RANGE_FILTER);
+  const [selectedFlowState, setSelectedFlowState] = useState(UNSELECTED_FLOW_STATE_FILTER);
   const [selectedFlowType, setSelectedFlowType] = useState(UNSELECTED_FLOW_TYPE_FILTER);
   const [selectedToken, setSelectedToken] = useState(UNSELECTED_TOKEN_FILTER);
 
@@ -22,6 +33,11 @@ function useFilteredFlows({ flows, tokens }) {
   const handleTokenChange = useCallback(index => {
     const tokenIndex = index === 0 ? UNSELECTED_TOKEN_FILTER : index;
     setSelectedToken(tokenIndex);
+  }, []);
+
+  const handleFlowStateChange = useCallback(index => {
+    const flowStateIndex = index === 0 ? UNSELECTED_FLOW_STATE_FILTER : index;
+    setSelectedFlowState(flowStateIndex);
   }, []);
 
   const handleFlowTypeChange = useCallback(index => {
@@ -42,10 +58,22 @@ function useFilteredFlows({ flows, tokens }) {
 
   const filteredFlows = useMemo(
     () =>
-      flows.filter(({ creationDate, isIncoming, superTokenAddress }) => {
+      flows.filter(({ creationDate, isCancelled, isIncoming, superTokenAddress }) => {
+        const state = isCancelled ? Close : Open;
         const type = isIncoming ? Incoming : Outgoing;
+        // Exclude by flow state
+        if (
+          selectedFlowState !== UNSELECTED_FLOW_STATE_FILTER &&
+          FLOW_STATES[selectedFlowState] !== state
+        ) {
+          return false;
+        }
+
         // Exclude by flow type
-        if (selectedFlowType !== -1 && FLOW_TYPES[selectedFlowType] !== type) {
+        if (
+          selectedFlowType !== UNSELECTED_FLOW_TYPE_FILTER &&
+          FLOW_TYPES[selectedFlowType] !== type
+        ) {
           return false;
         }
 
@@ -71,7 +99,7 @@ function useFilteredFlows({ flows, tokens }) {
         // All good, we can include the flow ✌️
         return true;
       }),
-    [selectedDateRange, selectedFlowType, selectedToken, tokensToFilter, flows]
+    [selectedDateRange, selectedFlowState, selectedFlowType, selectedToken, tokensToFilter, flows]
   );
   const symbols = tokensToFilter.map(({ symbol }) => symbol);
   const emptyResultsViaFilters = !filteredFlows && (selectedToken > 0 || selectedFlowType > 0);
@@ -82,13 +110,16 @@ function useFilteredFlows({ flows, tokens }) {
     handleClearFilters,
     handleDateRangeChange,
     handleTokenChange,
+    handleFlowStateChange,
     handleFlowTypeChange,
     page,
     setPage,
     selectedDateRange,
     selectedToken,
+    selectedFlowState,
     selectedFlowType,
     symbols,
+    flowStates: FLOW_STATES_LABELS,
     flowTypes: FLOW_TYPES_LABELS,
   };
 }
