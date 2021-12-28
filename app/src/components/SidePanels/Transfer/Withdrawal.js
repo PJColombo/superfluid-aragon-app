@@ -1,37 +1,47 @@
-import { Button, Field, GU, Info, TextInput, useSidePanelFocusOnReady } from '@aragon/ui';
+import { Field, GU, Info, TextInput, useSidePanelFocusOnReady } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
+import { isAddress } from 'web3-utils';
 import { addressPattern } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SuperTokensLink from '../../SuperTokensLink';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
+import SubmitButton from '../SubmitButton';
 
-const Withdrawal = ({ superTokens, onWithdrawal }) => {
+const validateFields = (recipient, amount) => {
+  if (!isAddress(recipient)) {
+    return 'Recipient must be a valid Ethereum address.';
+  } else if (Number(amount) <= 0) {
+    return "Amount provided can't be negative nor zero.";
+  }
+};
+
+const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const recipientInputRef = useSidePanelFocusOnReady();
-
-  const disableSubmit = Boolean(errorMessage || !recipient || !amount);
+  const disableSubmit = Boolean(errorMessage || !recipient || !selectedToken.address || !amount);
+  const displayError = errorMessage && errorMessage.length;
 
   const clear = () => {
     setSelectedToken(INITIAL_SELECTED_TOKEN);
     setRecipient('');
-    setAmount(0);
+    setAmount('');
     setErrorMessage('');
   };
 
-  const handleTokenChange = useCallback(value => {
-    setSelectedToken(value);
+  const handleTokenChange = useCallback(token => {
+    setSelectedToken(token);
     setErrorMessage('');
   }, []);
 
-  const handleRecipientChange = useCallback(value => {
-    setRecipient(value);
+  const handleRecipientChange = useCallback(recipient => {
+    setRecipient(recipient);
     setErrorMessage('');
   }, []);
 
-  const handleAmountChange = useCallback(value => {
+  const handleAmountChange = useCallback(({ target: { value } }) => {
     setAmount(value);
     setErrorMessage('');
   }, []);
@@ -39,7 +49,14 @@ const Withdrawal = ({ superTokens, onWithdrawal }) => {
   const handleSubmit = async event => {
     event.preventDefault();
 
-    onWithdrawal();
+    const error = validateFields(recipient, amount);
+
+    if (error && error.length) {
+      setErrorMessage(error);
+      return;
+    }
+
+    panelState.requestTransaction(onWithdrawal, []);
   };
 
   // handle reset when opening
@@ -76,28 +93,29 @@ const Withdrawal = ({ superTokens, onWithdrawal }) => {
           onChange={handleTokenChange}
         />
         <Field label="Amount" required>
-          <TextInput
-            type="number"
-            value={amount}
-            min={0}
-            step="any"
-            wide
-            onChange={handleAmountChange}
-          />
+          <TextInput type="number" value={amount} step="any" wide onChange={handleAmountChange} />
         </Field>
-        <Button mode="strong" type="submit" disabled={disableSubmit} wide>
-          Withdraw
-        </Button>
+        <SubmitButton panelState={panelState} label="Withdraw" disabled={disableSubmit} />
       </form>
+      {displayError && (
+        <Info
+          mode="error"
+          css={`
+            margin-top: ${2 * GU}px;
+          `}
+        >
+          {errorMessage}
+        </Info>
+      )}
       <div
         css={`
           margin-top: ${3 * GU}px;
         `}
       >
         <Info>
-          You'll receive {<SuperTokensLink />} from the Flow Finance app. <br />
-          You can convert them to their ERC20 counterpart by going to the &quot;Convert Tokens&quot;
-          side panel.
+          The receipient will receive {<SuperTokensLink />} from the Flow Finance app. <br />
+          This tokens can be converted to their ERC20 version by going to the &quot;Convert
+          Tokens&quot; side panel.
         </Info>
       </div>
     </div>

@@ -1,19 +1,29 @@
-import { addressesEqual, Button, Field, LoadingRing } from '@aragon/ui';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
-import BaseSidePanel from '../BaseSidePanel';
-import ValidationError from '../../ValidationError';
-import { addressPattern } from '../../../helpers';
-import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
-import { isAddress } from 'web3-utils';
 import { useAppState } from '@aragon/api-react';
+import { Field, GU, Info } from '@aragon/ui';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { isAddress } from 'web3-utils';
+import { addressPattern, addressesEqual } from '../../../helpers';
+import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
+import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
+import SubmitButton from '../SubmitButton';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
+
+const validateFields = (recipient, flowRate, agentAddress) => {
+  if (!isAddress(recipient)) {
+    return 'Recipient must be a valid Ethereum address.';
+  } else if (addressesEqual(recipient, agentAddress)) {
+    return "You can't create a flow to the app's agent.";
+  } else if (Number(flowRate) <= 0) {
+    return "Flow rate provided can't be negative nor zero.";
+  }
+};
 
 export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
   const { agentAddress } = useAppState();
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
-  const [flowRate, setFlowRate] = useState(0);
+  const [flowRate, setFlowRate] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
   const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
@@ -22,14 +32,14 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
     errorMessage ||
       (!recipient && !updateRecipient) ||
       (!selectedToken.address && !updateSuperTokenAddress) ||
-      !Number(flowRate) ||
-      panelState.waitTxPanel
+      !flowRate
   );
+  const displayError = errorMessage && errorMessage.length;
 
   const clear = () => {
     setRecipient('');
     setSelectedToken(INITIAL_SELECTED_TOKEN);
-    setFlowRate(0);
+    setFlowRate('');
     setErrorMessage();
   };
 
@@ -54,8 +64,11 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
   const handleSubmit = async event => {
     event.preventDefault();
 
-    if (flowRate <= 0) {
-      setErrorMessage("Flow rate can't be zero.");
+    const error = validateFields(recipient, flowRate, agentAddress);
+
+    if (error && error.length) {
+      setErrorMessage(error);
+      return;
     }
 
     if (isFlowUpdate) {
@@ -65,15 +78,10 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
         flowRate,
       ]);
     } else {
-      if (!isAddress(recipient)) {
-        setErrorMessage('Recipient must be a valid Ethereum address.');
-      } else if (addressesEqual(agentAddress, recipient)) {
-        setErrorMessage("You can't create a flow to the app's agent.");
-      } else {
-        panelState.requestTransaction(onUpdateFlow, [selectedToken.address, recipient, flowRate]);
-      }
+      panelState.requestTransaction(onUpdateFlow, [selectedToken.address, recipient, flowRate]);
     }
   };
+
   // handle reset when opening
   useEffect(() => {
     if (panelState.didOpen && !isFlowUpdate) {
@@ -118,11 +126,22 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
           onChange={handleTokenChange}
         />
         <FlowRateField onChange={handleFlowRateChange} />
-        <Button disabled={disableSubmit} mode="strong" type="submit" wide>
-          {panelState.waitTxPanel && <LoadingRing />} {isFlowUpdate ? 'Update' : 'Create'}
-        </Button>
-        {errorMessage && <ValidationError messages={[errorMessage]} />}
+        <SubmitButton
+          panelState={panelState}
+          label={isFlowUpdate ? 'Update' : 'Create'}
+          disabled={disableSubmit}
+        />
       </form>
+      {displayError && (
+        <Info
+          mode="error"
+          css={`
+            margin-top: ${2 * GU}px;
+          `}
+        >
+          {errorMessage}
+        </Info>
+      )}
     </BaseSidePanel>
   );
 });

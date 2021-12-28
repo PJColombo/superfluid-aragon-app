@@ -19,9 +19,9 @@ const Transfer = React.memo(({ panelState, superTokens, onDeposit, onWithdrawal 
         <Tabs items={['Deposit', 'Withdrawal']} selected={selectedTab} onChange={setSelectedTab} />
       </div>
       {selectedTab === 0 ? (
-        <Deposit superTokens={superTokens} onDeposit={onDeposit} />
+        <Deposit panelState={panelState} superTokens={superTokens} onDeposit={onDeposit} />
       ) : (
-        <Withdrawal superTokens={superTokens} onWithdrawal={onWithdrawal} />
+        <Withdrawal panelState={panelState} superTokens={superTokens} onWithdrawal={onWithdrawal} />
       )}
     </BaseSidePanel>
   );
