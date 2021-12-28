@@ -1,5 +1,5 @@
 import { useAragonApi } from '@aragon/api-react';
-import { Button, GU, Header, IconAdd, IconCoin, Main, SyncIndicator } from '@aragon/ui';
+import { Button, GU, Header, IconAdd, IconCoin, IconSwap, Main, SyncIndicator } from '@aragon/ui';
 import React from 'react';
 import { useAppLogic } from './app-logic';
 import Balances from './components/Balances';
@@ -26,16 +26,15 @@ function App() {
                 <div
                   css={`
                     display: flex;
-                    gap: ${3 * GU}px;
+                    gap: ${2 * GU}px;
                   `}
                 >
+                  <Button label="Convert" icon={<IconCoin />} onClick={convertPanel.requestOpen} />
                   <Button
-                    label="Convert"
-                    icon={<IconCoin />}
-                    display="label"
-                    onClick={convertPanel.requestOpen}
+                    icon={<IconSwap />}
+                    label="Transfer"
+                    onClick={transferPanel.requestOpen}
                   />
-                  <Button label="Transfer" onClick={transferPanel.requestOpen} />
                   <Button
                     mode="strong"
                     onClick={createFlowPanel.requestOpen}
