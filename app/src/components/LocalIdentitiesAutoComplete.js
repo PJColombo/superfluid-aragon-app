@@ -39,7 +39,7 @@ const LocalIdentitiesAutoComplete = React.memo(
         handleSearch(value);
         onChange(value);
       },
-      [onChange]
+      [handleSearch, onChange]
     );
     const handleSelect = useCallback(
       selected => {
@@ -49,7 +49,7 @@ const LocalIdentitiesAutoComplete = React.memo(
         setSelected(selected);
         onChange(address);
       },
-      [onChange]
+      [handleSearch, onChange]
     );
     const handleSelectedClick = () => {
       setSelected(null);
@@ -70,7 +70,7 @@ const LocalIdentitiesAutoComplete = React.memo(
           <IdentityBadge compact badgeOnly entity={address} />
         </Option>
       );
-    });
+    }, []);
     const renderSelected = useCallback(({ address, name }) => {
       return (
         <Option selected>
@@ -78,7 +78,7 @@ const LocalIdentitiesAutoComplete = React.memo(
           <Name>{name}</Name>
         </Option>
       );
-    });
+    }, []);
 
     useEffect(() => {
       const effect = async () => {
@@ -108,7 +108,7 @@ const LocalIdentitiesAutoComplete = React.memo(
         }
       };
       effect();
-    }, [selected, value, api]);
+    }, [selected, handleSearch, searchTerm, value, api]);
 
     return (
       <AutoCompleteSelected
