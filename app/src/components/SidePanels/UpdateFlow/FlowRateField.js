@@ -11,7 +11,7 @@ const computeFlowRate = (value, seconds) => (value / seconds).toFixed(ROUNDING);
 
 const FlowRateField = ({ onChange = noop }) => {
   const [selectedRate, setSelectedRate] = useState(DEFAULT_RATE_ITEM);
-  const [rateValue, setRateValue] = useState(0);
+  const [rateValue, setRateValue] = useState('');
   const valueInSeconds = computeFlowRate(rateValue, RATE_IN_SECONDS[selectedRate]);
 
   const handleInputChange = useCallback(
@@ -30,14 +30,7 @@ const FlowRateField = ({ onChange = noop }) => {
           gap: ${1.5 * GU}px;
         `}
       >
-        <TextInput
-          type="number"
-          value={rateValue}
-          min={0}
-          step="any"
-          wide
-          onChange={handleInputChange}
-        />
+        <TextInput type="number" value={rateValue} step="any" wide onChange={handleInputChange} />
         <div
           css={`
             width: 40%;

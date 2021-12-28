@@ -2,7 +2,7 @@ import { useAppState } from '@aragon/api-react';
 import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { addressPattern, addressesEqual } from '../../../helpers';
+import { addressPattern, addressesEqual, toDecimals } from '../../../helpers';
 import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
@@ -43,8 +43,16 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
     setErrorMessage();
   };
 
-  const findSuperTokenByAddress = address =>
-    superTokens.find(superToken => addressesEqual(superToken.address, address));
+  const findSuperTokenByAddress = address => {
+    const index = superTokens.findIndex(superToken => addressesEqual(superToken.address, address));
+    const superToken = superTokens[index];
+
+    return {
+      index,
+      address: superToken.address,
+      data: { decimals: superToken.decimals, name: superToken.name, symbol: superToken.symbol },
+    };
+  };
 
   const handleTokenChange = useCallback(value => {
     setSelectedToken(value);
@@ -71,14 +79,20 @@ export default React.memo(({ panelState, superTokens, onUpdateFlow }) => {
       return;
     }
 
+    const adjustedFlowRate = toDecimals(flowRate, selectedToken.decimals);
+
     if (isFlowUpdate) {
       panelState.requestTransaction(onUpdateFlow, [
         updateSuperTokenAddress,
         updateRecipient,
-        flowRate,
+        adjustedFlowRate,
       ]);
     } else {
-      panelState.requestTransaction(onUpdateFlow, [selectedToken.address, recipient, flowRate]);
+      panelState.requestTransaction(onUpdateFlow, [
+        selectedToken.address,
+        recipient,
+        adjustedFlowRate,
+      ]);
     }
   };
 

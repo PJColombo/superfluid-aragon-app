@@ -3,7 +3,7 @@ import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { addressesEqual, toDecimals } from './helpers';
+import { addressesEqual } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 
 export const useUpdateFlow = (onDone = noop) => {
@@ -12,7 +12,6 @@ export const useUpdateFlow = (onDone = noop) => {
 
   return useCallback(
     async (tokenAddress, receiver, flowRate) => {
-      const normalizedFlowRate = toDecimals(flowRate);
       const flow = flows.find(
         f =>
           !f.isIncoming &&
@@ -22,9 +21,9 @@ export const useUpdateFlow = (onDone = noop) => {
 
       try {
         if (flow) {
-          await api.updateFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+          await api.updateFlow(tokenAddress, receiver, flowRate).toPromise();
         } else {
-          await api.createFlow(tokenAddress, receiver, normalizedFlowRate).toPromise();
+          await api.createFlow(tokenAddress, receiver, flowRate).toPromise();
         }
       } catch (err) {
         console.error(err);
