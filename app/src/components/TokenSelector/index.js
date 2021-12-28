@@ -200,7 +200,8 @@ const SelectedTokenBalance = ({ token, networkType }) => {
           align-items: center;
         `}
       >
-        You have {userBalance === '0' ? 'no' : formatTokenAmount(userBalance, decimals)}{' '}
+        You have{' '}
+        {userBalance === '0' ? 'no' : formatTokenAmount(userBalance, decimals, { digits: 6 })}{' '}
         <span
           css={`
             margin: 0 ${0.5 * GU}px;

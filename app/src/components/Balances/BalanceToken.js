@@ -72,7 +72,9 @@ const BalanceToken = ({
             ${textStyle('body2')}
           `}
         >
-          {convertedAmount.isNeg() ? '−' : `$${formatTokenAmount(convertedAmount, decimals)}`}
+          {convertedAmount.isNeg()
+            ? '−'
+            : `$${formatTokenAmount(convertedAmount, decimals, { digits: 6 })}`}
         </div>
       </div>
     </div>
