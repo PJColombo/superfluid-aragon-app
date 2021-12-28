@@ -1,44 +1,47 @@
 import { ContextMenuItem, GU, IconEdit, IconRemove, useTheme } from '@aragon/ui';
 import React from 'react';
 
-export const ContextMenuDeleteFlow = ({ onDeleteFlow }) => {
+const BaseContextMenuItem = ({ icon, label }) => {
   const theme = useTheme();
 
   return (
-    <ContextMenuItem onClick={onDeleteFlow}>
-      <IconRemove
-        css={`
-          color: ${theme.surfaceContentSecondary};
-        `}
-      />
+    <div
+      css={`
+        display: flex;
+        align-items: center;
+        position: relative;
+      `}
+    >
+      {icon && (
+        <div
+          css={`
+            position: relative;
+            top: 2px;
+            color: ${theme.surfaceContentSecondary};
+          `}
+        >
+          {icon}
+        </div>
+      )}
       <span
         css={`
-          margin-left: ${1 * GU}px;
+          margin-left: ${0.5 * GU}px;
         `}
       >
-        Cancel Flow
+        {label}
       </span>
-    </ContextMenuItem>
+    </div>
   );
 };
 
-export const ContextMenuUpdateFlow = ({ onUpdateFlow }) => {
-  const theme = useTheme();
+export const ContextMenuDeleteFlow = ({ onDeleteFlow }) => (
+  <ContextMenuItem onClick={onDeleteFlow}>
+    <BaseContextMenuItem icon={<IconRemove />} label="Cancel Flow" />
+  </ContextMenuItem>
+);
 
-  return (
-    <ContextMenuItem onClick={onUpdateFlow}>
-      <IconEdit
-        css={`
-          color: ${theme.surfaceContentSecondary};
-        `}
-      />
-      <span
-        css={`
-          margin-left: ${1 * GU}px;
-        `}
-      >
-        Update Flow
-      </span>
-    </ContextMenuItem>
-  );
-};
+export const ContextMenuUpdateFlow = ({ onUpdateFlow }) => (
+  <ContextMenuItem onClick={onUpdateFlow}>
+    <BaseContextMenuItem icon={<IconEdit />} label="Update Flow" />
+  </ContextMenuItem>
+);
