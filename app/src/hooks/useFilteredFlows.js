@@ -1,7 +1,7 @@
-import { addressesEqual } from '@aragon/ui';
 import { endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FLOW_TYPES, FLOW_TYPES_LABELS, Incoming, Outgoing } from '../flow-types';
+import { addressesEqual } from '../helpers';
 
 const UNSELECTED_TOKEN_FILTER = -1;
 const UNSELECTED_FLOW_TYPE_FILTER = -1;

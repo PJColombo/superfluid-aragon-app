@@ -1,9 +1,9 @@
 import { useApi, useAppState } from '@aragon/api-react';
-import { addressesEqual, noop } from '@aragon/ui';
+import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { toDecimals } from './helpers';
+import { addressesEqual, toDecimals } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 
 export const useUpdateFlow = (onDone = noop) => {

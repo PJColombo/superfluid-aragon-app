@@ -1,6 +1,5 @@
 import { useAragonApi, useConnectedAccount } from '@aragon/api-react';
 import {
-  addressesEqual,
   ContextMenu,
   DataView,
   formatTokenAmount,
@@ -14,7 +13,7 @@ import { compareDesc, format } from 'date-fns';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
 import { toChecksumAddress } from 'web3-utils';
-import { MONTH } from '../../helpers';
+import { addressesEqual, MONTH } from '../../helpers';
 import useFilteredFlows from '../../hooks/useFilteredFlows';
 import DynamicFlowAmount from '../DynamicFlowAmount';
 import LocalIdentityBadge from '../LocalIdentityBadge';

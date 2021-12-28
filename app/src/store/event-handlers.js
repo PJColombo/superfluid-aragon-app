@@ -1,4 +1,4 @@
-import { addressesEqual } from '../helpers/web3-helpers';
+import { addressesEqual } from '../helpers';
 import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
 import erc20Abi from '../abi/ERC20.json';
 import superTokenABI from '../abi/SuperToken.js';

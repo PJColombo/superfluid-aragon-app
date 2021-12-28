@@ -1,8 +1,8 @@
-import { addressesEqual } from '@aragon/ui';
 import { BN } from 'bn.js';
 import { concat, from } from 'rxjs';
 import { endWith, first, mergeMap, startWith } from 'rxjs/operators';
 import cfaV1ABI from '../abi/CFAv1.json';
+import { addressesEqual } from '../helpers';
 
 const REORG_SAFETY_BLOCK_AGE = 100;
 
