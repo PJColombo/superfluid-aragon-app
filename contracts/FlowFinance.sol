@@ -58,6 +58,12 @@ contract FlowFinance is AragonApp {
         initialized();
     }
 
+    /**
+     * @notice Deposit `@tokenAmount(_token, _amount)`
+     * @param _token Address of deposited super token
+     * @param _amount Amount of tokens sent
+     * @param _isExternalDeposit Flag that indicates wether the assets are already in the app
+     */
     function deposit(
         ISuperToken _token,
         uint256 _amount,
