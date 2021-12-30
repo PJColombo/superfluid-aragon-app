@@ -87,7 +87,7 @@ contract FlowFinance is AragonApp {
         ISuperToken _token,
         address _receiver,
         int96 _flowRate
-    ) external auth(MANAGE_STREAMS_ROLE) isInitialized isValidSuperToken(_token) {
+    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.createFlow.selector,
             _token,
@@ -109,7 +109,7 @@ contract FlowFinance is AragonApp {
         ISuperToken _token,
         address _receiver,
         int96 _flowRate
-    ) external auth(MANAGE_STREAMS_ROLE) isInitialized isValidSuperToken(_token) {
+    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.updateFlow.selector,
             _token,
