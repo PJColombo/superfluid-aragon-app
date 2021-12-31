@@ -17,7 +17,7 @@ const FlowRateField = ({ onChange = noop }) => {
   const handleInputChange = useCallback(
     ({ target: { value } }) => {
       setRateValue(value);
-      onChange(computeFlowRate(value, RATE_IN_SECONDS[selectedRate]));
+      onChange((value / RATE_IN_SECONDS[selectedRate]).toString());
     },
     [selectedRate, setRateValue, onChange]
   );

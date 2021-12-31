@@ -1,3 +1,4 @@
+import { BN } from 'bn.js';
 /**
  * Get the whole and decimal parts from a number.
  * Trims leading and trailing zeroes.
@@ -16,14 +17,21 @@ function splitDecimalNumber(num) {
 /**
  * Format a decimal-based number back to a normal number
  *
- * @param {string} num the number
+ * @param {string | BN} num the number
  * @param {number} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
  * @returns {string} formatted number
  */
-export function fromDecimals(num, decimals, { truncate = true } = {}) {
-  const [whole, dec] = splitDecimalNumber(num);
+export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
+  let normalizedNum = '';
+  if (BN.isBN(num)) {
+    normalizedNum = num.toString();
+  } else {
+    normalizedNum = num;
+  }
+
+  const [whole, dec] = splitDecimalNumber(normalizedNum);
   if (!whole && !dec) {
     return '0';
   }
@@ -50,14 +58,21 @@ export function fromDecimals(num, decimals, { truncate = true } = {}) {
 /**
  * Format the number to be in a given decimal base
  *
- * @param {string} num the number
+ * @param {string | BN} num the number
  * @param {number} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
  * @returns {string} formatted number
  */
 export function toDecimals(num, decimals = 18, { truncate = true } = {}) {
-  const [whole, dec] = splitDecimalNumber(num);
+  let normalizedNum = '';
+  if (BN.isBN(num)) {
+    normalizedNum = num.toString();
+  } else {
+    normalizedNum = num;
+  }
+
+  const [whole, dec] = splitDecimalNumber(normalizedNum);
   if (!whole && (!dec || !decimals)) {
     return '0';
   }

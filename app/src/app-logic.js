@@ -5,6 +5,8 @@ import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
 import { addressesEqual } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
+import useContract from './hooks/useContract';
+import cfaV1Abi from './abi/CFAv1.json';
 
 export const useUpdateFlow = (onDone = noop) => {
   const api = useApi();
@@ -14,6 +16,7 @@ export const useUpdateFlow = (onDone = noop) => {
     async (tokenAddress, receiver, flowRate) => {
       const flow = flows.find(
         f =>
+          !f.isCancelled &&
           !f.isIncoming &&
           addressesEqual(f.entity, receiver) &&
           addressesEqual(f.superTokenAddress, tokenAddress)
@@ -89,10 +92,11 @@ export const useConvertTokens = (onDone = noop) => {
 
 // Handles the main logic of the app.
 export function useAppLogic() {
-  const { isSyncing } = useAppState();
+  const { cfaAddress, isSyncing } = useAppState();
   const convertPanel = usePanelState();
   const createFlowPanel = usePanelState();
   const transferPanel = usePanelState();
+  const cfa = useContract(cfaAddress, cfaV1Abi);
 
   const actions = {
     updateFlow: useUpdateFlow(createFlowPanel.requestClose),
@@ -102,6 +106,7 @@ export function useAppLogic() {
   };
 
   return {
+    cfa,
     actions,
     isSyncing,
     convertPanel,

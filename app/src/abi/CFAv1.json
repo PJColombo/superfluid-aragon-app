@@ -39,6 +39,31 @@
     "type": "function"
   },
   {
+    "constant": true,
+    "inputs":[
+       {
+          "internalType":"contract ISuperfluidToken",
+          "name":"token",
+          "type":"address"
+       },
+       {
+          "internalType":"int96",
+          "name":"flowRate",
+          "type":"int96"
+       }
+    ],
+    "name":"getDepositRequiredForFlowRate",
+    "outputs":[
+       {
+          "internalType":"uint256",
+          "name":"deposit",
+          "type":"uint256"
+       }
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {

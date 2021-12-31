@@ -107,6 +107,7 @@ const initializeState = (agentAddress, settings) => async cachedState => {
       : await initializeBlockNumbersCache(cachedState, initialBlock, agentAddress, settings);
   const nextState = {
     agentAddress,
+    cfaAddress: cfa.address,
     superTokens: [],
     flows: [],
     blockNumbersCache,

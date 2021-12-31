@@ -58,6 +58,7 @@ function App() {
               onConvert={convertTokens}
             />
             <UpdateFlow
+              flows={flows}
               panelState={createFlowPanel}
               superTokens={superTokens}
               onUpdateFlow={updateFlow}
