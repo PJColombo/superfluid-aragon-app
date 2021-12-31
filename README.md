@@ -1,4 +1,4 @@
-# Flow Finance
+# Flow Finance <a href="#"><img align="right" src=".github/assets/blossom-labs.png" height="80px" /></a>
 
 Flow Finance is an Aragon App that allows an organization to stream their funds by using Superfluid's CFA via an agent app that holds all the DAO's Super Tokens.
 
