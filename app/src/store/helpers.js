@@ -197,6 +197,7 @@ export const getFlowEventEntity = ({ returnValues: { sender, receiver } }, isInc
   isIncomingFlow ? sender : receiver;
 
 export const isFlowEqual = (flow, event) =>
+  !flow.isCancelled &&
   addressesEqual(flow.superTokenAddress, event.returnValues.token) &&
   addressesEqual(flow.entity, getFlowEventEntity(event, flow.isIncoming));
 
