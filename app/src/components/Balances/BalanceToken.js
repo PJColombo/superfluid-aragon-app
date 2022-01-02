@@ -56,11 +56,20 @@ const BalanceToken = ({
           `}
         >
           {!netFlow.isZero() ? (
-            netFlow.isNeg() ? (
-              <IconArrowDown color={theme.negative} />
-            ) : (
-              <IconArrowUp color={theme.positive} />
-            )
+            <div
+              css={`
+                display: flex;
+                align-items: center;
+                position: relative;
+                top: -3px;
+              `}
+            >
+              {netFlow.isNeg() ? (
+                <IconArrowDown color={theme.negative} />
+              ) : (
+                <IconArrowUp color={theme.positive} />
+              )}
+            </div>
           ) : null}
           <DynamicFlowAmount baseAmount={amount} rate={netFlow} lastDate={lastUpdateDate}>
             <SplitAmount decimals={decimals} />
