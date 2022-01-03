@@ -1,8 +1,8 @@
 import { useAppState } from '@aragon/api-react';
-import { Field, formatTokenAmount, IdentityBadge } from '@aragon/ui';
+import { Field } from '@aragon/ui';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { addressPattern, addressesEqual, toDecimals, fromDecimals, MONTH } from '../../../helpers';
+import { addressPattern, addressesEqual, toDecimals, calculateNewFlowRate } from '../../../helpers';
 import useDebounce from '../../../hooks/useDebounce';
 import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
@@ -11,7 +11,7 @@ import SubmitButton from '../SubmitButton';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import InfoBox from '../InfoBox';
 import { useAppLogic } from '../../../app-logic';
-import styled from 'styled-components';
+import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
 
 const DEBOUNCE_TIME = 500;
 
@@ -39,26 +39,17 @@ const findSuperTokenByAddress = (address, superTokens) => {
   };
 };
 
-const toMonthlyRate = flowRate => {
-  return flowRate * MONTH;
-};
-
-const calculateNewFlowRate = (existingFlow, flowRate) => {
-  return existingFlow
-    ? (Number(fromDecimals(existingFlow.flowRate)) + Number(flowRate)).toString()
-    : flowRate;
-};
-
-export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => {
-  const { agentAddress } = useAppState();
-  const { cfa } = useAppLogic();
+const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState('');
   const [requiredDeposit, setRequiredDeposit] = useState();
   const [errorMessage, setErrorMessage] = useState();
-  const debouncedFlowRate = useDebounce(flowRate, DEBOUNCE_TIME);
   const recipientInputRef = useRef();
+  const { agentAddress } = useAppState();
+  const { cfa } = useAppLogic();
+  const debouncedFlowRate = useDebounce(flowRate, DEBOUNCE_TIME);
+
   const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
   const isFlowUpdateOperation = Boolean(updateSuperTokenAddress && updateRecipient);
   const disableSubmit = Boolean(
@@ -111,11 +102,7 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
   const handleSubmit = async event => {
     event.preventDefault();
 
-    const error = validateFields(
-      isFlowUpdateOperation ? updateRecipient : recipient,
-      flowRate,
-      agentAddress
-    );
+    const error = validateFields(recipient, flowRate, agentAddress);
 
     if (error && error.length) {
       setErrorMessage(error);
@@ -127,22 +114,20 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
       : flowRate;
     const adjustedFlowRate = toDecimals(newFlowRate, selectedToken.decimals);
 
-    if (isFlowUpdateOperation) {
-      panelState.requestTransaction(onUpdateFlow, [
-        updateSuperTokenAddress,
-        updateRecipient,
-        adjustedFlowRate,
-      ]);
-    } else {
-      panelState.requestTransaction(onUpdateFlow, [
-        selectedToken.address,
-        recipient,
-        adjustedFlowRate,
-      ]);
-    }
+    panelState.requestTransaction(onUpdateFlow, [
+      selectedToken.address,
+      recipient,
+      adjustedFlowRate,
+    ]);
   };
 
-  // handle reset when opening
+  useEffect(() => {
+    return () => {
+      clear();
+    };
+  }, []);
+
+  // Handle reset when opening.
   useEffect(() => {
     if (panelState.didOpen && !isFlowUpdateOperation) {
       // reset to default values
@@ -150,10 +135,16 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
       // be skipped by the browser.
       recipientInputRef && setTimeout(() => recipientInputRef.current.focus(), 100);
     }
-    return () => {
-      clear();
-    };
-  }, [panelState.didOpen, isFlowUpdateOperation]);
+  }, [isFlowUpdateOperation, panelState.didOpen]);
+
+  useEffect(() => {
+    if (!updateSuperTokenAddress || !updateRecipient) {
+      return;
+    }
+
+    setRecipient(updateRecipient);
+    setSelectedToken(findSuperTokenByAddress(updateSuperTokenAddress, superTokens));
+  }, [updateRecipient, updateSuperTokenAddress, superTokens]);
 
   useEffect(() => {
     const fetchDepositRequeriment = async (superTokenAddress, flowRate) => {
@@ -180,10 +171,7 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
   }, [cfa, debouncedFlowRate, selectedToken.address]);
 
   return (
-    <BaseSidePanel
-      title={isFlowUpdateOperation || displayFlowExists ? 'Update Flow' : 'Create Flow'}
-      panelState={panelState}
-    >
+    <>
       <form onSubmit={handleSubmit}>
         <Field
           label="Recipient (must be a valid Ethereum address)"
@@ -199,18 +187,14 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
               // Allow spaces to be trimmable
               ` *${addressPattern} *`
             }
-            value={isFlowUpdateOperation ? updateRecipient : recipient}
+            value={recipient}
             required
             wide
           />
         </Field>
         <TokenSelector
           tokens={superTokens}
-          selectedToken={
-            isFlowUpdateOperation
-              ? findSuperTokenByAddress(updateSuperTokenAddress, superTokens)
-              : selectedToken
-          }
+          selectedToken={selectedToken}
           disabled={isFlowUpdateOperation}
           onChange={handleTokenChange}
         />
@@ -228,43 +212,23 @@ export default React.memo(({ panelState, flows, superTokens, onUpdateFlow }) => 
       {requiredDeposit && (
         <RequiredDepositInfo requiredDeposit={requiredDeposit} selectedToken={selectedToken} />
       )}
+    </>
+  );
+};
+
+const UpdateFlow = React.memo(({ ...props }) => {
+  const { panelState } = props;
+  const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
+  const isFlowUpdateOperation = Boolean(updateSuperTokenAddress && updateRecipient);
+
+  return (
+    <BaseSidePanel
+      title={isFlowUpdateOperation ? 'Update Flow' : 'Create Flow'}
+      panelState={panelState}
+    >
+      <InnerUpdateFlow {...props} />
     </BaseSidePanel>
   );
 });
 
-const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
-  const currentMonthlyFlowRate = toMonthlyRate(fromDecimals(flow.flowRate)).toFixed(2);
-  const newMonthlyFlowRate = toMonthlyRate(calculateNewFlowRate(flow, flowRate)).toFixed(2);
-  const tokenSymbol = selectedToken.data.symbol;
-
-  return (
-    <InfoBox>
-      There is already a flow of{' '}
-      <BoldUnderline>
-        {currentMonthlyFlowRate} {tokenSymbol}/month
-      </BoldUnderline>{' '}
-      open to <IdentityBadge entity={flow.entity} connectedAccount compact />. We will add this
-      amount to the flow for a total of{' '}
-      <BoldUnderline>
-        {newMonthlyFlowRate} {tokenSymbol}/month.
-      </BoldUnderline>
-    </InfoBox>
-  );
-};
-
-const RequiredDepositInfo = ({ requiredDeposit, selectedToken }) => (
-  <InfoBox mode="warning">
-    Starting this flow will take a security Deposit of{' '}
-    <BoldUnderline>
-      {formatTokenAmount(requiredDeposit, selectedToken.data.decimals, { digits: 6 })}{' '}
-      {selectedToken.data.symbol}
-    </BoldUnderline>{' '}
-    from the app agent's balance. The Deposit will be refunded in full when the flow gets close or
-    lost if the {selectedToken.data.symbol} balance hits zero with the flow still open.
-  </InfoBox>
-);
-
-const BoldUnderline = styled.span`
-  font-weight: bold;
-  text-decoration: underline;
-`;
+export default UpdateFlow;
