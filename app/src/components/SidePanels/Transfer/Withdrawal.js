@@ -1,4 +1,4 @@
-import { Field, GU, Info, useSidePanelFocusOnReady } from '@aragon/ui';
+import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
 import { addressPattern } from '../../../helpers';
@@ -21,7 +21,6 @@ const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const recipientInputRef = useSidePanelFocusOnReady();
   const disableSubmit = Boolean(errorMessage || !recipient || !selectedToken.address || !amount);
   const displayError = errorMessage && errorMessage.length;
 
@@ -77,7 +76,6 @@ const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
           `}
         >
           <LocalIdentitiesAutoComplete
-            ref={recipientInputRef}
             onChange={handleRecipientChange}
             pattern={
               // Allow spaces to be trimmable
