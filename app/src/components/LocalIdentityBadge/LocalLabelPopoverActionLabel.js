@@ -10,11 +10,13 @@ function LocalLabelPopoverActionLabel({ hasLabel }) {
         align-items: center;
       `}
     >
-      <IconLabel
+      <div
         css={`
           margin-right: ${1 * GU}px;
         `}
-      />
+      >
+        <IconLabel />
+      </div>
       {hasLabel ? 'Edit' : 'Add'} custom label
     </div>
   );
