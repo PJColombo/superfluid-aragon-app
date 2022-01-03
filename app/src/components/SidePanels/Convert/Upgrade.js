@@ -1,7 +1,7 @@
-import { Field, GU, Info, TextInput } from '@aragon/ui';
+import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { toDecimals } from '../../../helpers';
+import { fromDecimals, toDecimals } from '../../../helpers';
 import { UPGRADE } from '../../../super-token-operations';
 import TokenSelector, {
   INITIAL_SELECTED_TOKEN,
@@ -11,6 +11,7 @@ import TokenSelector, {
 import superTokenAbi from '../../../abi/RawSuperToken.json';
 import SuperTokensLink from '../../SuperTokensLink';
 import SubmitButton from '../SubmitButton';
+import AmountInput from '../AmountInput';
 
 const processCustomSuperToken = async (address, api) => {
   const customSuperToken = api.external(address, superTokenAbi);
@@ -59,6 +60,15 @@ const Upgrade = ({ panelState, superTokens, onConvert }) => {
     setErrorMessage('');
   }, []);
 
+  const handleMaxAmount = useCallback(() => {
+    const { data } = selectedToken;
+    if (!data.decimals || !data.userBalance || data.userBalance === '0') {
+      return;
+    }
+
+    setAmount(fromDecimals(data.userBalance, data.decimals));
+  }, [selectedToken]);
+
   const handleSubmit = async event => {
     event.preventDefault();
 
@@ -98,13 +108,12 @@ const Upgrade = ({ panelState, superTokens, onConvert }) => {
           allowCustomToken
         />
         <Field label="Amount" required>
-          <TextInput
-            type="number"
-            value={amount}
-            min={0}
-            step="any"
+          <AmountInput
+            amount={amount}
+            showMax
             wide
             onChange={handleAmountChange}
+            onMaxClick={handleMaxAmount}
           />
         </Field>
         <SubmitButton label="Update" panelState={panelState} disabled={disableSubmit} />

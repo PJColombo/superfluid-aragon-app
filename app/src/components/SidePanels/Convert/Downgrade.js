@@ -1,7 +1,7 @@
-import { Field, GU, Info, TextInput } from '@aragon/ui';
+import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { toDecimals } from '../../../helpers';
+import { fromDecimals, toDecimals } from '../../../helpers';
 import { DOWNGRADE } from '../../../super-token-operations';
 import SuperTokensLink from '../../SuperTokensLink';
 import TokenSelector, {
@@ -9,6 +9,7 @@ import TokenSelector, {
   INVALID_TOKEN_ERROR,
   NO_TOKEN_BALANCE_ERROR,
 } from '../../TokenSelector';
+import AmountInput from '../AmountInput';
 import SubmitButton from '../SubmitButton';
 
 const validateFields = (token, amount) => {
@@ -47,6 +48,15 @@ const Downgrade = ({ panelState, superTokens, onConvert }) => {
     setErrorMessage('');
   }, []);
 
+  const handleMaxAmount = useCallback(() => {
+    const { data } = selectedToken;
+    if (!data.decimals || !data.userBalance || data.userBalance === '0') {
+      return;
+    }
+
+    setAmount(fromDecimals(data.userBalance, data.decimals));
+  }, [selectedToken]);
+
   const handleSubmit = async event => {
     event.preventDefault();
 
@@ -79,13 +89,12 @@ const Downgrade = ({ panelState, superTokens, onConvert }) => {
           allowCustomToken
         />
         <Field label="Amount" required>
-          <TextInput
-            type="number"
-            value={amount}
-            min={0}
-            step="any"
+          <AmountInput
+            amount={amount}
+            showMax
             wide
             onChange={handleAmountChange}
+            onMaxClick={handleMaxAmount}
           />
         </Field>
         <SubmitButton label="Downgrade" panelState={panelState} disabled={disableSubmit} />

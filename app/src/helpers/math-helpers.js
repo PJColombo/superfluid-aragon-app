@@ -18,17 +18,25 @@ function splitDecimalNumber(num) {
  * Format a decimal-based number back to a normal number
  *
  * @param {string | BN} num the number
- * @param {number} decimals number of decimal places
+ * @param {number | string} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
  * @returns {string} formatted number
  */
 export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
+  let normalizedDecimals;
   let normalizedNum = '';
+
   if (BN.isBN(num)) {
     normalizedNum = num.toString();
   } else {
     normalizedNum = num;
+  }
+
+  if (typeof decimals === 'string') {
+    normalizedDecimals = parseInt(decimals);
+  } else {
+    normalizedDecimals = decimals;
   }
 
   const [whole, dec] = splitDecimalNumber(normalizedNum);
@@ -36,8 +44,8 @@ export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
     return '0';
   }
 
-  const paddedWhole = whole.padStart(decimals + 1, '0');
-  const decimalIndex = paddedWhole.length - decimals;
+  const paddedWhole = whole.padStart(normalizedDecimals + 1, '0');
+  const decimalIndex = paddedWhole.length - normalizedDecimals;
   const wholeWithoutBase = paddedWhole.slice(0, decimalIndex);
   const decWithoutBase = paddedWhole.slice(decimalIndex);
 
@@ -59,25 +67,33 @@ export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
  * Format the number to be in a given decimal base
  *
  * @param {string | BN} num the number
- * @param {number} decimals number of decimal places
+ * @param {number | string} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
  * @returns {string} formatted number
  */
 export function toDecimals(num, decimals = 18, { truncate = true } = {}) {
+  let normalizedDecimals;
   let normalizedNum = '';
+
   if (BN.isBN(num)) {
     normalizedNum = num.toString();
   } else {
     normalizedNum = num;
   }
 
+  if (typeof decimals === 'string') {
+    normalizedDecimals = parseInt(decimals);
+  } else {
+    normalizedDecimals = decimals;
+  }
+
   const [whole, dec] = splitDecimalNumber(normalizedNum);
-  if (!whole && (!dec || !decimals)) {
+  if (!whole && (!dec || !normalizedDecimals)) {
     return '0';
   }
 
-  const wholeLengthWithBase = whole.length + decimals;
+  const wholeLengthWithBase = whole.length + normalizedDecimals;
   const withoutDecimals = (whole + dec).padEnd(wholeLengthWithBase, '0');
   const wholeWithBase = withoutDecimals.slice(0, wholeLengthWithBase);
 

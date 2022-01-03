@@ -1,6 +1,7 @@
-import { DropDown, Field, GU, noop, TextInput, textStyle } from '@aragon/ui';
+import { DropDown, Field, GU, noop, textStyle } from '@aragon/ui';
 import React, { useCallback, useState } from 'react';
 import { DAY, HOUR, MONTH, WEEK, YEAR } from '../../../helpers/time';
+import AmountInput from '../AmountInput';
 
 const RATE_ITEMS = ['/hour', '/day', '/week', '/month', '/year'];
 const DEFAULT_RATE_ITEM = 3;
@@ -30,18 +31,19 @@ const FlowRateField = ({ onChange = noop }) => {
           gap: ${1.5 * GU}px;
         `}
       >
-        <TextInput type="number" value={rateValue} step="any" wide onChange={handleInputChange} />
         <div
           css={`
-            width: 40%;
+            width: 100%;
           `}
         >
+          <AmountInput value={rateValue} onChange={handleInputChange} wide />
+        </div>
+        <div>
           <DropDown
             header="Rate"
             items={RATE_ITEMS}
             selected={selectedRate}
             onChange={setSelectedRate}
-            wide
           />
         </div>
       </div>

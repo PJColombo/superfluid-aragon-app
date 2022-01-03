@@ -1,10 +1,11 @@
-import { Field, GU, Info, TextInput, useSidePanelFocusOnReady } from '@aragon/ui';
+import { Field, GU, Info, useSidePanelFocusOnReady } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
 import { addressPattern } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SuperTokensLink from '../../SuperTokensLink';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
+import AmountInput from '../AmountInput';
 import SubmitButton from '../SubmitButton';
 
 const validateFields = (recipient, amount) => {
@@ -93,7 +94,7 @@ const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
           onChange={handleTokenChange}
         />
         <Field label="Amount" required>
-          <TextInput type="number" value={amount} step="any" wide onChange={handleAmountChange} />
+          <AmountInput amount={amount} onChange={handleAmountChange} wide />
         </Field>
         <SubmitButton panelState={panelState} label="Withdraw" disabled={disableSubmit} />
       </form>
