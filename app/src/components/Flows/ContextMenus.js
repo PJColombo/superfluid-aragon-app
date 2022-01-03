@@ -17,7 +17,7 @@ const BaseContextMenuItem = ({ icon, label }) => {
           css={`
             position: relative;
             top: 2px;
-            color: ${theme.surfaceContentSecondary};
+            color: ${theme.surfaceIcon};
           `}
         >
           {icon}
