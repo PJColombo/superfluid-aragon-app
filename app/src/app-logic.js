@@ -70,18 +70,18 @@ export const useConvertTokens = (onDone = noop) => {
   return useCallback(
     async (operation, superTokenAddress, amount) => {
       const superToken = api.external(superTokenAddress, superTokenAbi);
-      const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
-
-      const intentParams = {
-        token: { address: underlyingTokenAddress, value: amount },
-      };
 
       if (operation === UPGRADE) {
+        const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
+        const intentParams = {
+          token: { address: underlyingTokenAddress, value: amount },
+        };
+
         await superToken.upgrade(amount, intentParams).toPromise();
       } else if (operation === DOWNGRADE) {
-        await superToken.downgrade(amount, intentParams).toPromise();
+        await superToken.downgrade(amount).toPromise();
       } else {
-        throw new Error('Convert operation unknown');
+        throw new Error('Convert operation unknown.');
       }
 
       onDone();
