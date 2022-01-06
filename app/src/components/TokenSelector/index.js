@@ -87,7 +87,7 @@ const TokenSelector = ({
       }
 
       const processedAddress = isCustomToken ? await processCustomToken(address, api) : address;
-      let updatedToken = { ...selectedToken, address: processedAddress, loadingData: false };
+      let updatedToken = { ...selectedToken, address, loadingData: false };
       try {
         if (isCustomToken) {
           const [decimals, name, symbol] = await loadTokenData(processedAddress, api);
@@ -108,12 +108,7 @@ const TokenSelector = ({
         onChange(updatedToken);
       } catch (err) {
         updatedToken.error = FETCH_TOKEN_ERROR;
-        onChange({
-          ...selectedToken,
-          address: processedAddress,
-          loadingData: false,
-          error: FETCH_TOKEN_ERROR,
-        });
+        onChange(updatedToken);
         console.error(err);
       }
     };

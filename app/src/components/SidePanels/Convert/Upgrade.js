@@ -80,10 +80,12 @@ const Upgrade = ({ panelState, superTokens, onConvert }) => {
     }
 
     const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+    const isCustomToken = selectedToken.index === -1;
 
     panelState.requestTransaction(onConvert, [
       UPGRADE,
-      superTokens[selectedToken.index].address,
+      // Selected token address corresponds to the underlying token so we need to fetch the super token address
+      isCustomToken ? selectedToken.address : superTokens[selectedToken.index].address,
       adjustedAmount,
     ]);
   };
