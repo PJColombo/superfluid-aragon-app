@@ -2,7 +2,8 @@ import { BN } from 'bn.js';
 import { concat, from } from 'rxjs';
 import { endWith, first, mergeMap, startWith } from 'rxjs/operators';
 import cfaV1ABI from '../abi/CFAv1.json';
-import { addressesEqual } from '../helpers';
+import { addressesEqual, isTestNetwork } from '../helpers';
+import { getTokenListUrlByNetwork } from '../helpers/token-list';
 
 const REORG_SAFETY_BLOCK_AGE = 100;
 
@@ -13,6 +14,19 @@ export const EXTERNAL_SUBSCRIPTION_SYNCED = 'EXTERNAL_SUBSCRIPTION_SYNCED';
 export const EXTERNAL_SUBSCRIPTIONS_SYNCING = 'EXTERNAL_SUBSCRIPTIONS_SYNCING';
 export const EXTERNAL_SUBSCRIPTIONS_SYNCED = 'EXTERNAL_SUBSCRIPTIONS_SYNCED';
 
+export const fetchTokenList = async network => {
+  const tokenListUrl = getTokenListUrlByNetwork(network);
+
+  const response = await fetch(tokenListUrl);
+  const tokenList = await response.json();
+
+  const tokens = tokenList.tokens;
+
+  return isTestNetwork(network)
+    ? tokens
+    : tokens.filter(({ chainId }) => chainId === Number(network.id));
+};
+
 export const createSettings = async app => {
   const cfaAddress = await app.call('cfa').toPromise();
   const cfa = { address: cfaAddress, contract: app.external(cfaAddress, cfaV1ABI) };
@@ -21,11 +35,15 @@ export const createSettings = async app => {
     .network()
     .pipe(first())
     .toPromise();
+
+  const tokenList = await fetchTokenList(network);
+
   return {
     network,
     superfluid: {
       cfa,
     },
+    tokenList,
   };
 };
 

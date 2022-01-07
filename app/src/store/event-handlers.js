@@ -1,6 +1,5 @@
-import { addressesEqual } from '../helpers';
+import { addressesEqual, getFakeTokenSymbol, isTestNetwork, loadTokenData } from '../helpers';
 import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
-import erc20Abi from '../abi/ERC20.json';
 import superTokenABI from '../abi/SuperToken.js';
 
 const superTokenContracts = new Map();
@@ -26,6 +25,7 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
     updateSuperTokens(
       state,
       app,
+      settings,
       tokenAddress,
       timestamp,
       addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
@@ -40,13 +40,13 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
   };
 };
 
-export const handleVaultEvent = async (state, event, app) => {
+export const handleVaultEvent = async (state, event, app, settings) => {
   const { token: tokenAddress, _blockNumber } = event.returnValues;
   const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
   return {
     ...state,
-    superTokens: await updateSuperTokens(state, app, tokenAddress, timestamp),
+    superTokens: await updateSuperTokens(state, app, settings, tokenAddress, timestamp),
   };
 };
 
@@ -76,6 +76,7 @@ const getSuperTokenContract = (tokenAddress, app) => {
 const updateSuperTokens = async (
   { superTokens: oldSuperTokens, agentAddress },
   app,
+  settings,
   tokenAddress,
   updateTimestamp,
   netFlow
@@ -89,7 +90,7 @@ const updateSuperTokens = async (
 
   if (superTokenIndex === -1) {
     updatedToken = {
-      ...(await newSuperToken(tokenContract, app)),
+      ...(await newSuperToken(tokenContract, app, settings)),
     };
   } else {
     updatedToken = {
@@ -158,20 +159,47 @@ const updateFlows = async (state, event, updateTimestamp) => {
   return newFlows;
 };
 
-const newSuperToken = async (tokenContract, app) => {
-  const [name, decimals, symbol, underlyingTokenAddress] = await Promise.all([
-    tokenContract.name().toPromise(),
-    tokenContract.decimals().toPromise(),
-    tokenContract.symbol().toPromise(),
-    tokenContract.getUnderlyingToken().toPromise(),
+const newSuperToken = async (superTokenContract, app, settings) => {
+  const [[decimals, name, symbol], underlyingTokenAddress] = await Promise.all([
+    loadTokenData(superTokenContract, app),
+    superTokenContract.getUnderlyingToken().toPromise(),
   ]);
 
-  const underlyingTokenContract = app.external(underlyingTokenAddress, erc20Abi);
-  const [underlyingName, underlyingDecimals, underlyingSymbol] = await Promise.all([
-    underlyingTokenContract.name().toPromise(),
-    underlyingTokenContract.decimals().toPromise(),
-    underlyingTokenContract.symbol().toPromise(),
-  ]);
+  let mainnetTokenEquivalentAddress, logoURI, underlyingDecimals, underlyingName, underlyingSymbol;
+  const tokenList = settings.tokenList;
+  let token;
+
+  /**
+   * For test networks fetch the underlying token data directly from the contract as we're using a mainnet token list
+   */
+  if (isTestNetwork(settings.network)) {
+    [underlyingDecimals, underlyingName, underlyingSymbol] = await loadTokenData(
+      underlyingTokenAddress,
+      app
+    );
+
+    const tokenSymbol = getFakeTokenSymbol(underlyingSymbol);
+    token = tokenList.find(({ symbol }) => symbol === tokenSymbol);
+
+    if (token) {
+      logoURI = token.logoURI;
+      mainnetTokenEquivalentAddress = token.address;
+    }
+  } else {
+    token = tokenList.find(({ address }) => addressesEqual(address, underlyingTokenAddress));
+
+    if (token) {
+      logoURI = token.logoURI;
+      underlyingDecimals = token.decimals;
+      underlyingName = token.name;
+      underlyingSymbol = token.symbol;
+    } else {
+      [underlyingDecimals, underlyingName, underlyingSymbol] = await loadTokenData(
+        underlyingTokenAddress,
+        app
+      );
+    }
+  }
 
   return {
     decimals,
@@ -183,6 +211,9 @@ const newSuperToken = async (tokenContract, app) => {
       decimals: underlyingDecimals,
       symbol: underlyingSymbol,
     },
+    logoURI,
+    // Needed to display conversion rates on test networks,
+    mainnetTokenEquivalentAddress,
     netFlow: 0,
     balance: 0,
   };

@@ -55,7 +55,7 @@ const initialize = async agentAddress => {
 
         // Agent events
         if (eventName === 'VaultTransfer' || eventName === 'VaultDeposit') {
-          return handleVaultEvent(state, event, app);
+          return handleVaultEvent(state, event, app, settings);
         }
 
         // App events

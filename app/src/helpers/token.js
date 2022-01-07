@@ -1,28 +1,27 @@
-import superTokenABI from '../abi/SuperToken.js';
+import { isAddress } from 'web3-utils';
+import erc20ABI from '../abi/ERC20.json';
 
-export const isSuperToken = async (tokenAddress, app) => {
-  try {
-    const superToken = app.external(tokenAddress, superTokenABI);
+export const loadTokenData = (token, app) => {
+  let tokenContract;
 
-    await superToken.getHost().toPromise();
-    return true;
-  } catch (err) {
-    return false;
+  if (isAddress(token)) {
+    tokenContract = app.external(token, erc20ABI);
+  } else {
+    tokenContract = token;
   }
-};
-
-export const loadTokenData = (tokenAddress, app) => {
-  const token = app.external(tokenAddress, superTokenABI);
 
   return Promise.all([
-    token.decimals().toPromise(),
-    token.name().toPromise(),
-    token.symbol().toPromise(),
+    tokenContract.decimals().toPromise(),
+    tokenContract.name().toPromise(),
+    tokenContract.symbol().toPromise(),
   ]);
 };
 
 export const loadTokenHolderBalance = (tokenAddress, holder, app) => {
-  const token = app.external(tokenAddress, superTokenABI);
+  const token = app.external(tokenAddress, erc20ABI);
 
   return token.balanceOf(holder).toPromise();
 };
+
+export const getFakeTokenSymbol = symbol =>
+  symbol && symbol.charAt(0) === 'f' ? symbol.slice(1, symbol.length) : symbol;
