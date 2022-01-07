@@ -1,12 +1,9 @@
-import { useNetwork } from '@aragon/api-react';
 import { GU, IdentityBadge } from '@aragon/ui';
 import React from 'react';
 import styled from 'styled-components';
-import { superTokenIconUrl } from '../../helpers';
 
-const TokenSelectorInstance = React.memo(({ address, name, symbol, showIcon = true }) => {
-  const network = useNetwork();
-  const networkType = network && network.type;
+const TokenSelectorInstance = React.memo(({ address, logoURI, name, symbol, showIcon = true }) => {
+  const displayLogo = showIcon && logoURI && logoURI.length;
 
   return (
     <div
@@ -15,15 +12,16 @@ const TokenSelectorInstance = React.memo(({ address, name, symbol, showIcon = tr
         align-items: center;
       `}
     >
-      {showIcon ? (
-        <Icon src={superTokenIconUrl(address, symbol, networkType)} />
-      ) : (
+      {displayLogo ? (
         <div
           css={`
-            width: ${3 * GU}px;
+            position: relative;
+            top: 2px;
           `}
-        />
-      )}
+        >
+          <Icon src={logoURI} />
+        </div>
+      ) : null}
       {symbol && (
         <span
           css={`
@@ -50,7 +48,7 @@ const TokenSelectorInstance = React.memo(({ address, name, symbol, showIcon = tr
   );
 });
 
-const Icon = styled.img.attrs({ alt: '', width: '16', height: '16' })`
+const Icon = styled.img.attrs({ alt: '', width: '18', height: '18' })`
   margin-right: ${1 * GU}px;
 `;
 

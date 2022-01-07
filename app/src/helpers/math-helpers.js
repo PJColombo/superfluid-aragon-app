@@ -17,7 +17,7 @@ function splitDecimalNumber(num) {
 /**
  * Format a decimal-based number back to a normal number
  *
- * @param {string | BN} num the number
+ * @param {string | BN | Number} num the number
  * @param {number | string} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
@@ -28,6 +28,8 @@ export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
   let normalizedNum = '';
 
   if (BN.isBN(num)) {
+    normalizedNum = num.toString();
+  } else if (typeof num === 'number') {
     normalizedNum = num.toString();
   } else {
     normalizedNum = num;
@@ -66,7 +68,7 @@ export function fromDecimals(num, decimals = 18, { truncate = true } = {}) {
 /**
  * Format the number to be in a given decimal base
  *
- * @param {string | BN} num the number
+ * @param {string | BN | Number} num the number
  * @param {number | string} decimals number of decimal places
  * @param {Object} [options] options object
  * @param {bool} [options.truncate=true] Should the number be truncated to its decimal base
@@ -77,6 +79,8 @@ export function toDecimals(num, decimals = 18, { truncate = true } = {}) {
   let normalizedNum = '';
 
   if (BN.isBN(num)) {
+    normalizedNum = num.toString();
+  } else if (typeof num === 'number') {
     normalizedNum = num.toString();
   } else {
     normalizedNum = num;

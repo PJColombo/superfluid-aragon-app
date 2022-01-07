@@ -1,37 +1,15 @@
-import { useAppState } from '@aragon/api-react';
-import { GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
-import Box from '@aragon/ui/dist/Box';
-import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
-import React, { useMemo } from 'react';
+import React from 'react';
+import { useAppState, useNetwork } from '@aragon/api-react';
+import { Box, GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
 import BalanceToken from './BalanceToken';
-
-// Prepare the balances for the BalanceToken component
-function useBalanceItems(superTokens) {
-  const balanceItems = useMemo(() => {
-    return superTokens.map(
-      ({ address, balance: amount, decimals, symbol, netFlow, lastUpdateDate }) => {
-        return {
-          address,
-          amount,
-          convertedAmount: new BN('-1'),
-          decimals,
-          symbol,
-          lastUpdateDate,
-          netFlow,
-          // verified,
-        };
-      },
-      [superTokens]
-    );
-  }, [superTokens]);
-  return balanceItems;
-}
+import useBalanceItems from '../../hooks/useBalanceItems';
 
 const Balances = ({ superTokens }) => {
+  const network = useNetwork();
   const { isSyncing } = useAppState();
   const theme = useTheme();
   const { layoutName } = useLayout();
-  const balanceItems = useBalanceItems(superTokens);
+  const balanceItems = useBalanceItems(superTokens, network);
 
   const compact = layoutName === 'small';
 
@@ -102,10 +80,7 @@ const Balances = ({ superTokens }) => {
                     }
                   `}
                 >
-                  <BalanceToken
-                    item={balanceItem}
-                    // verified={verified}
-                  />
+                  <BalanceToken item={balanceItem} />
                 </li>
               ))}
             </ul>

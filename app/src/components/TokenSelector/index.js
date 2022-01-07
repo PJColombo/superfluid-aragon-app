@@ -45,8 +45,14 @@ const TokenSelector = ({
   const { api, connectedAccount, network } = useAragonApi();
   const [customTokenAddress, setCustomTokenAddress] = useState('');
   const tokenItems = useMemo(() => {
-    const items = tokens.map(({ address, name, symbol }) => (
-      <TokenSelectorInstance key={address} address={address} name={name} symbol={symbol} />
+    const items = tokens.map(({ address, logoURI, name, symbol }) => (
+      <TokenSelectorInstance
+        key={address}
+        address={address}
+        logoURI={logoURI}
+        name={name}
+        symbol={symbol}
+      />
     ));
 
     return allowCustomToken ? ['Other…', ...items] : items;

@@ -38,7 +38,11 @@ const Upgrade = ({ panelState, superTokens, onConvert }) => {
   const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const underlyingTokens = useMemo(
-    () => superTokens.map(superToken => ({ ...superToken.underlyingToken })),
+    () =>
+      superTokens.map(superToken => ({
+        ...superToken.underlyingToken,
+        logoURI: superToken.logoURI,
+      })),
     [superTokens]
   );
   const disableSubmit = Boolean(errorMessage || !selectedToken.address || !amount);
