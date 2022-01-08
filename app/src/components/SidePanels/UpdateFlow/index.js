@@ -10,7 +10,6 @@ import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SubmitButton from '../SubmitButton';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import InfoBox from '../InfoBox';
-import { useAppLogic } from '../../../app-logic';
 import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
 
 const DEBOUNCE_TIME = 500;
@@ -39,7 +38,7 @@ const findSuperTokenByAddress = (address, superTokens) => {
   };
 };
 
-const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
+const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) => {
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState('');
@@ -47,7 +46,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
   const { agentAddress } = useAppState();
-  const { cfa } = useAppLogic();
   const debouncedFlowRate = useDebounce(flowRate, DEBOUNCE_TIME);
 
   const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};

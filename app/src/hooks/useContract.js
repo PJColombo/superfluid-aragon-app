@@ -5,9 +5,10 @@ const useContract = (address, abi) => {
   const api = useApi();
 
   return useMemo(() => {
-    if (!address) {
+    if (!api || !address || !abi) {
       return null;
     }
+
     return api.external(address, abi);
   }, [api, abi, address]);
 };

@@ -1,11 +1,11 @@
 import { formatTokenAmount, GU, IconArrowDown, IconArrowUp, textStyle, useTheme } from '@aragon/ui';
 import React from 'react';
+import { DEFAULT_CURRENCY_SYMBOL } from '../../helpers';
 import DynamicFlowAmount from '../DynamicFlowAmount';
 
 const BalanceToken = ({
   item: {
     amount,
-    compact,
     convertedAmount,
     convertedNetFlow,
     logoURI,
@@ -86,7 +86,11 @@ const BalanceToken = ({
               rate={convertedNetFlow}
               lastDate={lastUpdateDate}
             >
-              <SplitAmount decimals={decimals} digitsDisplayed={2} prefix="$" />
+              <SplitAmount
+                decimals={decimals}
+                digitsDisplayed={2}
+                prefix={DEFAULT_CURRENCY_SYMBOL}
+              />
             </DynamicFlowAmount>
           )}
         </div>

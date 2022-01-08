@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { DEFAULT_CURRENCY } from '../helpers';
 
 const CONVERT_API_RETRY_DELAY = 2 * 1000;
 const CONVERT_API_RETRY_DELAY_MAX = 60 * 1000;
@@ -9,7 +10,11 @@ function convertRatesUrl(tokenAddresses, currencies, networkName) {
   return `${BASE_URL}/${networkName}?vs_currencies=${currencies}&contract_addresses=${tokenAddresses}`;
 }
 
-const useConvertRates = (tokenAddresses, currencies = ['usd'], networkName = 'ethereum') => {
+const useConvertRates = (
+  tokenAddresses,
+  currencies = [DEFAULT_CURRENCY],
+  networkName = 'ethereum'
+) => {
   const [rates, setRates] = useState({});
   const retryDelay = useRef(CONVERT_API_RETRY_DELAY);
 

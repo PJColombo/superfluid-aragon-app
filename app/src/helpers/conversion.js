@@ -1,8 +1,15 @@
 import BN from 'bn.js';
 
-export const USD = 'usd';
+const USD = 'usd';
+const USD_SYMBOL = '$';
 
-export function getConvertedAmount(amount, convertRate) {
+export const DEFAULT_CURRENCY = USD;
+export const DEFAULT_CURRENCY_SYMBOL = USD_SYMBOL;
+
+export const getConvertRateToken = (superToken, isTestNetwork) =>
+  isTestNetwork ? superToken.mainnetTokenEquivalentAddress : superToken.address;
+
+export const getConvertedAmount = (amount, convertRate) => {
   const [whole = '', dec = ''] = convertRate.toString().split('.');
   // Remove any trailing zeros from the decimal part
   const parsedDec = dec.replace(/0*$/, '');
@@ -17,4 +24,4 @@ export function getConvertedAmount(amount, convertRate) {
   const oneDecimal = new BN('10').pow(new BN('18'));
 
   return amount.mul(new BN(rate).mul(oneDecimal)).div(oneDecimal.mul(expCarryAmount));
-}
+};

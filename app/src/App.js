@@ -8,9 +8,9 @@ import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
-  const { guiStyle, appState } = useAragonApi();
+  const { appState, guiStyle } = useAragonApi();
   const { superTokens, flows } = appState;
-  const { actions, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
+  const { actions, cfa, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { convertTokens, deleteFlow, deposit, updateFlow } = actions;
   const { appearance } = guiStyle;
 
@@ -58,6 +58,7 @@ function App() {
               onConvert={convertTokens}
             />
             <UpdateFlow
+              cfa={cfa}
               flows={flows}
               panelState={createFlowPanel}
               superTokens={superTokens}

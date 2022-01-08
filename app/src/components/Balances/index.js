@@ -1,15 +1,14 @@
 import React from 'react';
-import { useAppState, useNetwork } from '@aragon/api-react';
+import { useAppState } from '@aragon/api-react';
 import { Box, GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
 import BalanceToken from './BalanceToken';
 import useBalanceItems from '../../hooks/useBalanceItems';
 
 const Balances = ({ superTokens }) => {
-  const network = useNetwork();
   const { isSyncing } = useAppState();
   const theme = useTheme();
   const { layoutName } = useLayout();
-  const balanceItems = useBalanceItems(superTokens, network);
+  const balanceItems = useBalanceItems(superTokens);
 
   const compact = layoutName === 'small';
 
