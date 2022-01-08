@@ -5,10 +5,12 @@ import DynamicFlowAmount from '../DynamicFlowAmount';
 
 const BalanceToken = ({
   item: {
+    address,
     amount,
     convertedAmount,
     convertedNetFlow,
     logoURI,
+    name,
     netFlow,
     lastUpdateDate,
     decimals,
@@ -22,7 +24,7 @@ const BalanceToken = ({
   return (
     <div css="display: inline-block">
       <div
-        title={symbol || 'Unknown symbol'}
+        title={name ? `${name} - ${address}` : `${address}`}
         css={`
           display: flex;
           color: ${theme.surfaceContentSecondary};

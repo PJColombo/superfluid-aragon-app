@@ -23,6 +23,7 @@ const useBalanceItems = superTokens => {
         decimals,
         lastUpdateDate,
         logoURI,
+        name,
         netFlow,
         symbol,
       } = superToken;
@@ -40,10 +41,11 @@ const useBalanceItems = superTokens => {
         amount,
         convertedAmount,
         decimals,
-        logoURI,
-        symbol,
         lastUpdateDate,
+        logoURI,
+        name,
         netFlow,
+        symbol,
         convertedNetFlow,
       };
     });
