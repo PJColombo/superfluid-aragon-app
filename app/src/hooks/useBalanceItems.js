@@ -13,7 +13,7 @@ const useBalanceItems = superTokens => {
     getConvertRateToken(superToken, isTestNet)
   );
 
-  const convertRates = useConvertRates(underlyingTokenAddresses, [DEFAULT_CURRENCY], 'ethereum');
+  const convertRates = useConvertRates(underlyingTokenAddresses, [DEFAULT_CURRENCY], network?.type);
 
   const balanceItems = useMemo(() => {
     return superTokens.map(superToken => {

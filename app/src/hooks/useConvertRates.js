@@ -1,20 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { DEFAULT_CURRENCY } from '../helpers';
+import { getConvertRatesUrl } from '../helpers';
 
 const CONVERT_API_RETRY_DELAY = 2 * 1000;
 const CONVERT_API_RETRY_DELAY_MAX = 60 * 1000;
 
-const BASE_URL = 'https://api.coingecko.com/api/v3/simple/token_price';
-
-function convertRatesUrl(tokenAddresses, currencies, networkName) {
-  return `${BASE_URL}/${networkName}?vs_currencies=${currencies}&contract_addresses=${tokenAddresses}`;
-}
-
-const useConvertRates = (
-  tokenAddresses,
-  currencies = [DEFAULT_CURRENCY],
-  networkName = 'ethereum'
-) => {
+const useConvertRates = (tokenAddresses, currencies, networkName) => {
   const [rates, setRates] = useState({});
   const retryDelay = useRef(CONVERT_API_RETRY_DELAY);
 
@@ -38,7 +28,7 @@ const useConvertRates = (
 
       try {
         const response = await fetch(
-          convertRatesUrl(tokenAddressesQueryValues, currenciesQueryValues, networkName)
+          getConvertRatesUrl(tokenAddressesQueryValues, currenciesQueryValues, networkName)
         );
         const rates = await response.json();
 
