@@ -51,7 +51,7 @@ function App() {
                 }
               />
 
-              <Balances superTokens={superTokens} />
+              <Balances superTokens={superTokens} onDeposit={transferPanel.requestOpen} />
               <Flows
                 flows={flows}
                 tokens={superTokens}

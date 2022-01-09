@@ -4,7 +4,7 @@ import { Box, GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui
 import BalanceToken from './BalanceToken';
 import useBalanceItems from '../../hooks/useBalanceItems';
 
-const Balances = ({ superTokens }) => {
+const Balances = ({ superTokens, onDeposit }) => {
   const { isSyncing } = useAppState();
   const theme = useTheme();
   const { layoutName } = useLayout();
@@ -79,7 +79,7 @@ const Balances = ({ superTokens }) => {
                     }
                   `}
                 >
-                  <BalanceToken item={balanceItem} />
+                  <BalanceToken item={balanceItem} onDeposit={onDeposit} />
                 </li>
               ))}
             </ul>

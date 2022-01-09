@@ -1,16 +1,13 @@
 import React from 'react';
 import { Redraw } from '@aragon/ui';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
-import { differenceInSeconds } from 'date-fns';
+import { calculateCurrentSuperTokenBalance } from '../helpers';
 
 const RENDER_EVERY = 1000;
 
-const getAmount = (baseAmount, rate, lastDate) =>
-  baseAmount.add(rate.mul(new BN(differenceInSeconds(new Date(), lastDate))));
-
 const DynamicFlowAmount = ({ children, baseAmount = new BN(0), rate, lastDate }) => {
   const renderAmount = () => {
-    const amount = getAmount(baseAmount, rate, lastDate);
+    const amount = calculateCurrentSuperTokenBalance(baseAmount, rate, lastDate);
 
     return (
       <>

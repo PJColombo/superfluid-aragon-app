@@ -1,7 +1,7 @@
 import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { fromDecimals, toDecimals } from '../../../helpers';
+import { addressesEqual, fromDecimals, toDecimals } from '../../../helpers';
 import SuperTokensLink from '../../SuperTokensLink';
 import TokenSelector, {
   INITIAL_SELECTED_TOKEN,
@@ -24,10 +24,23 @@ const validateFields = (token, amount) => {
   }
 };
 
+const findSuperTokenByAddress = (address, superTokens) => {
+  const index = superTokens.findIndex(superToken => addressesEqual(superToken.address, address));
+  const superToken = superTokens[index];
+
+  return {
+    index,
+    address: superToken.address,
+    data: { decimals: superToken.decimals, name: superToken.name, symbol: superToken.symbol },
+    loadingData: true,
+  };
+};
+
 const Deposit = ({ panelState, superTokens, onDeposit }) => {
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const { presetTokenAddress } = panelState.presetParams || {};
   const disableSubmit = Boolean(errorMessage || !selectedToken.address || !amount);
   const displayError = errorMessage && errorMessage.length;
 
@@ -71,12 +84,21 @@ const Deposit = ({ panelState, superTokens, onDeposit }) => {
     panelState.requestTransaction(onDeposit, [selectedToken.address, adjustedAmount, true]);
   };
 
-  // handle reset when opening
+  // Handle reset when opening.
   useEffect(() => {
     return () => {
       clear();
     };
   }, []);
+
+  // Set up preset params.
+  useEffect(() => {
+    if (!presetTokenAddress) {
+      return;
+    }
+
+    setSelectedToken(findSuperTokenByAddress(presetTokenAddress, superTokens));
+  }, [presetTokenAddress, superTokens]);
 
   return (
     <div>
@@ -86,6 +108,7 @@ const Deposit = ({ panelState, superTokens, onDeposit }) => {
           selectedToken={selectedToken}
           onChange={handleTokenChange}
           loadUserBalance
+          disabled={!!presetTokenAddress}
           allowCustomToken
         />
         <Field label="Amount" required>

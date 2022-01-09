@@ -1,6 +1,11 @@
 import { useNetwork } from '@aragon/api-react';
 import { useMemo } from 'react';
-import { DEFAULT_CURRENCY, getConvertedAmount, isTestNetwork } from '../helpers';
+import {
+  calculateDepletionDate,
+  DEFAULT_CURRENCY,
+  getConvertedAmount,
+  isTestNetwork,
+} from '../helpers';
 import useConvertRates from '../hooks/useConvertRates';
 
 const getConvertRateToken = (superToken, isTestNetwork) =>
@@ -27,6 +32,8 @@ const useBalanceItems = superTokens => {
         netFlow,
         symbol,
       } = superToken;
+
+      const depletionDate = calculateDepletionDate(amount, netFlow, new Date(), lastUpdateDate);
       const conversionRate =
         convertRates[getConvertRateToken(superToken, isTestNet)]?.[DEFAULT_CURRENCY];
       let convertedAmount, convertedNetFlow;
@@ -41,12 +48,13 @@ const useBalanceItems = superTokens => {
         amount,
         convertedAmount,
         decimals,
+        depletionDate,
         lastUpdateDate,
         logoURI,
         name,
         netFlow,
-        symbol,
         convertedNetFlow,
+        symbol,
       };
     });
   }, [convertRates, superTokens, isTestNet]);

@@ -16,6 +16,7 @@
     "qrcode.react": "^0.8.0",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
+    "react-lottie-player": "^1.4.1",
     "react-spring": "^7.2.8",
     "rxjs": "^6.5.2",
     "styled-components": "4.1.3",

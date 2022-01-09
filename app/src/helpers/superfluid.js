@@ -1,3 +1,5 @@
+import BN from 'bn.js';
+import { differenceInSeconds } from 'date-fns';
 import { fromDecimals, isTestNetwork } from '.';
 import superTokenABI from '../abi/SuperToken';
 
@@ -23,4 +25,31 @@ export const calculateNewFlowRate = (existingFlow, flowRate) => {
   return existingFlow
     ? (Number(fromDecimals(existingFlow.flowRate)) + Number(flowRate)).toString()
     : flowRate;
+};
+
+export const calculateCurrentSuperTokenBalance = (baseAmount, rate, lastDate, date) => {
+  return baseAmount.add(rate.mul(new BN(differenceInSeconds(date ?? new Date(), lastDate))));
+};
+
+export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdateDate) => {
+  if (!netFlow.isNeg()) {
+    return;
+  }
+
+  const currentBalance = calculateCurrentSuperTokenBalance(
+    balance,
+    netFlow,
+    lastUpdateDate,
+    currentDate
+  );
+  const millisecondsToDepletion = Math.floor(
+    currentBalance
+      .div(netFlow)
+      .abs()
+      .mul(new BN(1000))
+      .toNumber()
+  );
+  const currentDateMilliseconds = currentDate.getTime();
+
+  return new Date(currentDateMilliseconds + millisecondsToDepletion);
 };
