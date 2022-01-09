@@ -53,7 +53,7 @@ export const useDeposit = (onDone = noop) => {
   const api = useApi();
 
   return useCallback(
-    async (tokenAddress, amount, isExternalDeposit) => {
+    async (tokenAddress, amount, isExternalDeposit = true) => {
       const intentParams = {
         token: { address: tokenAddress, value: amount },
       };
