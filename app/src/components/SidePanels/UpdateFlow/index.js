@@ -48,12 +48,12 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
   const { agentAddress } = useAppState();
   const debouncedFlowRate = useDebounce(flowRate, DEBOUNCE_TIME);
 
-  const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
-  const isFlowUpdateOperation = Boolean(updateSuperTokenAddress && updateRecipient);
+  const { presetSuperTokenAddress, presetRecipient } = panelState.presetParams || {};
+  const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
   const disableSubmit = Boolean(
     errorMessage ||
-      (!recipient && !updateRecipient) ||
-      (!selectedToken.address && !updateSuperTokenAddress) ||
+      (!recipient && !presetRecipient) ||
+      (!selectedToken.address && !presetSuperTokenAddress) ||
       !flowRate
   );
   const displayError = errorMessage && errorMessage.length;
@@ -135,14 +135,15 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
     }
   }, [isFlowUpdateOperation, panelState.didOpen]);
 
+  // Set up preset params.
   useEffect(() => {
-    if (!updateSuperTokenAddress || !updateRecipient) {
+    if (!presetSuperTokenAddress || !presetRecipient) {
       return;
     }
 
-    setRecipient(updateRecipient);
-    setSelectedToken(findSuperTokenByAddress(updateSuperTokenAddress, superTokens));
-  }, [updateRecipient, updateSuperTokenAddress, superTokens]);
+    setRecipient(presetRecipient);
+    setSelectedToken(findSuperTokenByAddress(presetSuperTokenAddress, superTokens));
+  }, [presetRecipient, presetSuperTokenAddress, superTokens]);
 
   useEffect(() => {
     const fetchDepositRequeriment = async (superTokenAddress, flowRate) => {
@@ -172,11 +173,11 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
     <>
       <form onSubmit={handleSubmit}>
         <Field
-          label="Recipient (must be a valid Ethereum address)"
           css={`
             height: 60px;
             ${isFlowUpdateOperation && 'pointer-events: none;'}
           `}
+          label="Recipient (must be a valid Ethereum address)"
         >
           <LocalIdentitiesAutoComplete
             ref={recipientInputRef}
@@ -216,7 +217,7 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
 
 const UpdateFlow = React.memo(({ ...props }) => {
   const { panelState } = props;
-  const { updateSuperTokenAddress, updateRecipient } = panelState.params || {};
+  const { updateSuperTokenAddress, updateRecipient } = panelState.presetParams || {};
   const isFlowUpdateOperation = Boolean(updateSuperTokenAddress && updateRecipient);
 
   return (

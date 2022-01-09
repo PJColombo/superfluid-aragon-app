@@ -5,10 +5,10 @@ import {
   formatTokenAmount,
   GU,
   textStyle,
+  TokenBadge,
   useLayout,
   useTheme,
 } from '@aragon/ui';
-import TokenBadge from '@aragon/ui/dist/TokenBadge';
 import { compareDesc, format } from 'date-fns';
 import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
 import React, { useMemo } from 'react';
@@ -57,7 +57,6 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
     return details;
   }, {});
   const compactMode = layoutName === 'small' || layoutName === 'medium';
-
   const sortedFlows = useMemo(
     () =>
       filteredFlows.sort(
@@ -248,8 +247,8 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
             <ContextMenuUpdateFlow
               onUpdateFlow={() =>
                 onUpdateFlow({
-                  updateSuperTokenAddress: superTokenAddress,
-                  updateRecipient: entity,
+                  presetSuperTokenAddress: superTokenAddress,
+                  presetRecipient: entity,
                 })
               }
             />

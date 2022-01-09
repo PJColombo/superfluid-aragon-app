@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 // Pass `onTransitionEnd` to the same SidePanel prop.
 export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = {}) {
   const [visible, setVisible] = useState(false);
-  const [params, setParams] = useState();
+  const [presetParams, setPresetParams] = useState();
   const [waitTxPanel, setWaitTxPanel] = useState(false);
 
   // `didOpen` is set to `true` when the opening transition of the panel has
@@ -18,7 +18,7 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
       setVisible(true);
       setDidOpen(false);
       if (params) {
-        setParams(params);
+        setPresetParams(params);
       }
     },
     [setVisible, setDidOpen]
@@ -28,7 +28,7 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
     setVisible(false);
     setWaitTxPanel(false);
     // Wait a little bit for the side panel close animation to end
-    setTimeout(() => setParams({}), 1000);
+    setTimeout(() => setPresetParams({}), 1000);
   }, [setVisible]);
 
   // To be passed to the onTransitionEnd prop of SidePanel.
@@ -54,7 +54,7 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
 
   return useMemo(
     () => ({
-      params,
+      presetParams,
       requestOpen,
       requestClose,
       requestTransaction,
@@ -64,7 +64,7 @@ export default function usePanelState({ onDidOpen = noop, onDidClose = noop } = 
       onTransitionEnd,
     }),
     [
-      params,
+      presetParams,
       requestOpen,
       requestClose,
       requestTransaction,
