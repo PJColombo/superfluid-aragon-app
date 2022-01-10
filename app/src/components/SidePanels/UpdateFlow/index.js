@@ -107,9 +107,7 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
       return;
     }
 
-    const newFlowRate = existingFlow
-      ? calculateNewFlowRate(existingFlow, flowRate).toString()
-      : flowRate;
+    const newFlowRate = calculateNewFlowRate(existingFlow, flowRate);
     const adjustedFlowRate = toDecimals(newFlowRate, selectedToken.decimals);
 
     panelState.requestTransaction(onUpdateFlow, [

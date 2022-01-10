@@ -23,6 +23,14 @@ const FlowRateField = ({ onChange = noop }) => {
     [selectedRate, setRateValue, onChange]
   );
 
+  const handleDropdownChange = useCallback(
+    index => {
+      setSelectedRate(index);
+      onChange((rateValue / RATE_IN_SECONDS[index]).toString());
+    },
+    [rateValue, onChange]
+  );
+
   return (
     <Field label="Flow Rate" required>
       <div
@@ -43,7 +51,7 @@ const FlowRateField = ({ onChange = noop }) => {
             header="Rate"
             items={RATE_ITEMS}
             selected={selectedRate}
-            onChange={setSelectedRate}
+            onChange={handleDropdownChange}
           />
         </div>
       </div>
