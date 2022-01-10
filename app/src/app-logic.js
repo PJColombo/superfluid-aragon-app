@@ -64,6 +64,18 @@ export const useDeposit = (onDone = noop) => {
   );
 };
 
+export const useWithdraw = (onDone = noop) => {
+  const api = useApi();
+
+  return useCallback(
+    async (tokenAddress, receiver, amount) => {
+      await api.withdraw(tokenAddress, receiver, amount).toPromise();
+      onDone();
+    },
+    [api, onDone]
+  );
+};
+
 export const useConvertTokens = (onDone = noop) => {
   const api = useApi();
 
@@ -102,6 +114,7 @@ export function useAppLogic() {
     updateFlow: useUpdateFlow(createFlowPanel.requestClose),
     deleteFlow: useDeleteFlow(),
     deposit: useDeposit(transferPanel.requestClose),
+    withdraw: useWithdraw(transferPanel.requestClose),
     convertTokens: useConvertTokens(convertPanel.requestClose),
   };
 

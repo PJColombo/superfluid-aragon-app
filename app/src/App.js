@@ -12,7 +12,7 @@ function App() {
   const { appState, guiStyle } = useAragonApi();
   const { superTokens, flows } = appState;
   const { actions, cfa, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
-  const { convertTokens, deleteFlow, deposit, updateFlow } = actions;
+  const { convertTokens, deleteFlow, deposit, updateFlow, withdraw } = actions;
   const { appearance } = guiStyle;
 
   return (
@@ -58,6 +58,7 @@ function App() {
                 onUpdateFlow={createFlowPanel.requestOpen}
                 onDeleteFlow={deleteFlow}
               />
+
               <Convert
                 panelState={convertPanel}
                 superTokens={superTokens}
@@ -70,7 +71,12 @@ function App() {
                 superTokens={superTokens}
                 onUpdateFlow={updateFlow}
               />
-              <Transfer panelState={transferPanel} superTokens={superTokens} onDeposit={deposit} />
+              <Transfer
+                panelState={transferPanel}
+                superTokens={superTokens}
+                onDeposit={deposit}
+                onWithdraw={withdraw}
+              />
             </React.Fragment>
           }
         </IdentityProvider>

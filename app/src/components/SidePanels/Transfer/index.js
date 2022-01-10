@@ -6,7 +6,7 @@ import Withdrawal from './Withdrawal';
 
 const DEFAULT_SELECTED_TAB = 0;
 
-const Transfer = React.memo(({ panelState, superTokens, onDeposit, onWithdrawal }) => {
+const Transfer = React.memo(({ panelState, superTokens, onDeposit, onWithdraw }) => {
   const [selectedTab, setSelectedTab] = useState(DEFAULT_SELECTED_TAB);
 
   return (
@@ -21,7 +21,7 @@ const Transfer = React.memo(({ panelState, superTokens, onDeposit, onWithdrawal 
       {selectedTab === 0 ? (
         <Deposit panelState={panelState} superTokens={superTokens} onDeposit={onDeposit} />
       ) : (
-        <Withdrawal panelState={panelState} superTokens={superTokens} onWithdrawal={onWithdrawal} />
+        <Withdrawal panelState={panelState} superTokens={superTokens} onWithdraw={onWithdraw} />
       )}
     </BaseSidePanel>
   );

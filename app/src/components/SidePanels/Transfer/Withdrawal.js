@@ -1,7 +1,7 @@
 import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { addressPattern } from '../../../helpers';
+import { addressPattern, toDecimals } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SuperTokensLink from '../../SuperTokensLink';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
@@ -16,7 +16,7 @@ const validateFields = (recipient, amount) => {
   }
 };
 
-const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
+const Withdrawal = ({ panelState, superTokens, onWithdraw }) => {
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -56,7 +56,9 @@ const Withdrawal = ({ panelState, superTokens, onWithdrawal }) => {
       return;
     }
 
-    panelState.requestTransaction(onWithdrawal, []);
+    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+
+    panelState.requestTransaction(onWithdraw, [selectedToken.address, recipient, adjustedAmount]);
   };
 
   // handle reset when opening
