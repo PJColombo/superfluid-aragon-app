@@ -35,7 +35,7 @@ describe('Flow Finance', () => {
   let receiver: SignerWithAddress;
   let permissionlessAccount: SignerWithAddress;
   let nonContractAccount: SignerWithAddress;
-  let depositor: SignerWithAddress;
+  let transferrer: SignerWithAddress;
 
   let dao: Kernel;
   let acl: ACL;
@@ -53,11 +53,11 @@ describe('Flow Finance', () => {
 
   let snapshotId: string;
 
-  const generateSuperTokens = async (recipientSigner: Signer) => {
-    await fakeToken.mint(await recipientSigner.getAddress(), TOKEN_AMOUNT);
-    await fakeToken.connect(recipientSigner).approve(superToken.address, TOKEN_AMOUNT);
+  const generateSuperTokens = async (recipientSigner: Signer, amount: BigNumber) => {
+    await fakeToken.mint(await recipientSigner.getAddress(), amount);
+    await fakeToken.connect(recipientSigner).approve(superToken.address, amount);
 
-    await superToken.connect(recipientSigner).upgrade(TOKEN_AMOUNT);
+    await superToken.connect(recipientSigner).upgrade(amount);
   };
 
   const setUpAgent = async (): Promise<Agent> => {
@@ -74,6 +74,12 @@ describe('Flow Finance', () => {
       flowFinance.address,
       agent.address,
       await agent.SAFE_EXECUTE_ROLE(),
+      root.address
+    );
+    await acl.createPermission(
+      flowFinance.address,
+      agent.address,
+      await agent.TRANSFER_ROLE(),
       root.address
     );
 
@@ -103,7 +109,7 @@ describe('Flow Finance', () => {
       root
     );
 
-    [root, receiver, permissionlessAccount, nonContractAccount, depositor] =
+    [root, receiver, permissionlessAccount, nonContractAccount, transferrer] =
       await ethers.getSigners();
     [dao, acl] = await newDao(root, daoFactory);
   });
@@ -123,14 +129,15 @@ describe('Flow Finance', () => {
       MANAGE_STREAMS_ROLE,
       root.address
     );
+    await acl.grantPermission(transferrer.address, flowFinance.address, MANAGE_STREAMS_ROLE);
 
     await acl.createPermission(root.address, flowFinance.address, SET_AGENT_ROLE, root.address);
   });
 
-  before('Prepare initialization parameters', async () => {
+  before('Prepare agent app', async () => {
     ffAgent = await setUpAgent();
 
-    await generateSuperTokens(await impersonateAddress(ffAgent.address));
+    await generateSuperTokens(await impersonateAddress(ffAgent.address), TOKEN_AMOUNT);
 
     snapshotId = await takeSnapshot();
   });
@@ -202,60 +209,112 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('deposit(ISuperToken _token, uint256 _amount, bool _isExternalDeposit)', () => {
-    let depositSuperToken: ISuperToken;
-    let ffDepositor: FlowFinance;
+  describe("when making app's discrete token transfer operations", () => {
+    let transferredSuperToken: ISuperToken;
+    let ffTransferrer: FlowFinance;
 
-    const DEPOSIT_AMOUNT = toDecimals(3000);
+    const TRANSFERRED_AMOUNT = toDecimals(3000);
 
     before(async () => {
       const superTokenAddress = deployments.superfluid.supertokens[1];
       const tokenSigner = await impersonateAddress(superTokenAddress);
-      depositSuperToken = await ethers.getContractAt('ISuperToken', superTokenAddress, tokenSigner);
-      ffDepositor = flowFinance.connect(depositor);
+      transferredSuperToken = await ethers.getContractAt(
+        'ISuperToken',
+        superTokenAddress,
+        tokenSigner
+      );
+      ffTransferrer = flowFinance.connect(transferrer);
 
-      await depositSuperToken.connect(depositor).approve(flowFinance.address, DEPOSIT_AMOUNT);
-      await depositSuperToken.selfMint(depositor.address, DEPOSIT_AMOUNT, '0x');
+      await transferredSuperToken
+        .connect(transferrer)
+        .approve(flowFinance.address, TRANSFERRED_AMOUNT);
+      await transferredSuperToken.selfMint(transferrer.address, TRANSFERRED_AMOUNT, '0x');
 
       snapshotId = await takeSnapshot();
     });
 
-    it('should deposit tokens correctly', async () => {
-      const agentBalanceBefore = await depositSuperToken.balanceOf(ffAgent.address);
+    describe('deposit(ISuperToken _token, uint256 _amount, bool _isExternalDeposit)', () => {
+      it('should deposit tokens correctly', async () => {
+        const agentBalanceBefore = await transferredSuperToken.balanceOf(ffAgent.address);
 
-      await ffDepositor.deposit(depositSuperToken.address, DEPOSIT_AMOUNT, true);
+        await ffTransferrer.deposit(transferredSuperToken.address, TRANSFERRED_AMOUNT, true);
 
-      const agentBalanceAfter = await depositSuperToken.balanceOf(ffAgent.address);
-      const depositorBalanceAfter = await depositSuperToken.balanceOf(depositor.address);
+        const agentBalanceAfter = await transferredSuperToken.balanceOf(ffAgent.address);
+        const depositorBalanceAfter = await transferredSuperToken.balanceOf(transferrer.address);
 
-      expect(depositorBalanceAfter).to.equal(0);
-      expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(DEPOSIT_AMOUNT);
+        expect(depositorBalanceAfter).to.equal(0);
+        expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(TRANSFERRED_AMOUNT);
+      });
+
+      it('should deposit tokens already transfered to the app', async () => {
+        await transferredSuperToken
+          .connect(transferrer)
+          .transfer(flowFinance.address, TRANSFERRED_AMOUNT);
+
+        const agentBalanceBefore = await transferredSuperToken.balanceOf(ffAgent.address);
+
+        await flowFinance.deposit(transferredSuperToken.address, TRANSFERRED_AMOUNT, false);
+
+        const ffBalanceAfter = await transferredSuperToken.balanceOf(flowFinance.address);
+        const agentBalanceAfter = await transferredSuperToken.balanceOf(ffAgent.address);
+
+        expect(ffBalanceAfter).to.equal(0);
+        expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(TRANSFERRED_AMOUNT);
+      });
+
+      it('should revert when trying to deposit zero supertokens', async () => {
+        await expect(
+          ffTransferrer.deposit(transferredSuperToken.address, 0, true)
+        ).to.be.revertedWith('FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO');
+      });
+
+      it('should revert when trying to deposit an invalid supertoken', async () => {
+        await expect(
+          ffTransferrer.deposit(fakeToken.address, TRANSFERRED_AMOUNT, true)
+        ).to.be.revertedWith('FLOW_FINANCE_INVALID_SUPERTOKEN');
+      });
     });
 
-    it('should deposit tokens already transfered to the app', async () => {
-      await depositSuperToken.connect(depositor).transfer(flowFinance.address, DEPOSIT_AMOUNT);
+    describe('withdraw(ISuperToken _token, address _receiver, uint256 _amount)', () => {
+      beforeEach(async () => {
+        await ffTransferrer.deposit(transferredSuperToken.address, TRANSFERRED_AMOUNT, true);
+      });
 
-      const agentBalanceBefore = await depositSuperToken.balanceOf(ffAgent.address);
+      it('should withdraw tokens correctly', async () => {
+        const withdrawerBalanceBefore = await transferredSuperToken.balanceOf(transferrer.address);
 
-      await flowFinance.deposit(depositSuperToken.address, DEPOSIT_AMOUNT, false);
+        await flowFinance.withdraw(
+          transferredSuperToken.address,
+          transferrer.address,
+          TRANSFERRED_AMOUNT
+        );
 
-      const ffBalanceAfter = await depositSuperToken.balanceOf(flowFinance.address);
-      const agentBalanceAfter = await depositSuperToken.balanceOf(ffAgent.address);
+        const agentBalanceAfter = await transferredSuperToken.balanceOf(ffAgent.address);
+        const withdrawerBalanceAfter = await transferredSuperToken.balanceOf(transferrer.address);
 
-      expect(ffBalanceAfter).to.equal(0);
-      expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(DEPOSIT_AMOUNT);
-    });
+        expect(agentBalanceAfter).to.equal(0);
+        expect(withdrawerBalanceAfter.sub(withdrawerBalanceBefore)).to.equal(TRANSFERRED_AMOUNT);
+      });
 
-    it('should revert when trying to deposit zero amount', async () => {
-      await expect(ffDepositor.deposit(depositSuperToken.address, 0, true)).to.be.revertedWith(
-        'FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO'
-      );
-    });
+      it('should revert when trying to withdraw supertokens without having the MANAGE_STREAMS_ROLE', async () => {
+        await expect(
+          flowFinance
+            .connect(permissionlessAccount)
+            .withdraw(transferredSuperToken.address, transferrer.address, TRANSFERRED_AMOUNT)
+        ).to.be.revertedWith('APP_AUTH_FAILED');
+      });
 
-    it('should revert when trying to deposit an invalid supertoken', async () => {
-      await expect(ffDepositor.deposit(fakeToken.address, DEPOSIT_AMOUNT, true)).to.be.revertedWith(
-        'FLOW_FINANCE_INVALID_SUPERTOKEN'
-      );
+      it('should revert when trying to withdraw zero supertokens', async () => {
+        await expect(
+          ffTransferrer.withdraw(transferredSuperToken.address, transferrer.address, 0)
+        ).to.be.revertedWith('FLOW_FINANCE_WITHDRAW_AMOUNT_ZERO');
+      });
+
+      it('should revert when trying to withdraw an invalid supertoken', async () => {
+        await expect(
+          ffTransferrer.withdraw(fakeToken.address, transferrer.address, TRANSFERRED_AMOUNT)
+        ).to.be.revertedWith('FLOW_FINANCE_INVALID_SUPERTOKEN');
+      });
     });
   });
 

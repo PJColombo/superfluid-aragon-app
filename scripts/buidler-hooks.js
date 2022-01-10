@@ -19,7 +19,7 @@ const SuperfluidSDK = require('@superfluid-finance/js-sdk');
 const { utils, BigNumber } = require('ethers');
 
 const TOKENS = ['fDAI', 'fUSDC'];
-const SUPER_TOKENS = TOKENS.map((t) => `${t}x`);
+// const SUPER_TOKENS = TOKENS.map((t) => `${t}x`);
 const ONE_TOKEN = BigNumber.from((1e18).toString());
 const INITIAL_BALANCE = ONE_TOKEN.mul(15000);
 const ANY_ENTITY = '0x' + 'F'.repeat(40);
@@ -162,6 +162,7 @@ const setUpAgent = async (dao, artifacts, log = console.log) => {
 
   log(`Proxy address: ${agent.address}.`);
 
+  await createAppPermission(acl, agent.address, await agent.TRANSFER_ROLE());
   await createAppPermission(acl, agent.address, await agent.SAFE_EXECUTE_ROLE());
 
   log("Agent's permissions set up");

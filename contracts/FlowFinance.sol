@@ -22,6 +22,7 @@ contract FlowFinance is AragonApp {
     string private constant ERROR_SUPERTOKEN_NOT_CONTRACT = "FLOW_FINANCE_SUPERTOKEN_NOT_CONTRACT";
     string private constant ERROR_INVALID_SUPERTOKEN = "FLOW_FINANCE_INVALID_SUPERTOKEN";
     string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO";
+    string private constant ERROR_WITHDRAW_AMOUNT_ZERO = "FLOW_FINANCE_WITHDRAW_AMOUNT_ZERO";
     string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "FLOW_FINANCE_SUPERTOKEN_APPROVE_FAILED";
     string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED = "FLOW_FINANCE_SUPERTOKEN_TRANSFER_FROM_REVERT";
     string private constant ERROR_SENDER_CAN_NOT_DELETE_FLOW = "FLOW_FINANCE_SENDER_CAN_NOT_DELETE_FLOW";
@@ -59,7 +60,7 @@ contract FlowFinance is AragonApp {
     }
 
     /**
-     * @notice Deposit `@tokenAmount(_token, _amount)`
+     * @notice Deposit `@tokenAmount(_token, _amount)`.
      * @param _token Address of deposited super token
      * @param _amount Amount of tokens sent
      * @param _isExternalDeposit Flag that indicates wether the assets are already in the app
@@ -81,6 +82,22 @@ contract FlowFinance is AragonApp {
         require(_token.approve(agent, _amount), ERROR_SUPERTOKEN_APPROVE_FAILED);
         // Finally, initiate the deposit
         agent.deposit(_token, _amount);
+    }
+
+    /**
+     * @notice Withdraw `@tokenAmount(_token, _amount)` to `_receiver`.
+     * @param _token Address of withdrawed super token
+     * @param _receiver Receiver of the withdrawed amount
+     * @param _amount Amount of tokens received
+     */
+    function withdraw(
+        ISuperToken _token,
+        address _receiver,
+        uint256 _amount
+    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+        require(_amount > 0, ERROR_WITHDRAW_AMOUNT_ZERO);
+
+        agent.transfer(_token, _receiver, _amount);
     }
 
     /**
