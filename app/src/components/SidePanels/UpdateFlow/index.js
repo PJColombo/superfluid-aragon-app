@@ -181,6 +181,7 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
     };
 
     if (!selectedToken.address || !debouncedFlowRate || Number(debouncedFlowRate) <= 0) {
+      setRequiredDeposit();
       return;
     }
 
