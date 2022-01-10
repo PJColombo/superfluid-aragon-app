@@ -1,8 +1,15 @@
 import { useAppState } from '@aragon/api-react';
 import { Field } from '@aragon/ui';
+import BN from 'bn.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { addressPattern, addressesEqual, toDecimals, calculateNewFlowRate } from '../../../helpers';
+import {
+  addressPattern,
+  addressesEqual,
+  toDecimals,
+  calculateNewFlowRate,
+  calculateCurrentSuperTokenBalance,
+} from '../../../helpers';
 import useDebounce from '../../../hooks/useDebounce';
 import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
@@ -12,18 +19,25 @@ import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import InfoBox from '../InfoBox';
 import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
 
-const DEBOUNCE_TIME = 500;
+const DEBOUNCE_TIME = 300;
 
 const isFlowRateTooBigError = errorMessage =>
   errorMessage.includes('revert CFA: flow rate too big');
 
-const validateFields = (recipient, flowRate, agentAddress) => {
+const validateFields = (superToken, recipient, flowRate, agentAddress, requiredDeposit) => {
   if (!isAddress(recipient)) {
     return 'Recipient must be a valid Ethereum address.';
   } else if (addressesEqual(recipient, agentAddress)) {
     return "You can't create a flow to the app's agent.";
   } else if (Number(flowRate) <= 0) {
     return "Flow rate provided can't be negative nor zero.";
+  } else {
+    const { balance, netFlow, lastUpdateDate } = superToken;
+    const currentBalance = calculateCurrentSuperTokenBalance(balance, netFlow, lastUpdateDate);
+
+    if (currentBalance.lt(new BN(requiredDeposit))) {
+      return "Required deposit exceeds app's super token current balance.";
+    }
   }
 };
 
@@ -100,7 +114,13 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
   const handleSubmit = async event => {
     event.preventDefault();
 
-    const error = validateFields(recipient, flowRate, agentAddress);
+    const error = validateFields(
+      superTokens[selectedToken.index],
+      recipient,
+      flowRate,
+      agentAddress,
+      requiredDeposit
+    );
 
     if (error && error.length) {
       setErrorMessage(error);
