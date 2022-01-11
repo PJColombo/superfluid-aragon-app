@@ -104,7 +104,7 @@ export const useConvertTokens = (onDone = noop) => {
 
 // Handles the main logic of the app.
 export function useAppLogic() {
-  const { cfaAddress, isSyncing } = useAppState();
+  const { cfaAddress } = useAppState();
   const convertPanel = usePanelState();
   const createFlowPanel = usePanelState();
   const transferPanel = usePanelState();
@@ -121,7 +121,6 @@ export function useAppLogic() {
   return {
     cfa,
     actions,
-    isSyncing,
     convertPanel,
     createFlowPanel,
     transferPanel,

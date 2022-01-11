@@ -10,8 +10,8 @@ import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
   const { appState, guiStyle } = useAragonApi();
-  const { superTokens, flows } = appState;
-  const { actions, cfa, isSyncing, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
+  const { superTokens, flows, isSyncing } = appState;
+  const { actions, cfa, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { convertTokens, deleteFlow, deposit, updateFlow, withdraw } = actions;
   const { appearance } = guiStyle;
 
