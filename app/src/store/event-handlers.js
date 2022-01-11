@@ -90,7 +90,7 @@ const updateSuperTokens = async (
 
   if (superTokenIndex === -1) {
     updatedToken = {
-      ...(await newSuperToken(tokenContract, app, settings)),
+      ...(await newSuperToken(tokenAddress, tokenContract, app, settings)),
     };
   } else {
     updatedToken = {
@@ -98,7 +98,6 @@ const updateSuperTokens = async (
     };
   }
 
-  updatedToken.address = tokenAddress;
   updatedToken.lastUpdateTimestamp = updateTimestamp;
   updatedToken.balance = await tokenContract.balanceOf(agentAddress).toPromise();
 
@@ -159,20 +158,26 @@ const updateFlows = async (state, event, updateTimestamp) => {
   return newFlows;
 };
 
-const newSuperToken = async (superTokenContract, app, settings) => {
-  const [[decimals, name, symbol], underlyingTokenAddress] = await Promise.all([
+const newSuperToken = async (superTokenAddress, superTokenContract, app, settings) => {
+  const {
+    network,
+    superfluid: { governance, host },
+    tokenList,
+  } = settings;
+
+  const [[decimals, name, symbol], underlyingTokenAddress, liquidationPeriod] = await Promise.all([
     loadTokenData(superTokenContract, app),
     superTokenContract.getUnderlyingToken().toPromise(),
+    governance.contract.getCFAv1LiquidationPeriod(host.address, superTokenAddress).toPromise(),
   ]);
 
   let mainnetTokenEquivalentAddress, logoURI, underlyingDecimals, underlyingName, underlyingSymbol;
-  const tokenList = settings.tokenList;
   let token;
 
   /**
    * For test networks fetch the underlying token data directly from the contract as we're using a mainnet token list
    */
-  if (isTestNetwork(settings.network)) {
+  if (isTestNetwork(network)) {
     [underlyingDecimals, underlyingName, underlyingSymbol] = await loadTokenData(
       underlyingTokenAddress,
       app
@@ -202,7 +207,9 @@ const newSuperToken = async (superTokenContract, app, settings) => {
   }
 
   return {
+    address: superTokenAddress,
     decimals,
+    liquidationPeriodSeconds: liquidationPeriod,
     name,
     symbol,
     underlyingToken: {
@@ -214,7 +221,7 @@ const newSuperToken = async (superTokenContract, app, settings) => {
     logoURI,
     // Needed to display conversion rates on test networks,
     mainnetTokenEquivalentAddress,
-    netFlow: 0,
     balance: 0,
+    netFlow: 0,
   };
 };

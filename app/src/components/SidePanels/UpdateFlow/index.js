@@ -1,6 +1,5 @@
 import { useAppState } from '@aragon/api-react';
 import { Field } from '@aragon/ui';
-import BN from 'bn.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isAddress } from 'web3-utils';
 import {
@@ -8,9 +7,10 @@ import {
   addressesEqual,
   toDecimals,
   calculateNewFlowRate,
-  calculateCurrentSuperTokenBalance,
+  calculateCurrentAmount,
+  calculateRequiredDeposit,
+  fromDecimals,
 } from '../../../helpers';
-import useDebounce from '../../../hooks/useDebounce';
 import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
@@ -18,11 +18,6 @@ import SubmitButton from '../SubmitButton';
 import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
 import InfoBox from '../InfoBox';
 import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
-
-const DEBOUNCE_TIME = 300;
-
-const isFlowRateTooBigError = errorMessage =>
-  errorMessage.includes('revert CFA: flow rate too big');
 
 const validateFields = (superToken, recipient, flowRate, agentAddress, requiredDeposit) => {
   if (!isAddress(recipient)) {
@@ -32,11 +27,11 @@ const validateFields = (superToken, recipient, flowRate, agentAddress, requiredD
   } else if (Number(flowRate) <= 0) {
     return "Flow rate provided can't be negative nor zero.";
   } else {
-    const { balance, netFlow, lastUpdateDate } = superToken;
-    const currentBalance = calculateCurrentSuperTokenBalance(balance, netFlow, lastUpdateDate);
+    const { balance, decimals, netFlow, lastUpdateDate, symbol } = superToken;
+    const currentBalance = calculateCurrentAmount(balance, netFlow, lastUpdateDate);
 
-    if (currentBalance.lt(new BN(requiredDeposit))) {
-      return "Required deposit exceeds app's super token current balance.";
+    if (fromDecimals(currentBalance, decimals) < requiredDeposit) {
+      return `Required deposit exceeds current ${symbol} balance.`;
     }
   }
 };
@@ -52,15 +47,20 @@ const findSuperTokenByAddress = (address, superTokens) => {
   };
 };
 
-const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) => {
+const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState('');
-  const [requiredDeposit, setRequiredDeposit] = useState();
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
   const { agentAddress } = useAppState();
-  const debouncedFlowRate = useDebounce(flowRate, DEBOUNCE_TIME);
+  const requiredDeposit =
+    selectedToken.index >= 0
+      ? calculateRequiredDeposit(
+          flowRate,
+          superTokens[selectedToken.index].liquidationPeriodSeconds
+        )
+      : null;
 
   const { presetSuperTokenAddress, presetRecipient } = panelState.presetParams || {};
   const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
@@ -90,7 +90,6 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
 
   const clear = () => {
     setRecipient('');
-    setRequiredDeposit();
     setSelectedToken(INITIAL_SELECTED_TOKEN);
     setFlowRate('');
     setErrorMessage();
@@ -163,31 +162,6 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
     setSelectedToken(findSuperTokenByAddress(presetSuperTokenAddress, superTokens));
   }, [presetRecipient, presetSuperTokenAddress, superTokens]);
 
-  useEffect(() => {
-    const fetchDepositRequeriment = async (superTokenAddress, flowRate) => {
-      try {
-        const adjustedFlowRate = toDecimals(flowRate);
-        const flowDeposit = await cfa
-          .getDepositRequiredForFlowRate(superTokenAddress, adjustedFlowRate)
-          .toPromise();
-
-        setRequiredDeposit(flowDeposit);
-      } catch (err) {
-        console.error(err);
-        if (isFlowRateTooBigError(err.message)) {
-          setErrorMessage('The flow rate provided is too big.');
-        }
-      }
-    };
-
-    if (!selectedToken.address || !debouncedFlowRate || Number(debouncedFlowRate) <= 0) {
-      setRequiredDeposit();
-      return;
-    }
-
-    fetchDepositRequeriment(selectedToken.address, debouncedFlowRate);
-  }, [cfa, debouncedFlowRate, selectedToken.address]);
-
   return (
     <>
       <form onSubmit={handleSubmit}>
@@ -227,7 +201,7 @@ const InnerUpdateFlow = ({ cfa, panelState, flows, superTokens, onUpdateFlow }) 
       {displayFlowExists && (
         <ExistingFlowInfo flow={existingFlow} selectedToken={selectedToken} flowRate={flowRate} />
       )}
-      {requiredDeposit && (
+      {!!requiredDeposit && (
         <RequiredDepositInfo requiredDeposit={requiredDeposit} selectedToken={selectedToken} />
       )}
     </>

@@ -1,0 +1,24 @@
+[
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "host",
+        "type": "address"
+      },
+      {
+        "name": "superToken",
+        "type": "address"
+      }
+    ],
+    "name": "getCFAv1LiquidationPeriod",
+    "outputs": [
+      {
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

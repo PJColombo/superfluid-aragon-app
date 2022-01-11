@@ -1,9 +1,11 @@
 import { BN } from 'bn.js';
 import { concat, from } from 'rxjs';
 import { endWith, first, mergeMap, startWith } from 'rxjs/operators';
-import cfaV1ABI from '../abi/CFAv1.json';
 import { addressesEqual, isTestNetwork } from '../helpers';
 import { getTokenListUrlByNetwork } from '../helpers/token-list';
+import cfaV1ABI from '../abi/CFAv1.json';
+import governanceABI from '../abi/Governance.json';
+import hostABI from '../abi/Host.json';
 
 const REORG_SAFETY_BLOCK_AGE = 100;
 
@@ -30,6 +32,13 @@ export const fetchTokenList = async network => {
 export const createSettings = async app => {
   const cfaAddress = await app.call('cfa').toPromise();
   const cfa = { address: cfaAddress, contract: app.external(cfaAddress, cfaV1ABI) };
+  const hostAddress = await app.call('host').toPromise();
+  const host = { address: hostAddress, contract: app.external(hostAddress, hostABI) };
+  const governanceAddress = await host.contract.getGovernance().toPromise();
+  const governance = {
+    address: governanceAddress,
+    contract: app.external(governanceAddress, governanceABI),
+  };
 
   const network = await app
     .network()
@@ -42,6 +51,8 @@ export const createSettings = async app => {
     network,
     superfluid: {
       cfa,
+      governance,
+      host,
     },
     tokenList,
   };
@@ -190,6 +201,7 @@ export const subscribeToExternal = async (
             event: EXTERNAL_SUBSCRIPTION_SYNCED,
             returnValues: {
               address: contractAddress,
+              blockNumber: nonCachedPastEventsToBlock,
             },
           },
           ...customFinalEvents,

@@ -1,0 +1,15 @@
+[
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "getGovernance",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

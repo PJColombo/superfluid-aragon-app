@@ -1,4 +1,4 @@
-import { formatTokenAmount, IdentityBadge } from '@aragon/ui';
+import { IdentityBadge } from '@aragon/ui';
 import React from 'react';
 import styled from 'styled-components';
 import { calculateNewFlowRate, fromDecimals, MONTH } from '../../../helpers';
@@ -19,8 +19,8 @@ export const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
       <BoldUnderline>
         {currentMonthlyFlowRate} {tokenSymbol}/month
       </BoldUnderline>{' '}
-      open to <IdentityBadge entity={flow.entity} connectedAccount compact />. We will add this
-      amount to the flow for a total of{' '}
+      open to <IdentityBadge entity={flow.entity} connectedAccount compact />. This amount will be
+      added to the current flow for a total of{' '}
       <BoldUnderline>
         {newMonthlyFlowRate} {tokenSymbol}/month.
       </BoldUnderline>
@@ -32,8 +32,7 @@ export const RequiredDepositInfo = ({ requiredDeposit, selectedToken }) => (
   <InfoBox mode="warning">
     Starting this flow will take a security Deposit of{' '}
     <BoldUnderline>
-      {formatTokenAmount(requiredDeposit, selectedToken.data.decimals, { digits: 6 })}{' '}
-      {selectedToken.data.symbol}
+      {requiredDeposit} {selectedToken.data.symbol}
     </BoldUnderline>{' '}
     from the app agent's balance. The Deposit will be refunded in full when the flow gets close or
     lost if the {selectedToken.data.symbol} balance hits zero with the flow still open.

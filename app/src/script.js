@@ -45,7 +45,12 @@ const initialize = async agentAddress => {
   return app.store(
     async (state, event) => {
       const { event: eventName } = event;
-      console.log('Reciving event: ', eventName, ' at block ', event.returnValues._blockNumber);
+      console.log(
+        'Reciving event: ',
+        eventName,
+        ' at block ',
+        event.returnValues._blockNumber ?? event.returnValues.blockNumber
+      );
 
       try {
         // Superfluid events

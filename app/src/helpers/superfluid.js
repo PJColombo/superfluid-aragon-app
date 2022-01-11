@@ -36,7 +36,6 @@ export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdate
     return;
   }
 
-  const b = calculateCurrentAmount(balance, netFlow, lastUpdateDate, lastUpdateDate);
   const currentBalance = calculateCurrentAmount(balance, netFlow, lastUpdateDate, currentDate);
   const millisecondsToDepletion = Math.floor(
     currentBalance
@@ -47,4 +46,26 @@ export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdate
   const currentDateMilliseconds = currentDate.getTime();
 
   return new Date(currentDateMilliseconds + millisecondsToDepletion);
+};
+
+export const calculateRequiredDeposit = (flowRate, liquidationPeriod) => {
+  if (!flowRate || isNaN(flowRate) || !liquidationPeriod || isNaN(liquidationPeriod)) {
+    return;
+  }
+
+  let normalizedFlowRate, normalizedLiquidationPeriod;
+
+  if (typeof flowRate === 'string') {
+    normalizedFlowRate = Number(flowRate);
+  } else {
+    normalizedFlowRate = flowRate;
+  }
+
+  if (typeof liquidationPeriod === 'string') {
+    normalizedLiquidationPeriod = Number(liquidationPeriod);
+  } else {
+    normalizedLiquidationPeriod = liquidationPeriod;
+  }
+
+  return normalizedFlowRate * normalizedLiquidationPeriod;
 };

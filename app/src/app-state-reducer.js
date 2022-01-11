@@ -23,6 +23,7 @@ const appStateReducer = state => {
         balance,
         lastUpdateDate,
         lastUpdateTimestamp,
+        liquidationPeriodSeconds,
         netFlow,
         decimals,
         ...superToken
@@ -39,6 +40,7 @@ const appStateReducer = state => {
           },
           balance: formattedBalance,
           lastUpdateDate: formattedLastUpdateDate,
+          liquidationPeriodSeconds: parseInt(liquidationPeriodSeconds),
           netFlow: formattedNetflow,
           decimals: parseInt(decimals),
           depletionDate: calculateDepletionDate(
