@@ -1,10 +1,11 @@
 import { useNetwork } from '@aragon/api-react';
 import { useMemo } from 'react';
 import {
-  calculateDepletionDate,
+  calculateCurrentAmount,
   DEFAULT_CURRENCY,
   getConvertedAmount,
   isTestNetwork,
+  ZERO_BN,
 } from '../helpers';
 import useConvertRates from '../hooks/useConvertRates';
 
@@ -21,42 +22,49 @@ const useBalanceItems = superTokens => {
   const convertRates = useConvertRates(underlyingTokenAddresses, [DEFAULT_CURRENCY], network?.type);
 
   const balanceItems = useMemo(() => {
-    return superTokens.map(superToken => {
-      const {
-        address,
-        balance: amount,
-        decimals,
-        lastUpdateDate,
-        logoURI,
-        name,
-        netFlow,
-        symbol,
-      } = superToken;
+    return (
+      superTokens
+        // Filter out tokens with empty balances.
+        .filter(({ balance, netFlow, lastUpdateDate }) =>
+          calculateCurrentAmount(balance, netFlow, lastUpdateDate).gt(ZERO_BN)
+        )
+        .map(superToken => {
+          const {
+            address,
+            balance: amount,
+            decimals,
+            depletionDate,
+            lastUpdateDate,
+            logoURI,
+            name,
+            netFlow,
+            symbol,
+          } = superToken;
 
-      const depletionDate = calculateDepletionDate(amount, netFlow, new Date(), lastUpdateDate);
-      const conversionRate =
-        convertRates[getConvertRateToken(superToken, isTestNet)]?.[DEFAULT_CURRENCY];
-      let convertedAmount, convertedNetFlow;
+          const conversionRate =
+            convertRates[getConvertRateToken(superToken, isTestNet)]?.[DEFAULT_CURRENCY];
+          let convertedAmount, convertedNetFlow;
 
-      if (conversionRate) {
-        convertedAmount = getConvertedAmount(amount, conversionRate);
-        convertedNetFlow = getConvertedAmount(netFlow, conversionRate);
-      }
+          if (conversionRate) {
+            convertedAmount = getConvertedAmount(amount, conversionRate);
+            convertedNetFlow = getConvertedAmount(netFlow, conversionRate);
+          }
 
-      return {
-        address,
-        amount,
-        convertedAmount,
-        decimals,
-        depletionDate,
-        lastUpdateDate,
-        logoURI,
-        name,
-        netFlow,
-        convertedNetFlow,
-        symbol,
-      };
-    });
+          return {
+            address,
+            amount,
+            convertedAmount,
+            decimals,
+            depletionDate,
+            lastUpdateDate,
+            logoURI,
+            name,
+            netFlow,
+            convertedNetFlow,
+            symbol,
+          };
+        })
+    );
   }, [convertRates, superTokens, isTestNet]);
   return balanceItems;
 };

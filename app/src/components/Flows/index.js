@@ -10,7 +10,7 @@ import {
   useTheme,
 } from '@aragon/ui';
 import { compareDesc, format } from 'date-fns';
-import { BN } from 'ethereumjs-blockchain/node_modules/ethereumjs-util';
+import BN from 'bn.js';
 import React, { useMemo } from 'react';
 import { toChecksumAddress } from 'web3-utils';
 import { addressesEqual, MONTH } from '../../helpers';
@@ -167,7 +167,8 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
         superTokenAddress,
       }) => {
         const formattedDate = format(creationDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
-        const { decimals, symbol } = tokenDetails[toChecksumAddress(superTokenAddress)];
+        const checksumAddress = toChecksumAddress(superTokenAddress);
+        const { decimals, symbol } = tokenDetails[checksumAddress];
         const monthlyFlowRate = flowRate.mul(MONTH_BN);
 
         return [
@@ -231,7 +232,7 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
               />
             ) : (
               <DynamicFlowAmount
-                baseAmount={accumulatedAmount}
+                accumulatedAmount={accumulatedAmount}
                 rate={flowRate}
                 lastDate={lastUpdateDate}
               >

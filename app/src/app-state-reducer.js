@@ -1,5 +1,5 @@
 import { BN } from 'bn.js';
-import { timestampToDate } from './helpers';
+import { calculateDepletionDate, timestampToDate } from './helpers';
 
 const INITIAL_STATE = {
   agentAddress: '',
@@ -13,27 +13,60 @@ const appStateReducer = state => {
     return { ...INITIAL_STATE };
   }
 
+  const now = new Date();
+
   return {
     ...state,
-    superTokens: state.superTokens.map(superToken => ({
-      ...superToken,
-      underlyingToken: {
-        ...superToken.underlyingToken,
-        decimals: parseInt(superToken.underlyingToken.decimals),
-      },
-      balance: new BN(superToken.balance),
-      lastUpdateDate: timestampToDate(superToken.lastUpdateTimestamp),
-      netFlow: new BN(superToken.netFlow),
-      decimals: parseInt(superToken.decimals),
-    })),
-    flows: state.flows.map(flow => ({
-      ...flow,
-      accumulatedAmount: new BN(flow.accumulatedAmount),
-      creationDate: timestampToDate(flow.creationTimestamp),
-      flowRate: new BN(flow.flowRate),
-      lastUpdateDate: timestampToDate(flow.lastTimestamp),
-    })),
+    superTokens: state.superTokens.map(
+      ({
+        underlyingToken,
+        balance,
+        lastUpdateDate,
+        lastUpdateTimestamp,
+        netFlow,
+        decimals,
+        ...superToken
+      }) => {
+        const formattedBalance = new BN(balance);
+        const formattedNetflow = new BN(netFlow);
+        const formattedLastUpdateDate = timestampToDate(lastUpdateTimestamp);
+
+        return {
+          ...superToken,
+          underlyingToken: {
+            ...underlyingToken,
+            decimals: parseInt(underlyingToken.decimals),
+          },
+          balance: formattedBalance,
+          lastUpdateDate: formattedLastUpdateDate,
+          netFlow: formattedNetflow,
+          decimals: parseInt(decimals),
+          depletionDate: calculateDepletionDate(
+            formattedBalance,
+            formattedNetflow,
+            now,
+            formattedLastUpdateDate
+          ),
+        };
+      }
+    ),
+    flows: state.flows.map(
+      ({
+        accumulatedAmount,
+        creationDate,
+        creationTimestamp,
+        flowRate,
+        lastUpdateDate,
+        lastTimestamp,
+        ...flow
+      }) => ({
+        ...flow,
+        accumulatedAmount: new BN(accumulatedAmount),
+        creationDate: timestampToDate(creationTimestamp),
+        flowRate: new BN(flowRate),
+        lastUpdateDate: timestampToDate(lastTimestamp),
+      })
+    ),
   };
 };
-
 export default appStateReducer;

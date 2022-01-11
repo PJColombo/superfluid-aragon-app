@@ -2,7 +2,7 @@ import { formatTokenAmount, GU, IconArrowDown, IconArrowUp, textStyle, useTheme 
 import { differenceInDays } from 'date-fns';
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
-import { DEFAULT_CURRENCY_SYMBOL } from '../../helpers';
+import { DEFAULT_CURRENCY_SYMBOL, ZERO_BN } from '../../helpers';
 import DynamicFlowAmount from '../DynamicFlowAmount';
 import TokenDepletionWarning from './TokenDepletionWarning';
 
@@ -91,7 +91,7 @@ const BalanceToken = ({
             align-items: center;
           `}
         >
-          <DynamicFlowAmount baseAmount={amount} rate={netFlow} lastDate={lastUpdateDate}>
+          <DynamicFlowAmount accumulatedAmount={amount} rate={netFlow} lastDate={lastUpdateDate}>
             <SplitAmount decimals={decimals} />
           </DynamicFlowAmount>
         </div>
@@ -101,11 +101,11 @@ const BalanceToken = ({
             ${textStyle('body2')};
           `}
         >
-          {!convertedAmount || convertedAmount.isNeg() ? (
+          {!convertedAmount || convertedAmount.lte(ZERO_BN) ? (
             '−'
           ) : (
             <DynamicFlowAmount
-              baseAmount={convertedAmount}
+              accumulatedAmount={convertedAmount}
               rate={convertedNetFlow}
               lastDate={lastUpdateDate}
             >
@@ -134,17 +134,23 @@ function SplitAmount({ dynamicAmount, decimals, digitsDisplayed = 6, prefix }) {
       `}
     >
       {prefix}
-      <span>{integer}</span>
-      {fractional && (
-        <div
-          css={`
-            ${textStyle('body3')};
-            min-width: ${8 * GU}px;
-            align-self: center;
-          `}
-        >
-          .{fractional}
-        </div>
+      {dynamicAmount.isNeg() ? (
+        0
+      ) : (
+        <>
+          <span>{integer}</span>
+          {fractional && (
+            <div
+              css={`
+                ${textStyle('body3')};
+                min-width: ${8 * GU}px;
+                align-self: center;
+              `}
+            >
+              .{fractional}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

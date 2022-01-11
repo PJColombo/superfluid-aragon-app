@@ -27,8 +27,8 @@ export const calculateNewFlowRate = (existingFlow, flowRate) => {
     : flowRate;
 };
 
-export const calculateCurrentSuperTokenBalance = (baseAmount, rate, lastDate, date) => {
-  return baseAmount.add(rate.mul(new BN(differenceInSeconds(date ?? new Date(), lastDate))));
+export const calculateCurrentAmount = (accumulatedAmount, rate, lastDate, date) => {
+  return accumulatedAmount.add(rate.mul(new BN(differenceInSeconds(date ?? new Date(), lastDate))));
 };
 
 export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdateDate) => {
@@ -36,16 +36,11 @@ export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdate
     return;
   }
 
-  const currentBalance = calculateCurrentSuperTokenBalance(
-    balance,
-    netFlow,
-    lastUpdateDate,
-    currentDate
-  );
+  const b = calculateCurrentAmount(balance, netFlow, lastUpdateDate, lastUpdateDate);
+  const currentBalance = calculateCurrentAmount(balance, netFlow, lastUpdateDate, currentDate);
   const millisecondsToDepletion = Math.floor(
     currentBalance
-      .div(netFlow)
-      .abs()
+      .div(netFlow.abs())
       .mul(new BN(1000))
       .toNumber()
   );

@@ -2,10 +2,14 @@ import React, { useRef, useState } from 'react';
 import { Button, GU, IconWarning, noop, Popover, useLayout } from '@aragon/ui';
 import Lottie from 'react-lottie-player';
 import warningAnimatiom from '../../assets/warning-animation.json';
-import format from 'date-fns/format';
+import { format, formatDistance } from 'date-fns';
 
 const DepletionWarningPopover = ({ compact, depletionDate, onDeposit, ...props }) => {
   const formattedDepletionDate = depletionDate ? format(depletionDate, 'PPPPpp') : 'soon';
+  const formattedDistanceDepletionDate = depletionDate
+    ? `(${formatDistance(depletionDate, new Date(), { addSuffix: true })})`
+    : '';
+
   return (
     <Popover placement={compact ? 'bottom' : 'right'} {...props}>
       <div
@@ -30,8 +34,11 @@ const DepletionWarningPopover = ({ compact, depletionDate, onDeposit, ...props }
           >
             <IconWarning color="#FF6B00" />
           </span>
-          The balance is going to run out on <strong>{formattedDepletionDate}</strong>. All flows
-          will stop, make a deposit to keep them open.
+          The balance is going to run out on{' '}
+          <strong>
+            {formattedDepletionDate} {formattedDistanceDepletionDate}
+          </strong>
+          . All flows will stop, make a deposit to keep them open.
         </div>
         <Button mode="strong" label="Make a deposit" onClick={onDeposit} wide />
       </div>

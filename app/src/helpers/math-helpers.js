@@ -1,4 +1,6 @@
 import { BN } from 'bn.js';
+
+export const ZERO_BN = new BN(0);
 /**
  * Get the whole and decimal parts from a number.
  * Trims leading and trailing zeroes.
