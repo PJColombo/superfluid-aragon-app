@@ -1,5 +1,5 @@
 import { BN } from 'bn.js';
-import { calculateDepletionDate, timestampToDate } from './helpers';
+import { calculateDepletionDate, timestampToDate, ZERO_BN } from './helpers';
 
 const INITIAL_STATE = {
   agentAddress: '',
@@ -8,67 +8,96 @@ const INITIAL_STATE = {
   isSyncing: true,
 };
 
+const calculateInOutRate = (inOutRates, superTokenAddress, flowRate, flowIncoming) => {
+  const inOutRate = inOutRates[superTokenAddress] || [ZERO_BN, ZERO_BN];
+  const index = flowIncoming ? 0 : 1;
+  inOutRate[index] = inOutRate[index].add(flowRate);
+  return inOutRate;
+};
+
 const appStateReducer = state => {
   if (state === null) {
     return { ...INITIAL_STATE };
   }
 
   const now = new Date();
+  const inOutRates = {};
 
-  return {
-    ...state,
-    superTokens: state.superTokens.map(
-      ({
-        underlyingToken,
-        balance,
-        lastUpdateDate,
-        lastUpdateTimestamp,
-        liquidationPeriodSeconds,
-        netFlow,
-        decimals,
-        ...superToken
-      }) => {
-        const formattedBalance = new BN(balance);
-        const formattedNetflow = new BN(netFlow);
-        const formattedLastUpdateDate = timestampToDate(lastUpdateTimestamp);
+  const formattedFlows = state.flows.map(
+    ({
+      accumulatedAmount,
+      creationDate,
+      creationTimestamp,
+      flowRate,
+      lastUpdateDate,
+      lastTimestamp,
+      ...flow
+    }) => {
+      const flowRateBN = new BN(flowRate);
 
-        return {
-          ...superToken,
-          underlyingToken: {
-            ...underlyingToken,
-            decimals: parseInt(underlyingToken.decimals),
-          },
-          balance: formattedBalance,
-          lastUpdateDate: formattedLastUpdateDate,
-          liquidationPeriodSeconds: parseInt(liquidationPeriodSeconds),
-          netFlow: formattedNetflow,
-          decimals: parseInt(decimals),
-          depletionDate: calculateDepletionDate(
-            formattedBalance,
-            formattedNetflow,
-            now,
-            formattedLastUpdateDate
-          ),
-        };
+      if (!flow.isCancelled) {
+        const updatedInOutRate = calculateInOutRate(
+          inOutRates,
+          flow.superTokenAddress,
+          flowRateBN,
+          flow.isIncoming
+        );
+        inOutRates[flow.superTokenAddress] = updatedInOutRate;
       }
-    ),
-    flows: state.flows.map(
-      ({
-        accumulatedAmount,
-        creationDate,
-        creationTimestamp,
-        flowRate,
-        lastUpdateDate,
-        lastTimestamp,
-        ...flow
-      }) => ({
+
+      return {
         ...flow,
         accumulatedAmount: new BN(accumulatedAmount),
         creationDate: timestampToDate(creationTimestamp),
-        flowRate: new BN(flowRate),
+        flowRate: flowRateBN,
         lastUpdateDate: timestampToDate(lastTimestamp),
-      })
-    ),
+      };
+    }
+  );
+
+  const formattedSuperTokens = state.superTokens.map(
+    ({
+      underlyingToken,
+      balance,
+      lastUpdateDate,
+      lastUpdateTimestamp,
+      liquidationPeriodSeconds,
+      netFlow,
+      decimals,
+      ...superToken
+    }) => {
+      const formattedBalance = new BN(balance);
+      const formattedNetflow = new BN(netFlow);
+      const formattedLastUpdateDate = timestampToDate(lastUpdateTimestamp);
+      const [inflowRate, outflowRate] = inOutRates[superToken.address];
+
+      return {
+        ...superToken,
+        underlyingToken: {
+          ...underlyingToken,
+          decimals: parseInt(underlyingToken.decimals),
+        },
+        balance: formattedBalance,
+        lastUpdateDate: formattedLastUpdateDate,
+        liquidationPeriodSeconds: parseInt(liquidationPeriodSeconds),
+        inflowRate,
+        outflowRate,
+        netFlow: formattedNetflow,
+        decimals: parseInt(decimals),
+        depletionDate: calculateDepletionDate(
+          formattedBalance,
+          formattedNetflow,
+          now,
+          formattedLastUpdateDate
+        ),
+      };
+    }
+  );
+
+  return {
+    ...state,
+    superTokens: formattedSuperTokens,
+    flows: formattedFlows,
   };
 };
 export default appStateReducer;

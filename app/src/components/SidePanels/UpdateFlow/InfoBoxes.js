@@ -1,12 +1,8 @@
 import { IdentityBadge } from '@aragon/ui';
 import React from 'react';
 import styled from 'styled-components';
-import { calculateNewFlowRate, fromDecimals, MONTH } from '../../../helpers';
+import { calculateNewFlowRate, fromDecimals, toMonthlyRate } from '../../../helpers';
 import InfoBox from '../InfoBox';
-
-const toMonthlyRate = flowRate => {
-  return flowRate * MONTH;
-};
 
 export const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
   const currentMonthlyFlowRate = toMonthlyRate(fromDecimals(flow.flowRate)).toFixed(2);

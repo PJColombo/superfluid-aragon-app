@@ -2,7 +2,7 @@ import { useAragonApi } from '@aragon/api-react';
 import { Button, GU, Header, IconAdd, IconCoin, IconSwap, Main, SyncIndicator } from '@aragon/ui';
 import React from 'react';
 import { useAppLogic } from './app-logic';
-import Balances from './components/Balances';
+import SuperTokens from './components/SuperTokens';
 import Flows from './components/Flows';
 import GlobalErrorHandler from './components/GlobalErrorHandler';
 import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
@@ -51,7 +51,7 @@ function App() {
                 }
               />
 
-              <Balances superTokens={superTokens} onDeposit={transferPanel.requestOpen} />
+              <SuperTokens superTokens={superTokens} onDeposit={transferPanel.requestOpen} />
               <Flows
                 flows={flows}
                 tokens={superTokens}

@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import { differenceInSeconds } from 'date-fns';
-import { fromDecimals, isTestNetwork } from '.';
+import { fromDecimals, isTestNetwork, MONTH } from '.';
 import superTokenABI from '../abi/SuperToken';
 
 export const isSuperToken = async (tokenAddress, app) => {
@@ -25,6 +25,22 @@ export const calculateNewFlowRate = (existingFlow, flowRate) => {
   return existingFlow
     ? (Number(fromDecimals(existingFlow.flowRate)) + Number(flowRate)).toString()
     : flowRate;
+};
+
+export const toMonthlyRate = flowRate => {
+  let normalizedFlowRate;
+
+  if (BN.isBN(flowRate)) {
+    normalizedFlowRate = flowRate.toNumber();
+  } else if (typeof flowRate === 'string') {
+    normalizedFlowRate = Number(flowRate);
+  } else if (typeof flowRate === 'number') {
+    normalizedFlowRate = flowRate;
+  } else {
+    return;
+  }
+
+  return normalizedFlowRate * MONTH;
 };
 
 export const calculateCurrentAmount = (accumulatedAmount, rate, lastDate, date) => {

@@ -37,6 +37,8 @@ const useBalanceItems = superTokens => {
             lastUpdateDate,
             logoURI,
             name,
+            inflowRate,
+            outflowRate,
             netFlow,
             symbol,
           } = superToken;
@@ -59,6 +61,8 @@ const useBalanceItems = superTokens => {
             lastUpdateDate,
             logoURI,
             name,
+            inflowRate,
+            outflowRate,
             netFlow,
             convertedNetFlow,
             symbol,

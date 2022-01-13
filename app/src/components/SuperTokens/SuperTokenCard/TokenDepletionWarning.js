@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
 import { Button, GU, IconWarning, noop, Popover, useLayout } from '@aragon/ui';
-import Lottie from 'react-lottie-player';
-import warningAnimatiom from '../../assets/warning-animation.json';
 import { format, formatDistance } from 'date-fns';
+import React, { useRef, useState } from 'react';
+import Lottie from 'react-lottie-player';
+import warningAnimatiom from '../../../assets/warning-animation.json';
 
 const DepletionWarningPopover = ({ compact, depletionDate, onDeposit, ...props }) => {
   const formattedDepletionDate = depletionDate ? format(depletionDate, 'PPPPpp') : 'soon';
