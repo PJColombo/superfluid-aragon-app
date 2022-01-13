@@ -1,14 +1,14 @@
 import React from 'react';
 import { useAppState } from '@aragon/api-react';
 import { GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
-import useBalanceItems from '../../hooks/useBalanceItems';
+import useSuperTokenItems from '../../hooks/useSuperTokenItems';
 import SuperTokenCard from './SuperTokenCard/index';
 
 const SuperTokens = ({ superTokens, onDeposit }) => {
   const { isSyncing } = useAppState();
   const theme = useTheme();
   const { layoutName } = useLayout();
-  const balanceItems = useBalanceItems(superTokens);
+  const superTokenItems = useSuperTokenItems(superTokens);
 
   const compact = layoutName === 'small';
 
@@ -26,7 +26,7 @@ const SuperTokens = ({ superTokens, onDeposit }) => {
           flex-wrap: wrap;
         `}
       >
-        {balanceItems.length === 0 ? (
+        {superTokenItems.length === 0 ? (
           <div
             css={`
               display: flex;
@@ -48,11 +48,11 @@ const SuperTokens = ({ superTokens, onDeposit }) => {
                 <LoadingRing mode="half-circle" /> Loading super tokens.
               </div>
             ) : (
-              'No token balances yet.'
+              'No super tokens yet.'
             )}
           </div>
         ) : (
-          balanceItems.map(balanceItem => (
+          superTokenItems.map(balanceItem => (
             <SuperTokenCard
               key={balanceItem.address}
               width={`${33 * GU}px`}

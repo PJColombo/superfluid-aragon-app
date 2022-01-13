@@ -7,12 +7,12 @@ import {
   isTestNetwork,
   ZERO_BN,
 } from '../helpers';
-import useConvertRates from '../hooks/useConvertRates';
+import useConvertRates from './useConvertRates';
 
 const getConvertRateToken = (superToken, isTestNetwork) =>
   isTestNetwork ? superToken.mainnetTokenEquivalentAddress : superToken.address;
 
-const useBalanceItems = superTokens => {
+const useSuperTokenItems = superTokens => {
   const network = useNetwork();
   const isTestNet = network && isTestNetwork(network);
   const underlyingTokenAddresses = superTokens.map(superToken =>
@@ -73,4 +73,4 @@ const useBalanceItems = superTokens => {
   return balanceItems;
 };
 
-export default useBalanceItems;
+export default useSuperTokenItems;

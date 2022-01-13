@@ -1,7 +1,7 @@
 import { Card, GU, IconArrowDown, IconArrowUp, textStyle, useTheme } from '@aragon/ui';
 import { differenceInDays } from 'date-fns';
 import React, { useCallback } from 'react';
-import { fromDecimals, toMonthlyRate } from '../../../helpers';
+import { fromDecimals, toMonthlyRate, ZERO_BN } from '../../../helpers';
 import Balance from './Balance';
 import FlowsDistribution from './FlowsDistribution';
 import TokenDepletionWarning from './TokenDepletionWarning';
@@ -119,7 +119,7 @@ const SuperTokenCard = React.memo(
               color: ${netFlow.isNeg() ? theme.negative : theme.positive};
             `}
           >
-            {netFlow.isNeg() ? '-' : '+'}
+            {netFlow.eq(ZERO_BN) ? '' : netFlow.isNeg() ? '-' : '+'}
             {formattedNetFlow}
           </div>
         </Field>

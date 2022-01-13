@@ -1,27 +1,21 @@
 import { Distribution, GU, textStyle, useTheme } from '@aragon/ui';
 import BN from 'bn.js';
 import React from 'react';
-import { fromDecimals, toMonthlyRate } from '../../../helpers';
+import { fromDecimals, toMonthlyRate, ZERO_BN } from '../../../helpers';
 
 const ONE_HUNDRED_BN = new BN(100);
 
 const FlowsDistribution = ({ inflowRate, outflowRate, netFlow, tokenDecimals }) => {
   const theme = useTheme();
   const absNetFlow = netFlow.abs();
-  const inflowPct = Number(
-    inflowRate
-      .div(absNetFlow)
-      .mul(ONE_HUNDRED_BN)
-      .toNumber()
-      .toFixed(2)
-  );
-  const outflowPct = Number(
-    outflowRate
-      .div(absNetFlow)
-      .mul(ONE_HUNDRED_BN)
-      .toNumber()
-      .toFixed(2)
-  );
+  const inflowPct = absNetFlow.eq(ZERO_BN)
+    ? new BN(0)
+    : inflowRate.div(absNetFlow).mul(ONE_HUNDRED_BN);
+  const outflowPct = absNetFlow.eq(ZERO_BN)
+    ? new BN(0)
+    : outflowRate.div(absNetFlow).mul(ONE_HUNDRED_BN);
+  const formattedInflowPct = Number(inflowPct.toNumber().toFixed(2));
+  const formattedOutflowPct = Number(outflowPct.toNumber().toFixed(2));
   const formattedInflow = toMonthlyRate(fromDecimals(inflowRate, tokenDecimals)).toFixed(2);
   const formattedOutflow = toMonthlyRate(fromDecimals(outflowRate, tokenDecimals)).toFixed(2);
 
@@ -29,8 +23,8 @@ const FlowsDistribution = ({ inflowRate, outflowRate, netFlow, tokenDecimals }) 
     <Distribution
       colors={[theme.negative, theme.positive]}
       items={[
-        { item: 'IN', percentage: inflowPct },
-        { item: 'OUT', percentage: outflowPct },
+        { item: 'IN', percentage: formattedInflowPct },
+        { item: 'OUT', percentage: formattedOutflowPct },
       ]}
       renderFullLegendItem={({ index, item, percentage }) => {
         const isFirstItem = index === 0;

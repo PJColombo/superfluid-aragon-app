@@ -1,5 +1,5 @@
 import { BN } from 'bn.js';
-import { calculateDepletionDate, timestampToDate, ZERO_BN } from './helpers';
+import { calculateDepletionDate, timestampToDate } from './helpers';
 
 const INITIAL_STATE = {
   agentAddress: '',
@@ -9,7 +9,7 @@ const INITIAL_STATE = {
 };
 
 const calculateInOutRate = (inOutRates, superTokenAddress, flowRate, flowIncoming) => {
-  const inOutRate = inOutRates[superTokenAddress] || [ZERO_BN, ZERO_BN];
+  const inOutRate = inOutRates[superTokenAddress] || [new BN(0), new BN(0)];
   const index = flowIncoming ? 0 : 1;
   inOutRate[index] = inOutRate[index].add(flowRate);
   return inOutRate;
@@ -69,7 +69,7 @@ const appStateReducer = state => {
       const formattedBalance = new BN(balance);
       const formattedNetflow = new BN(netFlow);
       const formattedLastUpdateDate = timestampToDate(lastUpdateTimestamp);
-      const [inflowRate, outflowRate] = inOutRates[superToken.address];
+      const [inflowRate, outflowRate] = inOutRates[superToken.address] ?? [new BN(0), new BN(0)];
 
       return {
         ...superToken,
