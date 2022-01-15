@@ -4,7 +4,8 @@ import { calculateCurrentAmount, ZERO_BN } from '../helpers';
 
 const RENDER_EVERY = 1000;
 
-const DynamicFlowAmount = ({ children, accumulatedAmount = ZERO_BN, rate, lastDate }) => {
+const DynamicFlowAmount = ({ index, children, accumulatedAmount = ZERO_BN, rate, lastDate }) => {
+  const displayDynamicAmount = !rate.eq(ZERO_BN);
   const renderAmount = () => {
     const amount = calculateCurrentAmount(accumulatedAmount, rate, lastDate);
     return (
@@ -16,10 +17,10 @@ const DynamicFlowAmount = ({ children, accumulatedAmount = ZERO_BN, rate, lastDa
     );
   };
 
-  return (
-    <div>
-      <Redraw interval={RENDER_EVERY}>{renderAmount}</Redraw>
-    </div>
+  return displayDynamicAmount ? (
+    <Redraw interval={RENDER_EVERY}>{renderAmount}</Redraw>
+  ) : (
+    <div>{renderAmount()}</div>
   );
 };
 
