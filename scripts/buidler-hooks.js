@@ -12,17 +12,11 @@
  * https://github.com/aragon/buidler-aragon/blob/develop/src/types.ts#L22
  */
 
-const deployFramework = require('@superfluid-finance/ethereum-contracts/scripts/deploy-framework');
-const deploySuperToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-super-token');
-const deployTestToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-test-token');
-const SuperfluidSDK = require('@superfluid-finance/js-sdk');
-const { utils, BigNumber } = require('ethers');
+const { sendTokensToAgent, setUpAgent, setUpSuperfluid } = require('./helpers/prepare');
+const { NATIVE_TOKEN, ONE_TOKEN, mintTestTokens, upgradeTokens } = require('./helpers/tokens');
 
-const TOKENS = ['fDAI', 'fUSDC'];
-// const SUPER_TOKENS = TOKENS.map((t) => `${t}x`);
-const ONE_TOKEN = BigNumber.from((1e18).toString());
+const TOKENS = ['fDAI', 'fUSDC', 'fTUSDC', NATIVE_TOKEN];
 const INITIAL_BALANCE = ONE_TOKEN.mul(15000);
-const ANY_ENTITY = '0x' + 'F'.repeat(40);
 
 let sf;
 let agent;
@@ -32,7 +26,17 @@ module.exports = {
   preDao: async ({ log }, { artifacts, web3 }) => {
     const [root] = await web3.eth.getAccounts();
 
-    sf = await setUpSuperfluid(TOKENS, web3, root, handleError, log);
+    sf = await setUpSuperfluid(
+      TOKENS,
+      web3,
+      root,
+      (err) => {
+        if (err) {
+          throw err;
+        }
+      },
+      log
+    );
   },
 
   // Called after a dao is deployed.
@@ -49,12 +53,12 @@ module.exports = {
 
     const accounts = [testAccount, receiver0, sender];
     log(`Minting test tokens for testing accounts...`);
-    await mintTestTokens(sf, accounts, TOKENS, artifacts, log);
+    await mintTestTokens(sf, accounts, TOKENS, INITIAL_BALANCE, artifacts, log);
 
     log(`Upgrading testing accounts tokens to super tokens...`);
     await upgradeTokens(sf, TOKENS, accounts, INITIAL_BALANCE.div(3), log);
 
-    log('Send super tokens to agent.');
+    log('Prepare ');
     await sendTokensToAgent(sf, proxy, sender, TOKENS, INITIAL_BALANCE.div(3));
   },
 
@@ -67,108 +71,3 @@ module.exports = {
   // Called after the app's proxy is updated with a new implementation.
   postUpdate: async ({ proxy }, { web3, artifacts }) => {},
 };
-
-const handleError = (err) => {
-  if (err) {
-    throw err;
-  }
-};
-
-const mintTestTokens = async (sf, recipients, tokens, artifacts, log = console.log) => {
-  const FakeToken = artifacts.require('FakeToken');
-  for (tokenName of tokens) {
-    /**
-     * Need to instantiate contract using FakeToken interface as the one provided by Superfluid
-     * doesn't have the mint() function
-     */
-    const fakeToken = await FakeToken.at(sf.tokens[tokenName].address);
-
-    for (recipient of recipients) {
-      await fakeToken.methods['mint(address,uint256)'](recipient, INITIAL_BALANCE);
-
-      log(`${INITIAL_BALANCE} ${tokenName} tokens minted for test account: ${recipient}`);
-    }
-  }
-};
-
-const upgradeTokens = async (sf, tokens, accounts, amount, log = console.log) => {
-  for (let i = 0; i < tokens.length; i++) {
-    const testToken = sf.tokens[tokens[i]];
-    const superToken = sf.superTokens[`${tokens[i]}x`];
-
-    for (account of accounts) {
-      await testToken.approve(superToken.address, amount, { from: account });
-      await superToken.upgrade(amount, { from: account });
-      log(`${amount} tokens ${superToken.address} upgraded for ${account}`);
-    }
-  }
-};
-
-const sendTokensToAgent = async (sf, flowFinance, sender, tokens, amount) => {
-  const testToken = sf.tokens[tokens[0]];
-  const superToken = sf.superTokens[`${tokens[0]}x`];
-
-  await testToken.approve(superToken.address, amount, { from: sender });
-  await superToken.upgrade(amount, { from: sender });
-
-  await superToken.approve(flowFinance.address, amount, { from: sender });
-  await flowFinance.deposit(superToken.address, amount, true, { from: sender });
-};
-
-const setUpSuperfluid = async (tokens, web3, deployer, cb = () => {}, log = console.log) => {
-  log('Deploying Superfluid framework...');
-
-  const options = { from: deployer, isTruffle: false, web3 };
-
-  await deployFramework(cb, options);
-
-  for (const tokenName of tokens) {
-    log(`Deploying super token and test token ${tokenName}...`);
-    await deployTestToken(handleError, [':', tokenName], options);
-    await deploySuperToken(handleError, [':', tokenName], options);
-
-    log(`Tokens ${tokenName} deployed.`);
-  }
-
-  log(`Initialize Superfluid Framework`);
-  const sf = new SuperfluidSDK.Framework({ tokens: tokens, web3, version: 'test' });
-
-  await sf.initialize();
-
-  return sf;
-};
-
-const setUpAgent = async (dao, artifacts, log = console.log) => {
-  const ACL = artifacts.require('ACL');
-  const acl = await ACL.at(await dao.acl());
-  const Agent = artifacts.require('Agent');
-  const agentBase = await Agent.new();
-  const appId = utils.namehash('agent.aragonpm.eth');
-
-  log('Creating agent...');
-
-  const receipt = await dao.methods['newAppInstance(bytes32,address,bytes,bool)'](
-    appId,
-    agentBase.address,
-    '0x',
-    false
-  );
-
-  const event = receipt.logs.find((log) => log.event === 'NewAppProxy' && log.args.appId === appId);
-
-  const agent = await Agent.at(event.args.proxy);
-
-  await agent.initialize();
-
-  log(`Proxy address: ${agent.address}.`);
-
-  await createAppPermission(acl, agent.address, await agent.TRANSFER_ROLE());
-  await createAppPermission(acl, agent.address, await agent.SAFE_EXECUTE_ROLE());
-
-  log("Agent's permissions set up");
-
-  return agent;
-};
-
-const createAppPermission = (acl, appAddress, appPermission) =>
-  acl.createPermission(ANY_ENTITY, appAddress, appPermission, ANY_ENTITY);
