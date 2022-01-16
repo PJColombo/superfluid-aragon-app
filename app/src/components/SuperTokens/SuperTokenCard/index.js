@@ -116,7 +116,8 @@ const SuperTokenCard = React.memo(
         <Field label="Monthly Net flow">
           <div
             css={`
-              color: ${netFlow.isNeg() ? theme.negative : theme.positive};
+              ${!netFlow.eq(ZERO_BN) &&
+                `color: ${netFlow.isNeg() ? theme.negative : theme.positive};`}
             `}
           >
             {netFlow.eq(ZERO_BN) ? '' : netFlow.isNeg() ? '-' : '+'}
