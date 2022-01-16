@@ -3,8 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
 import { addressPattern, toDecimals } from '../../../helpers';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
-import SuperTokensLink from '../../SuperTokensLink';
-import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
+import SuperTokensLink from '../SuperTokensLink';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../TokenSelector';
 import AmountInput from '../AmountInput';
 import SubmitButton from '../SubmitButton';
 

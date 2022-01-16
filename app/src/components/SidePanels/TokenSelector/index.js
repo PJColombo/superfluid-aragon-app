@@ -11,7 +11,7 @@ import {
 } from '@aragon/ui';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAddress } from 'web3-utils';
-import { isSuperToken, loadTokenData, loadTokenHolderBalance } from '../../helpers';
+import { isSuperToken, loadTokenData, loadTokenHolderBalance } from '../../../helpers';
 import TokenSelectorInstance from './TokenSelectorInstance';
 
 const CUSTOM_TOKEN_INDEX = -1;

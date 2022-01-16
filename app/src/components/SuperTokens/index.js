@@ -3,7 +3,7 @@ import { useAppState } from '@aragon/api-react';
 import { GU, LoadingRing, textStyle, useLayout, useTheme } from '@aragon/ui';
 import useSuperTokenItems from '../../hooks/useSuperTokenItems';
 import SuperTokenCard from './SuperTokenCard/index';
-import Carousel from '../Carousel/';
+import Carousel from './Carousel';
 
 const SuperTokens = ({ superTokens, onDeposit }) => {
   const { isSyncing } = useAppState();

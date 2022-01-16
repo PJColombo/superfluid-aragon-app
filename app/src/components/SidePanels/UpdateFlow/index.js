@@ -15,7 +15,7 @@ import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
 import LocalIdentitiesAutoComplete from '../../LocalIdentitiesAutoComplete';
 import SubmitButton from '../SubmitButton';
-import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../../TokenSelector';
+import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../TokenSelector';
 import InfoBox from '../InfoBox';
 import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
 

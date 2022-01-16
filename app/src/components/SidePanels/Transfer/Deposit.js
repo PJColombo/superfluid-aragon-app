@@ -2,12 +2,12 @@ import { Field, GU, Info } from '@aragon/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { isAddress } from 'web3-utils';
 import { addressesEqual, fromDecimals, toDecimals } from '../../../helpers';
-import SuperTokensLink from '../../SuperTokensLink';
+import SuperTokensLink from '../SuperTokensLink';
 import TokenSelector, {
   INITIAL_SELECTED_TOKEN,
   INVALID_TOKEN_ERROR,
   NO_TOKEN_BALANCE_ERROR,
-} from '../../TokenSelector';
+} from '../TokenSelector';
 import AmountInput from '../AmountInput';
 import SubmitButton from '../SubmitButton';
 

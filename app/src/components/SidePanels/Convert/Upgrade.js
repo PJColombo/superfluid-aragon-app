@@ -7,9 +7,9 @@ import TokenSelector, {
   INITIAL_SELECTED_TOKEN,
   INVALID_TOKEN_ERROR,
   NO_TOKEN_BALANCE_ERROR,
-} from '../../TokenSelector';
+} from '../TokenSelector';
 import superTokenAbi from '../../../abi/RawSuperToken.json';
-import SuperTokensLink from '../../SuperTokensLink';
+import SuperTokensLink from '../SuperTokensLink';
 import SubmitButton from '../SubmitButton';
 import AmountInput from '../AmountInput';
 
