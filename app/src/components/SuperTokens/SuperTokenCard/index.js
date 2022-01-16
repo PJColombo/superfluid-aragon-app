@@ -2,6 +2,7 @@ import { Card, GU, IconArrowDown, IconArrowUp, textStyle, useTheme } from '@arag
 import { differenceInDays } from 'date-fns';
 import React, { useCallback } from 'react';
 import { fromDecimals, toMonthlyRate, ZERO_BN } from '../../../helpers';
+import UnknownTokenLogo from '../../UnknownTokenLogo';
 import Balance from './Balance';
 import FlowsDistribution from './FlowsDistribution';
 import TokenDepletionWarning from './TokenDepletionWarning';
@@ -31,7 +32,7 @@ const SuperTokenCard = React.memo(
     showIcon = true,
   }) => {
     const theme = useTheme();
-    const displayLogo = showIcon && logoURI && logoURI.length;
+    const logoExists = Boolean(logoURI && logoURI.length);
     const displayWarning =
       depletionDate && differenceInDays(depletionDate, new Date()) <= WARNING_DAYS_THRESHOLD;
     const formattedNetFlow = toMonthlyRate(fromDecimals(netFlow.abs(), decimals)).toFixed(2);
@@ -65,16 +66,18 @@ const SuperTokenCard = React.memo(
               display: flex;
             `}
           >
-            {displayLogo && (
-              <img
-                alt=""
-                width={TOKEN_ICON_SIZE}
-                height={TOKEN_ICON_SIZE}
-                src={logoURI}
+            {showIcon && (
+              <div
                 css={`
                   margin-right: ${0.75 * GU}px;
                 `}
-              />
+              >
+                {logoExists ? (
+                  <img alt="" width={TOKEN_ICON_SIZE} height={TOKEN_ICON_SIZE} src={logoURI} />
+                ) : (
+                  <UnknownTokenLogo width={TOKEN_ICON_SIZE} height={TOKEN_ICON_SIZE} />
+                )}
+              </div>
             )}
             <strong>
               <div title={name ? `${name} - ${address}` : `${address}`}>{symbol || '?'}</div>

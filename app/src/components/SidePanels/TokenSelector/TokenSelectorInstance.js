@@ -1,9 +1,11 @@
 import { GU, IdentityBadge } from '@aragon/ui';
 import React from 'react';
-import styled from 'styled-components';
+import UnknownTokenLogo from '../../UnknownTokenLogo';
+
+const TOKEN_ICON_SIZE = '18';
 
 const TokenSelectorInstance = React.memo(({ address, logoURI, name, symbol, showIcon = true }) => {
-  const displayLogo = showIcon && logoURI && logoURI.length;
+  const logoExists = Boolean(logoURI && logoURI.length);
 
   return (
     <div
@@ -12,14 +14,19 @@ const TokenSelectorInstance = React.memo(({ address, logoURI, name, symbol, show
         align-items: center;
       `}
     >
-      {displayLogo ? (
+      {showIcon ? (
         <div
           css={`
             position: relative;
-            top: 2px;
+            top: ${logoExists ? '2' : '-2'}px;
+            margin-right: ${1 * GU}px;
           `}
         >
-          <Icon src={logoURI} />
+          {logoExists ? (
+            <img alt="" width={TOKEN_ICON_SIZE} height={TOKEN_ICON_SIZE} src={logoURI} />
+          ) : (
+            <UnknownTokenLogo width={TOKEN_ICON_SIZE} height={TOKEN_ICON_SIZE} />
+          )}
         </div>
       ) : null}
       {symbol && (
@@ -47,9 +54,5 @@ const TokenSelectorInstance = React.memo(({ address, logoURI, name, symbol, show
     </div>
   );
 });
-
-const Icon = styled.img.attrs({ alt: '', width: '18', height: '18' })`
-  margin-right: ${1 * GU}px;
-`;
 
 export default TokenSelectorInstance;
