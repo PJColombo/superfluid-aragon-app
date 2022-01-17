@@ -9,7 +9,7 @@ import {
   retryEvery,
   subscribeToExternals,
 } from './store/helpers';
-import { handleFlowUpdated, handleSetAgent, handleVaultEvent } from './store/event-handlers';
+import { handleFlowUpdated, handleVaultEvent } from './store/event-handlers';
 import { sha3 } from 'web3-utils';
 import AbiCoder from 'web3-eth-abi';
 
@@ -79,9 +79,6 @@ const initialize = async agentAddress => {
             };
           case EXTERNAL_SUBSCRIPTIONS_SYNCED:
             return { ...state, isSyncing: false };
-          // Flow Finance events
-          case 'SetAgent':
-            return handleSetAgent(state, event);
           default:
             return state;
         }

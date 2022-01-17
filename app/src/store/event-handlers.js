@@ -57,16 +57,6 @@ export const handleVaultEvent = async (state, event, app, settings) => {
   };
 };
 
-export const handleSetAgent = async (
-  state,
-  { returnValues: { agent: newAgentAddress } },
-  settings
-) => {
-  console.log('Should unsubscribe from previous agent and subscribe to the new one');
-
-  // TODO: Implement handler (cancel all old agent's subscriptions and subscribe to the new one)
-};
-
 const isAgentSender = (agentAddress, sender, receiver) => {
   return addressesEqual(agentAddress, sender) || addressesEqual(agentAddress, receiver);
 };
