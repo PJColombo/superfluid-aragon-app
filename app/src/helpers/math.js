@@ -88,6 +88,11 @@ export function toDecimals(num, decimals = 18, { truncate = true } = {}) {
     normalizedNum = num;
   }
 
+  // If num is on scientific notation reduce precision to the specified decimals
+  if (normalizedNum.includes('e')) {
+    normalizedNum = Number(normalizedNum).toFixed(decimals);
+  }
+
   if (typeof decimals === 'string') {
     normalizedDecimals = parseInt(decimals);
   } else {
