@@ -96,7 +96,7 @@ const TokenSelector = ({
       let updatedToken = { ...selectedToken, address, loadingData: false };
       try {
         if (isCustomToken) {
-          const [decimals, name, symbol] = await loadTokenData(processedAddress, api);
+          const [decimals, name, symbol] = await loadTokenData(processedAddress, api, network);
 
           updatedToken.data = { decimals, name, symbol };
         } else {
@@ -140,6 +140,7 @@ const TokenSelector = ({
     connectedAccount,
     customTokenAddress,
     loadUserBalance,
+    network,
     selectedToken,
     processCustomToken,
     validateToken,

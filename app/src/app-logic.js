@@ -3,7 +3,7 @@ import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { addressesEqual } from './helpers';
+import { addressesEqual, ZERO_ADDRESS } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 import useContract from './hooks/useContract';
 import cfaV1Abi from './abi/CFAv1.json';
@@ -82,16 +82,29 @@ export const useConvertTokens = (onDone = noop) => {
   return useCallback(
     async (operation, superTokenAddress, amount) => {
       const superToken = api.external(superTokenAddress, superTokenAbi);
+      const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
+      const isNativeSuperToken = addressesEqual(underlyingTokenAddress, ZERO_ADDRESS);
 
       if (operation === UPGRADE) {
-        const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
-        const intentParams = {
-          token: { address: underlyingTokenAddress, value: amount },
-        };
+        let intentParams = {};
 
-        await superToken.upgrade(amount, intentParams).toPromise();
+        /**
+         * Check if it's a native Super Token and pass amount as value. Otherwise,
+         * set up approve pre-tx data.
+         */
+        if (isNativeSuperToken) {
+          intentParams.value = amount;
+          await superToken.upgradeByETH(intentParams).toPromise();
+        } else {
+          intentParams.token = { address: underlyingTokenAddress, value: amount };
+          await superToken.upgrade(amount, intentParams).toPromise();
+        }
       } else if (operation === DOWNGRADE) {
-        await superToken.downgrade(amount).toPromise();
+        if (isNativeSuperToken) {
+          await superToken.downgradeToETH(amount).toPromise();
+        } else {
+          await superToken.downgrade(amount).toPromise();
+        }
       } else {
         throw new Error('Convert operation unknown.');
       }

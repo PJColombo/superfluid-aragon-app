@@ -1,4 +1,11 @@
-import { addressesEqual, getFakeTokenSymbol, isTestNetwork, loadTokenData } from '../helpers';
+import {
+  addressesEqual,
+  getFakeTokenSymbol,
+  getNativeCurrencyLogo,
+  isTestNetwork,
+  loadTokenData,
+  ZERO_ADDRESS,
+} from '../helpers';
 import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
 import superTokenABI from '../abi/SuperToken.js';
 
@@ -166,7 +173,7 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
   } = settings;
 
   const [[decimals, name, symbol], underlyingTokenAddress, liquidationPeriod] = await Promise.all([
-    loadTokenData(superTokenContract, app),
+    loadTokenData(superTokenContract, app, settings.network),
     superTokenContract.getUnderlyingToken().toPromise(),
     governance.contract.getCFAv1LiquidationPeriod(host.address, superTokenAddress).toPromise(),
   ]);
@@ -180,7 +187,8 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
   if (isTestNetwork(network)) {
     [underlyingDecimals, underlyingName, underlyingSymbol] = await loadTokenData(
       underlyingTokenAddress,
-      app
+      app,
+      settings.network
     );
 
     const tokenSymbol = getFakeTokenSymbol(underlyingSymbol);
@@ -189,9 +197,13 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
     if (token) {
       logoURI = token.logoURI;
       mainnetTokenEquivalentAddress = token.address;
+    } else if (addressesEqual(underlyingTokenAddress, ZERO_ADDRESS)) {
+      logoURI = getNativeCurrencyLogo(tokenSymbol);
     }
   } else {
-    token = tokenList.find(({ address }) => addressesEqual(address, underlyingTokenAddress));
+    token = !addressesEqual(underlyingTokenAddress, ZERO_ADDRESS)
+      ? tokenList.find(({ address }) => addressesEqual(address, underlyingTokenAddress))
+      : null;
 
     if (token) {
       logoURI = token.logoURI;
@@ -201,8 +213,13 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
     } else {
       [underlyingDecimals, underlyingName, underlyingSymbol] = await loadTokenData(
         underlyingTokenAddress,
-        app
+        app,
+        settings.network
       );
+
+      if (addressesEqual(underlyingTokenAddress, ZERO_ADDRESS)) {
+        logoURI = getNativeCurrencyLogo(underlyingSymbol);
+      }
     }
   }
 
@@ -219,7 +236,7 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
       symbol: underlyingSymbol,
     },
     logoURI,
-    // Needed to display conversion rates on test networks,
+    // Needed for displaying conversion rates on test networks,
     mainnetTokenEquivalentAddress,
     balance: 0,
     netFlow: 0,

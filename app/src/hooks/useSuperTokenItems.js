@@ -4,22 +4,18 @@ import {
   calculateCurrentAmount,
   DEFAULT_CURRENCY,
   getConvertedAmount,
+  getConvertRateToken,
   isTestNetwork,
   ZERO_BN,
 } from '../helpers';
 import useConvertRates from './useConvertRates';
 
-const getConvertRateToken = (superToken, isTestNetwork) =>
-  isTestNetwork ? superToken.mainnetTokenEquivalentAddress : superToken.address;
-
 const useSuperTokenItems = superTokens => {
   const network = useNetwork();
   const isTestNet = network && isTestNetwork(network);
-  const underlyingTokenAddresses = superTokens.map(superToken =>
-    getConvertRateToken(superToken, isTestNet)
-  );
+  const tokenAddresses = superTokens.map(superToken => getConvertRateToken(superToken, isTestNet));
 
-  const convertRates = useConvertRates(underlyingTokenAddresses, [DEFAULT_CURRENCY], network?.type);
+  const convertRates = useConvertRates(tokenAddresses, [DEFAULT_CURRENCY], network?.type);
 
   const balanceItems = useMemo(() => {
     return (
