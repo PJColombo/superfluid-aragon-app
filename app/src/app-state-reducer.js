@@ -8,6 +8,10 @@ const INITIAL_STATE = {
   isSyncing: true,
 };
 
+const compareSuperTokensBySymbol = (tokenA, tokenB) => {
+  return tokenA.symbol.localeCompare(tokenB.symbol);
+};
+
 const calculateInOutRate = (inOutRates, superTokenAddress, flowRate, flowIncoming) => {
   const inOutRate = inOutRates[superTokenAddress] || [new BN(0), new BN(0)];
   const index = flowIncoming ? 0 : 1;
@@ -96,7 +100,7 @@ const appStateReducer = state => {
 
   return {
     ...state,
-    superTokens: formattedSuperTokens,
+    superTokens: formattedSuperTokens.sort(compareSuperTokensBySymbol),
     flows: formattedFlows,
   };
 };
