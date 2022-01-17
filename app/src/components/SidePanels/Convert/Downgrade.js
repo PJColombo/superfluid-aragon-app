@@ -67,7 +67,7 @@ const Downgrade = ({ panelState, superTokens, onConvert }) => {
       return;
     }
 
-    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+    const adjustedAmount = toDecimals(amount, selectedToken.data.decimals);
     panelState.requestTransaction(onConvert, [DOWNGRADE, selectedToken.address, adjustedAmount]);
   };
 

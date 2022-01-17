@@ -56,7 +56,7 @@ const Withdrawal = ({ panelState, superTokens, onWithdraw }) => {
       return;
     }
 
-    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+    const adjustedAmount = toDecimals(amount, selectedToken.data.decimals);
 
     panelState.requestTransaction(onWithdraw, [selectedToken.address, recipient, adjustedAmount]);
   };

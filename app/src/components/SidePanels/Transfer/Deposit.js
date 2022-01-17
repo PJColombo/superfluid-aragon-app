@@ -79,7 +79,7 @@ const Deposit = ({ panelState, superTokens, onDeposit }) => {
       return;
     }
 
-    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+    const adjustedAmount = toDecimals(amount, selectedToken.data.decimals);
 
     panelState.requestTransaction(onDeposit, [selectedToken.address, adjustedAmount, true]);
   };

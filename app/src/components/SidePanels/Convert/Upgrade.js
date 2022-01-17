@@ -83,7 +83,7 @@ const Upgrade = ({ panelState, superTokens, onConvert }) => {
       return;
     }
 
-    const adjustedAmount = toDecimals(amount, selectedToken.decimals);
+    const adjustedAmount = toDecimals(amount, selectedToken.data.decimals);
     const isCustomToken = selectedToken.index === -1;
 
     panelState.requestTransaction(onConvert, [
