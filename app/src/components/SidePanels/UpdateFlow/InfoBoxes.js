@@ -4,7 +4,12 @@ import styled from 'styled-components';
 import { calculateNewFlowRate, fromDecimals, toMonthlyRate } from '../../../helpers';
 import InfoBox from '../InfoBox';
 
-export const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
+export const ExistingFlowInfo = ({
+  flow,
+  selectedToken,
+  flowRate = '0',
+  isOutgoingFlow = true,
+}) => {
   const currentMonthlyFlowRate = toMonthlyRate(fromDecimals(flow.flowRate)).toFixed(2);
   const newMonthlyFlowRate = toMonthlyRate(calculateNewFlowRate(flow, flowRate)).toFixed(2);
   const tokenSymbol = selectedToken.data.symbol;
@@ -15,8 +20,9 @@ export const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
       <BoldUnderline>
         {currentMonthlyFlowRate} {tokenSymbol}/month
       </BoldUnderline>{' '}
-      open to <IdentityBadge entity={flow.entity} connectedAccount compact />. This amount will be
-      added to the current flow for a total of{' '}
+      opened {isOutgoingFlow ? 'to' : 'from'}{' '}
+      <IdentityBadge entity={flow.entity} connectedAccount compact />. This amount will be added to
+      the current flow for a total of{' '}
       <BoldUnderline>
         {newMonthlyFlowRate} {tokenSymbol}/month.
       </BoldUnderline>
@@ -24,16 +30,21 @@ export const ExistingFlowInfo = ({ flow, selectedToken, flowRate = '0' }) => {
   );
 };
 
-export const RequiredDepositInfo = ({ requiredDeposit, selectedToken }) => (
-  <InfoBox mode="warning">
-    Starting this flow will take a security Deposit of{' '}
-    <BoldUnderline>
-      {requiredDeposit} {selectedToken.data.symbol}
-    </BoldUnderline>{' '}
-    from the app agent's balance. The Deposit will be refunded in full when the flow gets close or
-    lost if the {selectedToken.data.symbol} balance hits zero with the flow still open.
-  </InfoBox>
-);
+export const RequiredDepositInfo = ({ requiredDeposit, selectedToken, isOutgoingFlow = true }) => {
+  const formattedRequiredDeposit = Number(requiredDeposit.toFixed(8));
+
+  return (
+    <InfoBox mode="warning">
+      Starting this flow will take a security Deposit of{' '}
+      <BoldUnderline>
+        {formattedRequiredDeposit} {selectedToken.data.symbol}
+      </BoldUnderline>{' '}
+      from {isOutgoingFlow ? "the app Agent's balance" : 'your account'}. The Deposit will be
+      refunded in full when the flow gets closed or lost if the {selectedToken.data.symbol} balance
+      hits zero with the flow still open.
+    </InfoBox>
+  );
+};
 
 const BoldUnderline = styled.span`
   font-weight: bold;

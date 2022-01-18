@@ -11,5 +11,30 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "agreementClass",
+        "type": "address"
+      },
+      {
+        "name": "callData",
+        "type": "bytes"
+      },
+      {
+        "name": "userData",
+        "type": "bytes"
+      }
+    ],
+    "name": "callAgreement",
+    "outputs": [
+      {
+        "name": "returnedData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]

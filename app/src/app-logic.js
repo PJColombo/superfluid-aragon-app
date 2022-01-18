@@ -3,30 +3,40 @@ import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { addressesEqual, ZERO_ADDRESS } from './helpers';
+import { addressesEqual, callAgreement, ZERO_ADDRESS } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 import useContract from './hooks/useContract';
-import cfaV1Abi from './abi/CFAv1.json';
+import hostABI from './abi/Host.json';
 
-export const useUpdateFlow = (onDone = noop) => {
+export const useUpdateFlow = (host, onDone = noop) => {
   const api = useApi();
-  const { flows } = useAppState();
+  const { cfaAddress, flows } = useAppState();
 
   return useCallback(
-    async (tokenAddress, receiver, flowRate) => {
+    async (tokenAddress, sender, receiver, flowRate, isOutgoingFlow) => {
+      const useAgreementContract = !isOutgoingFlow;
+
       const flow = flows.find(
         f =>
           !f.isCancelled &&
-          !f.isIncoming &&
-          addressesEqual(f.entity, receiver) &&
+          (isOutgoingFlow ? !f.isIncoming : f.isIncoming) &&
+          addressesEqual(f.entity, isOutgoingFlow ? receiver : sender) &&
           addressesEqual(f.superTokenAddress, tokenAddress)
       );
 
       try {
         if (flow) {
-          await api.updateFlow(tokenAddress, receiver, flowRate).toPromise();
+          if (useAgreementContract) {
+            await callAgreement(host, cfaAddress, [tokenAddress, receiver, flowRate, '0x'], true);
+          } else {
+            await api.updateFlow(tokenAddress, receiver, flowRate).toPromise();
+          }
         } else {
-          await api.createFlow(tokenAddress, receiver, flowRate).toPromise();
+          if (useAgreementContract) {
+            await callAgreement(host, cfaAddress, [tokenAddress, receiver, flowRate, '0x']);
+          } else {
+            await api.createFlow(tokenAddress, receiver, flowRate).toPromise();
+          }
         }
       } catch (err) {
         console.error(err);
@@ -34,7 +44,7 @@ export const useUpdateFlow = (onDone = noop) => {
 
       onDone();
     },
-    [api, flows, onDone]
+    [api, cfaAddress, host, flows, onDone]
   );
 };
 
@@ -117,14 +127,14 @@ export const useConvertTokens = (onDone = noop) => {
 
 // Handles the main logic of the app.
 export function useAppLogic() {
-  const { cfaAddress } = useAppState();
+  const { hostAddress } = useAppState();
   const convertPanel = usePanelState();
   const createFlowPanel = usePanelState();
   const transferPanel = usePanelState();
-  const cfa = useContract(cfaAddress, cfaV1Abi);
+  const host = useContract(hostAddress, hostABI);
 
   const actions = {
-    updateFlow: useUpdateFlow(createFlowPanel.requestClose),
+    updateFlow: useUpdateFlow(host, createFlowPanel.requestClose),
     deleteFlow: useDeleteFlow(),
     deposit: useDeposit(transferPanel.requestClose),
     withdraw: useWithdraw(transferPanel.requestClose),
@@ -132,7 +142,6 @@ export function useAppLogic() {
   };
 
   return {
-    cfa,
     actions,
     convertPanel,
     createFlowPanel,

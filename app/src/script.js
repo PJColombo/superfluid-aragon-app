@@ -97,7 +97,7 @@ const initializeState = (agentAddress, settings) => async cachedState => {
   console.log(cachedState);
 
   const {
-    superfluid: { cfa },
+    superfluid: { cfa, host },
   } = settings;
   const initialBlock =
     cachedState && cachedState.initialBlock
@@ -110,6 +110,7 @@ const initializeState = (agentAddress, settings) => async cachedState => {
   const nextState = {
     agentAddress,
     cfaAddress: cfa.address,
+    hostAddress: host.address,
     superTokens: [],
     flows: [],
     blockNumbersCache,

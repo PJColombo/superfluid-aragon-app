@@ -25,7 +25,7 @@ const MONTH_BN = new BN(MONTH);
 
 export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteFlow }) => {
   const { appState, network } = useAragonApi();
-  const { isSyncing } = appState;
+  const { agentAddress, isSyncing } = appState;
   const connectedAccount = useConnectedAccount();
   const { layoutName } = useLayout();
   const theme = useTheme();
@@ -242,17 +242,21 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
           </div>,
         ];
       }}
-      renderEntryActions={({ superTokenAddress, entity, isCancelled }) =>
+      renderEntryActions={({ superTokenAddress, entity, isCancelled, isIncoming }) =>
         isCancelled ? null : (
           <ContextMenu disabled={disableMenu} zIndex={1}>
-            <ContextMenuUpdateFlow
-              onUpdateFlow={() =>
-                onUpdateFlow({
-                  presetSuperTokenAddress: superTokenAddress,
-                  presetRecipient: entity,
-                })
-              }
-            />
+            {isIncoming && !addressesEqual(entity, connectedAccount) ? null : (
+              <ContextMenuUpdateFlow
+                onUpdateFlow={() =>
+                  onUpdateFlow({
+                    presetSuperTokenAddress: superTokenAddress,
+                    presetRecipient: isIncoming ? agentAddress : entity,
+                    presetSender: isIncoming ? entity : agentAddress,
+                    presetFlowTypeIndex: isIncoming ? 0 : 1,
+                  })
+                }
+              />
+            )}
             <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
           </ContextMenu>
         )

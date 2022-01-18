@@ -1,7 +1,10 @@
 import BN from 'bn.js';
 import { differenceInSeconds } from 'date-fns';
+import Web3EthAbi from 'web3-eth-abi';
 import { fromDecimals, isTestNetwork, MONTH } from '.';
 import superTokenABI from '../abi/SuperToken';
+import createFlowABI from '../abi/CFAv1-createFlow.json';
+import updateFlowABI from '../abi/CFAv1-updateFlow.json';
 
 export const isSuperToken = async (tokenAddress, app) => {
   try {
@@ -84,4 +87,12 @@ export const calculateRequiredDeposit = (flowRate, liquidationPeriod) => {
   }
 
   return normalizedFlowRate * normalizedLiquidationPeriod;
+};
+
+export const callAgreement = (host, cfaAddress, params, isUpdateOperation = false) => {
+  const operationABI = isUpdateOperation ? updateFlowABI : createFlowABI;
+
+  return host
+    .callAgreement(cfaAddress, Web3EthAbi.encodeFunctionCall(operationABI, params), '0x')
+    .toPromise();
 };

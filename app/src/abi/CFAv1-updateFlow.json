@@ -1,0 +1,29 @@
+{
+  "inputs": [
+    {
+      "name": "token",
+      "type": "address"
+    },
+    {
+      "name": "receiver",
+      "type": "address"
+    },
+    {
+      "name": "flowRate",
+      "type": "int96"
+    },
+    {
+      "name": "ctx",
+      "type": "bytes"
+    }
+  ],
+  "name": "updateFlow",
+  "outputs": [
+    {
+      "name": "newCtx",
+      "type": "bytes"
+    }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+}
