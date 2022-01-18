@@ -1,30 +1,28 @@
 import { Distribution, GU, textStyle, useTheme } from '@aragon/ui';
-import BN from 'bn.js';
 import React from 'react';
-import { fromDecimals, toMonthlyRate, ZERO_BN } from '../../../helpers';
+import { fromDecimals, toMonthlyRate } from '../../../helpers';
 
-const ONE_HUNDRED_BN = new BN(100);
-
-const FlowsDistribution = ({ inflowRate, outflowRate, netFlow, tokenDecimals }) => {
+const FlowsDistribution = ({ inflowRate, outflowRate, tokenDecimals }) => {
   const theme = useTheme();
-  const absNetFlow = netFlow.abs();
-  const inflowPct = absNetFlow.eq(ZERO_BN)
-    ? new BN(0)
-    : inflowRate.div(absNetFlow).mul(ONE_HUNDRED_BN);
-  const outflowPct = absNetFlow.eq(ZERO_BN)
-    ? new BN(0)
-    : outflowRate.div(absNetFlow).mul(ONE_HUNDRED_BN);
-  const formattedInflowPct = Number(inflowPct.toNumber().toFixed(2));
-  const formattedOutflowPct = Number(outflowPct.toNumber().toFixed(2));
-  const formattedInflow = toMonthlyRate(fromDecimals(inflowRate, tokenDecimals)).toFixed(2);
-  const formattedOutflow = toMonthlyRate(fromDecimals(outflowRate, tokenDecimals)).toFixed(2);
+  const totalFlowRate = inflowRate.add(outflowRate).toNumber();
+  const inflowPct = (totalFlowRate === 0
+    ? 0
+    : (inflowRate.toNumber() / totalFlowRate) * 100
+  ).toFixed(2);
+  const outflowPct = (totalFlowRate === 0
+    ? 0
+    : (outflowRate.toNumber() / totalFlowRate) * 100
+  ).toFixed(2);
+  const monthlyInflowRate = toMonthlyRate(fromDecimals(inflowRate, tokenDecimals)).toFixed(2);
+  const monthlyOutflowRate = toMonthlyRate(fromDecimals(outflowRate, tokenDecimals)).toFixed(2);
+  const distributionColors = [theme.negative, theme.positive];
 
   return (
     <Distribution
-      colors={[theme.negative, theme.positive]}
+      colors={inflowPct < outflowPct ? distributionColors : distributionColors.reverse()}
       items={[
-        { item: 'IN', percentage: formattedInflowPct },
-        { item: 'OUT', percentage: formattedOutflowPct },
+        { item: 'IN', percentage: Number(inflowPct) },
+        { item: 'OUT', percentage: Number(outflowPct) },
       ]}
       renderFullLegendItem={({ index, item, percentage }) => {
         const isFirstItem = index === 0;
@@ -71,7 +69,7 @@ const FlowsDistribution = ({ inflowRate, outflowRate, netFlow, tokenDecimals }) 
                   width: 100%;
                 `}
               >
-                {isInflow ? formattedInflow : formattedOutflow}
+                {isInflow ? monthlyInflowRate : monthlyOutflowRate}
               </span>
               <span
                 css={`

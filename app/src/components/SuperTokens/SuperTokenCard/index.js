@@ -131,7 +131,6 @@ const SuperTokenCard = React.memo(
           <FlowsDistribution
             inflowRate={inflowRate}
             outflowRate={outflowRate}
-            netFlow={netFlow}
             tokenDecimals={decimals}
           />
         </Field>
