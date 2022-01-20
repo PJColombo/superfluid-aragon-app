@@ -8,7 +8,7 @@ import FlowsDistribution from './FlowsDistribution';
 import TokenDepletionWarning from './TokenDepletionWarning';
 
 const TOKEN_ICON_SIZE = '25';
-const WARNING_DAYS_THRESHOLD = 10;
+const WARNING_THRESHOLD_DAYS = 10;
 
 const SuperTokenCard = React.memo(
   ({
@@ -34,7 +34,7 @@ const SuperTokenCard = React.memo(
     const theme = useTheme();
     const logoExists = Boolean(logoURI && logoURI.length);
     const displayWarning =
-      depletionDate && differenceInDays(depletionDate, new Date()) <= WARNING_DAYS_THRESHOLD;
+      depletionDate && differenceInDays(depletionDate, new Date()) <= WARNING_THRESHOLD_DAYS;
     const formattedNetFlow = toMonthlyRate(fromDecimals(netFlow.abs(), decimals)).toFixed(2);
 
     const handleTokenDeposit = useCallback(() => {

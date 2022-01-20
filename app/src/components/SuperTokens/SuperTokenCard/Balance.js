@@ -32,7 +32,7 @@ const Balance = ({
           ${textStyle('body2')};
         `}
       >
-        {!convertedAmount || convertedAmount.lte(ZERO_BN) ? (
+        {!convertedAmount || convertedAmount.lt(ZERO_BN) ? (
           '−'
         ) : (
           <DynamicFlowAmount
