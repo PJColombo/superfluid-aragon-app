@@ -5,15 +5,17 @@ import { useAppLogic } from './app-logic';
 import SuperTokens from './components/SuperTokens';
 import Flows from './components/Flows';
 import GlobalErrorHandler from './components/GlobalErrorHandler';
+import IncomingFlowsWarnings from './components/IncomingFlowsWarnings';
 import { Convert, UpdateFlow, Transfer } from './components/SidePanels';
 import { IdentityProvider } from './providers/IdentityManager';
 
 function App() {
-  const { appState, guiStyle } = useAragonApi();
-  const { superTokens, flows, isSyncing } = appState;
+  const { appState, connectedAccount, guiStyle } = useAragonApi();
+  const { flows, sendersSuperTokens, superTokens, isSyncing } = appState;
   const { actions, convertPanel, createFlowPanel, transferPanel } = useAppLogic();
   const { convertTokens, deleteFlow, deposit, updateFlow, withdraw } = actions;
   const { appearance } = guiStyle;
+  const senderSuperTokens = sendersSuperTokens[connectedAccount];
 
   return (
     <Main theme={appearance} assetsUrl="./aragon-ui">
@@ -40,6 +42,12 @@ function App() {
               </div>
             }
           />
+          {Boolean(senderSuperTokens && senderSuperTokens.length) && (
+            <IncomingFlowsWarnings
+              incomingFlowTokens={senderSuperTokens}
+              superTokens={superTokens}
+            />
+          )}
           <SuperTokens superTokens={superTokens} onDeposit={transferPanel.requestOpen} />
           <Flows
             flows={flows}

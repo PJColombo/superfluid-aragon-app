@@ -113,6 +113,7 @@ const initializeState = (agentAddress, settings) => async cachedState => {
     hostAddress: host.address,
     superTokens: [],
     flows: [],
+    sendersSuperTokens: {},
     blockNumbersCache,
     initialBlock,
     ...cachedState,

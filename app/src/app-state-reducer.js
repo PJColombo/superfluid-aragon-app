@@ -5,6 +5,7 @@ const INITIAL_STATE = {
   agentAddress: '',
   flows: [],
   superTokens: [],
+  sendersSuperTokens: {},
   isSyncing: true,
 };
 
@@ -23,7 +24,6 @@ const appStateReducer = state => {
   if (state === null) {
     return { ...INITIAL_STATE };
   }
-
   const now = new Date();
   const inOutRates = {};
 
@@ -58,7 +58,6 @@ const appStateReducer = state => {
       };
     }
   );
-
   const formattedSuperTokens = state.superTokens.map(
     ({
       underlyingToken,
@@ -97,11 +96,25 @@ const appStateReducer = state => {
       };
     }
   );
+  const formattedSendersSuperTokens = Object.keys(state.sendersSuperTokens).reduce(
+    (newSendersSuperTokens, sender) => {
+      newSendersSuperTokens[sender] = state.sendersSuperTokens[sender].map(superToken => ({
+        ...superToken,
+        balance: new BN(superToken.balance),
+        lastUpdateDate: timestampToDate(superToken.lastUpdateTimestamp),
+        netFlow: new BN(superToken.netFlow),
+      }));
+
+      return newSendersSuperTokens;
+    },
+    {}
+  );
 
   return {
     ...state,
     superTokens: formattedSuperTokens.sort(compareSuperTokensBySymbol),
     flows: formattedFlows,
+    sendersSuperTokens: formattedSendersSuperTokens,
   };
 };
 export default appStateReducer;

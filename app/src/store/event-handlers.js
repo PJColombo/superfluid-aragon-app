@@ -28,8 +28,8 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
 
   const { timestamp } = await app.web3Eth('getBlock', _blockNumber).toPromise();
 
-  const [newSuperTokens, newFlows] = await Promise.all([
-    updateSuperTokens(
+  const [newSuperTokens, newSendersSuperTokens] = await Promise.all([
+    await updateSuperTokens(
       state,
       app,
       settings,
@@ -37,13 +37,14 @@ export const handleFlowUpdated = async (state, event, app, settings) => {
       timestamp,
       addressesEqual(agentAddress, sender) ? totalSenderFlowRate : totalReceiverFlowRate
     ),
-    updateFlows(state, event, timestamp, settings.superfluid.cfa.contract),
+    await updateSendersSuperTokens(state, event, timestamp),
   ]);
 
   return {
     ...state,
     superTokens: newSuperTokens,
-    flows: newFlows,
+    flows: updateFlows(state, event, timestamp, settings.superfluid.cfa.contract),
+    sendersSuperTokens: newSendersSuperTokens,
   };
 };
 
@@ -111,7 +112,7 @@ const updateSuperTokens = async (
   return newSuperTokens;
 };
 
-const updateFlows = async (state, event, updateTimestamp) => {
+const updateFlows = (state, event, updateTimestamp) => {
   const { agentAddress } = state;
   const { receiver, flowRate, token: tokenAddress } = event.returnValues;
   const newFlows = [...state.flows];
@@ -153,6 +154,48 @@ const updateFlows = async (state, event, updateTimestamp) => {
   }
 
   return newFlows;
+};
+
+const updateSendersSuperTokens = async (state, event, updateTimestamp) => {
+  const { agentAddress } = state;
+  const { receiver, sender, totalSenderFlowRate, token } = event.returnValues;
+  const isIncoming = addressesEqual(agentAddress, receiver);
+  const newSendersSuperTokens = { ...state.sendersSuperTokens };
+
+  if (!isIncoming) {
+    return newSendersSuperTokens;
+  }
+
+  const senderSuperTokens = newSendersSuperTokens[sender];
+
+  // Create a new entry
+  if (!senderSuperTokens) {
+    newSendersSuperTokens[sender] = [
+      await newSuperTokenEntry(sender, token, totalSenderFlowRate, updateTimestamp),
+    ];
+  } else {
+    let newSenderSuperTokens = senderSuperTokens.filter(
+      superToken => !addressesEqual(superToken.address, token)
+    );
+
+    // Include updated Super Token entry only if it has not ended (net flow equal to zero)
+    if (totalSenderFlowRate !== 0) {
+      newSenderSuperTokens.push(
+        await newSuperTokenEntry(sender, token, totalSenderFlowRate, updateTimestamp)
+      );
+
+      newSendersSuperTokens[sender] = newSenderSuperTokens;
+    }
+  }
+
+  return newSendersSuperTokens;
+};
+
+const newSuperTokenEntry = async (sender, tokenAddress, netFlow, updateTimestamp) => {
+  const tokenContract = getSuperTokenContract(tokenAddress);
+  const balance = await tokenContract.balanceOf(sender).toPromise();
+
+  return { address: tokenAddress, balance, netFlow, lastUpdateTimestamp: updateTimestamp };
 };
 
 const newSuperToken = async (superTokenAddress, superTokenContract, app, settings) => {
