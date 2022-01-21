@@ -1,24 +1,9 @@
-import React, { useCallback, useState } from 'react';
-import {
-  Button,
-  ButtonBase,
-  GU,
-  IconDown,
-  Modal,
-  RADIUS,
-  textStyle,
-  useLayout,
-  useTheme,
-} from '@aragon/ui';
+import React from 'react';
+import { Button, Details, GU, Modal, RADIUS, textStyle, useLayout, useTheme } from '@aragon/ui';
 import ErrorIcon from '../../assets/error-icon.svg';
 
 const GenericError = ({ detailsTitle, detailsContent }) => {
   const theme = useTheme();
-  const [opened, setOpened] = useState(false);
-
-  const toggle = useCallback(() => {
-    setOpened(prevOpened => !prevOpened);
-  }, [setOpened]);
 
   return (
     <React.Fragment>
@@ -49,34 +34,12 @@ const GenericError = ({ detailsTitle, detailsContent }) => {
             margin-bottom: ${5 * GU}px;
           `}
         >
-          <ButtonBase
-            onClick={toggle}
-            css={`
-              display: flex;
-              align-items: center;
-              color: ${theme.surfaceContentSecondary};
-              ${textStyle('label2')};
-            `}
-          >
-            Click here to see more details
-            <div
-              css={`
-                position: relative;
-                top: ${opened ? '-4px' : '1px'};
-                margin-left: ${0.5 * GU}px;
-                transition: transform 150ms ease-in-out;
-                transform: rotate3d(0, 0, 1, ${opened ? 180 : 0}deg);
-              `}
-            >
-              <IconDown size="tiny" color={theme.surfaceContentSecondary} />
-            </div>
-          </ButtonBase>
-          {opened && (
+          <Details label="Click here to see more">
             <div
               css={`
                 overflow: auto;
                 padding: ${2 * GU}px;
-                max-height: 200px;
+                max-height: 400px;
                 border-radius: ${RADIUS}px;
                 color: ${theme.text};
                 white-space: pre;
@@ -96,7 +59,7 @@ const GenericError = ({ detailsTitle, detailsContent }) => {
               )}
               {detailsContent}
             </div>
-          )}
+          </Details>
         </div>
       )}
       <Button onClick={() => window.location.reload(true)} wide>
