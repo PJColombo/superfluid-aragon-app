@@ -87,8 +87,12 @@ export const calculateRequiredDeposit = (flowRate, liquidationPeriod) => {
   return normalizedFlowRate * normalizedLiquidationPeriod;
 };
 
-export const callAgreement = (host, cfaAddress, params, operationABI) => {
+export const callAgreement = (host, cfaAddress, params, userData, operationABI) => {
   return host
-    .callAgreement(cfaAddress, Web3EthAbi.encodeFunctionCall(operationABI, params), '0x')
+    .callAgreement(
+      cfaAddress,
+      Web3EthAbi.encodeFunctionCall(operationABI, params),
+      userData ?? '0x'
+    )
     .toPromise();
 };

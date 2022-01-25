@@ -105,11 +105,13 @@ contract FlowFinance is AragonApp {
      * @param _token Address of super token
      * @param _receiver Receiver of the flow
      * @param _flowRate Flow's rate of tokens per second
+     * @param _description Codified string containing the flow's description
      */
     function createFlow(
         ISuperToken _token,
         address _receiver,
-        int96 _flowRate
+        int96 _flowRate,
+        bytes _description
     ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.createFlow.selector,
@@ -119,7 +121,7 @@ contract FlowFinance is AragonApp {
             new bytes(0)
         );
 
-        callAgreement(encodedAgreementCall);
+        callAgreement(encodedAgreementCall, _description);
     }
 
     /**
@@ -127,11 +129,13 @@ contract FlowFinance is AragonApp {
      * @param _token Address of super token
      * @param _receiver Receiver of the flow
      * @param _flowRate Flow's rate of tokens per second
+     * @param _description Codified string containing the flow's description
      */
     function updateFlow(
         ISuperToken _token,
         address _receiver,
-        int96 _flowRate
+        int96 _flowRate,
+        bytes _description
     ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.updateFlow.selector,
@@ -141,7 +145,7 @@ contract FlowFinance is AragonApp {
             new bytes(0)
         );
 
-        callAgreement(encodedAgreementCall);
+        callAgreement(encodedAgreementCall, _description);
     }
 
     /**
@@ -163,7 +167,7 @@ contract FlowFinance is AragonApp {
             new bytes(0)
         );
 
-        callAgreement(encodedAgreementCall);
+        callAgreement(encodedAgreementCall, new bytes(0));
     }
 
     function setAgent(Agent _agent) external auth(SET_AGENT_ROLE) {
@@ -173,10 +177,10 @@ contract FlowFinance is AragonApp {
         emit NewAgentSet(_agent);
     }
 
-    function callAgreement(bytes encodedAgreementCall) internal {
+    function callAgreement(bytes encodedAgreementCall, bytes _description) internal {
         agent.safeExecute(
             host,
-            abi.encodeWithSelector(host.callAgreement.selector, cfa, encodedAgreementCall, new bytes(0))
+            abi.encodeWithSelector(host.callAgreement.selector, cfa, encodedAgreementCall, _description)
         );
     }
 

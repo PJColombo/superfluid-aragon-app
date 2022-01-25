@@ -10,7 +10,7 @@ const ROUNDING = 8;
 
 const computeFlowRate = (value, seconds) => (value / seconds).toFixed(ROUNDING);
 
-const FlowRateField = ({ onChange = noop }) => {
+const FlowRateField = React.forwardRef(({ onChange = noop }, ref) => {
   const [selectedRate, setSelectedRate] = useState(DEFAULT_RATE_ITEM);
   const [rateValue, setRateValue] = useState('');
   const valueInSeconds = computeFlowRate(rateValue, RATE_IN_SECONDS[selectedRate]);
@@ -44,7 +44,7 @@ const FlowRateField = ({ onChange = noop }) => {
             width: 100%;
           `}
         >
-          <AmountInput value={rateValue} onChange={handleInputChange} wide />
+          <AmountInput ref={ref} value={rateValue} onChange={handleInputChange} wide />
         </div>
         <div>
           <DropDown
@@ -81,6 +81,6 @@ const FlowRateField = ({ onChange = noop }) => {
       )}
     </Field>
   );
-};
+});
 
 export default FlowRateField;

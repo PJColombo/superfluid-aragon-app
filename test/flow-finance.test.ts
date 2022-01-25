@@ -19,6 +19,7 @@ import { installNewApp, newDao, toDecimals } from './helpers';
 import { computeFlowRate } from './helpers/superfluid';
 
 const { utils: ethersUtils } = ethers;
+const abiCoder = ethersUtils.defaultAbiCoder;
 
 const { aragon } = hre.config;
 const deployments = getDeployments();
@@ -318,12 +319,14 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('createFlow(address _token,address _receiver,int96 _flowRate)', () => {
+  describe('createFlow(address _token,address _receiver,int96 _flowRate, bytes _description)', () => {
     const flowRate = computeFlowRate(1000); // 1000 tokens/month
 
     it('should emit a valid FlowUpdated event when creating a new flow', async () => {
+      const description = abiCoder.encode(['string'], ['Test description']);
+
       expect(
-        await flowFinance.createFlow(superToken.address, receiver.address, flowRate),
+        await flowFinance.createFlow(superToken.address, receiver.address, flowRate, description),
         'Invalid event'
       )
         .to.emit(cfav1, 'FlowUpdated')
@@ -334,12 +337,12 @@ describe('Flow Finance', () => {
           flowRate,
           flowRate.mul(-1),
           flowRate,
-          '0x'
+          description
         );
     });
 
     it('should create a new flow correctly', async () => {
-      const tx = await flowFinance.createFlow(superToken.address, receiver.address, flowRate);
+      const tx = await flowFinance.createFlow(superToken.address, receiver.address, flowRate, '0x');
       const block = await root.provider.getBlock(tx.blockNumber);
 
       const flow = await cfav1.getFlow(superToken.address, ffAgent.address, receiver.address);
@@ -351,33 +354,37 @@ describe('Flow Finance', () => {
       await expect(
         flowFinance
           .connect(permissionlessAccount)
-          .createFlow(superToken.address, receiver.address, flowRate)
+          .createFlow(superToken.address, receiver.address, flowRate, '0x')
       ).to.be.revertedWith('APP_AUTH_FAILED');
     });
 
     it('should revert when trying to create flow using a non-contract supertoken', async () => {
       await expect(
-        flowFinance.createFlow(nonContractAccount.address, receiver.address, flowRate)
+        flowFinance.createFlow(nonContractAccount.address, receiver.address, flowRate, '0x')
       ).to.be.revertedWith('FLOW_FINANCE_SUPERTOKEN_NOT_CONTRACT');
     });
 
     it('should revert when trying to create flow using an invalid supertoken', async () => {
       await expect(
-        flowFinance.createFlow(fakeToken.address, receiver.address, flowRate)
+        flowFinance.createFlow(fakeToken.address, receiver.address, flowRate, '0x')
       ).to.be.revertedWith('FLOW_FINANCE_INVALID_SUPERTOKEN');
     });
   });
 
-  describe('updateFlow(ISuperToken _token,address _receiver,int96 _flowRate)', () => {
+  describe('updateFlow(ISuperToken _token,address _receiver,int96 _flowRate, bytes _description)', () => {
     const oldFlowRate = computeFlowRate(1000);
     const newFlowRate = computeFlowRate(2500);
 
     beforeEach(async () =>
-      flowFinance.createFlow(superToken.address, receiver.address, oldFlowRate)
+      flowFinance.createFlow(superToken.address, receiver.address, oldFlowRate, '0x')
     );
 
     it('should emit a correct FlowUpdated event', async () => {
-      expect(await flowFinance.updateFlow(superToken.address, receiver.address, newFlowRate))
+      const description = abiCoder.encode(['string'], ['New test description']);
+
+      expect(
+        await flowFinance.updateFlow(superToken.address, receiver.address, newFlowRate, description)
+      )
         .to.emit(cfav1, 'FlowUpdated')
         .withArgs(
           superToken.address,
@@ -386,12 +393,17 @@ describe('Flow Finance', () => {
           newFlowRate,
           newFlowRate.mul(-1),
           newFlowRate,
-          '0x'
+          description
         );
     });
 
     it('should update a flow correctly', async () => {
-      const tx = await flowFinance.updateFlow(superToken.address, receiver.address, newFlowRate);
+      const tx = await flowFinance.updateFlow(
+        superToken.address,
+        receiver.address,
+        newFlowRate,
+        '0x'
+      );
       const block = await root.provider.getBlock(tx.blockNumber);
 
       const flow = await cfav1.getFlow(superToken.address, ffAgent.address, receiver.address);
@@ -403,26 +415,26 @@ describe('Flow Finance', () => {
       await expect(
         flowFinance
           .connect(permissionlessAccount)
-          .updateFlow(superToken.address, receiver.address, newFlowRate)
+          .updateFlow(superToken.address, receiver.address, newFlowRate, '0x')
       ).to.be.revertedWith('APP_AUTH_FAILED');
     });
 
     it('should revert when trying to create flow using a non-contract supertoken', async () => {
       await expect(
-        flowFinance.updateFlow(nonContractAccount.address, receiver.address, newFlowRate)
+        flowFinance.updateFlow(nonContractAccount.address, receiver.address, newFlowRate, '0x')
       ).to.be.revertedWith('FLOW_FINANCE_SUPERTOKEN_NOT_CONTRACT');
     });
 
     it('should revert when trying to create flow using an invalid supertoken', async () => {
       await expect(
-        flowFinance.updateFlow(fakeToken.address, receiver.address, newFlowRate)
+        flowFinance.updateFlow(fakeToken.address, receiver.address, newFlowRate, '0x')
       ).to.be.revertedWith('FLOW_FINANCE_INVALID_SUPERTOKEN');
     });
   });
 
   describe('deleteFlow(ISuperToken _token,address _receiver)', () => {
     beforeEach(async () =>
-      flowFinance.createFlow(superToken.address, receiver.address, computeFlowRate(1000))
+      flowFinance.createFlow(superToken.address, receiver.address, computeFlowRate(1000), '0x')
     );
 
     it('should emit a correct FlowUpdated event', async () => {

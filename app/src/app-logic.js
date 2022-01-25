@@ -14,7 +14,7 @@ export const useUpdateFlow = (host, onDone = noop) => {
   const { agentAddress, cfaAddress, flows } = useAppState();
 
   return useCallback(
-    async (tokenAddress, entity, flowRate, isOutgoingFlow) => {
+    async (tokenAddress, entity, flowRate, description, isOutgoingFlow) => {
       const flow = flows.find(
         f =>
           !f.isCancelled &&
@@ -22,6 +22,7 @@ export const useUpdateFlow = (host, onDone = noop) => {
           addressesEqual(f.entity, entity) &&
           addressesEqual(f.superTokenAddress, tokenAddress)
       );
+      const flowDescription = description && description.length ? description : '0x';
 
       try {
         if (flow) {
@@ -30,10 +31,11 @@ export const useUpdateFlow = (host, onDone = noop) => {
               host,
               cfaAddress,
               [tokenAddress, agentAddress, flowRate, '0x'],
+              flowDescription,
               updateFlowABI
             );
           } else {
-            await api.updateFlow(tokenAddress, entity, flowRate).toPromise();
+            await api.updateFlow(tokenAddress, entity, flowRate, flowDescription).toPromise();
           }
         } else {
           if (!isOutgoingFlow) {
@@ -41,10 +43,11 @@ export const useUpdateFlow = (host, onDone = noop) => {
               host,
               cfaAddress,
               [tokenAddress, agentAddress, flowRate, '0x'],
+              flowDescription,
               createFlowABI
             );
           } else {
-            await api.createFlow(tokenAddress, entity, flowRate).toPromise();
+            await api.createFlow(tokenAddress, entity, flowRate, flowDescription).toPromise();
           }
         }
       } catch (err) {

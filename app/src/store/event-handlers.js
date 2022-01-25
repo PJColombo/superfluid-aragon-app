@@ -1,3 +1,4 @@
+import Web3EthAbi from 'web3-eth-abi';
 import {
   addressesEqual,
   getFakeTokenSymbol,
@@ -114,12 +115,13 @@ const updateSuperTokens = async (
 
 const updateFlows = (state, event, updateTimestamp) => {
   const { agentAddress } = state;
-  const { receiver, flowRate, token: tokenAddress } = event.returnValues;
+  const { receiver, flowRate, token: tokenAddress, userData } = event.returnValues;
   const newFlows = [...state.flows];
 
   const isIncoming = addressesEqual(receiver, agentAddress);
   const flowIndex = newFlows.findIndex(flow => isFlowEqual(flow, event));
   const flowExists = !!newFlows[flowIndex];
+  const description = userData ? Web3EthAbi.decodeParameter('string', userData) : null;
 
   // Create flow case
   if (!flowExists) {
@@ -132,6 +134,7 @@ const updateFlows = (state, event, updateTimestamp) => {
       creationTimestamp: updateTimestamp,
       lastTimestamp: updateTimestamp,
       flowRate,
+      description,
     });
   }
   // Update flow case
@@ -141,6 +144,7 @@ const updateFlows = (state, event, updateTimestamp) => {
       accumulatedAmount: calculateNewAccumulatedAmount(state.flows[flowIndex], updateTimestamp),
       lastTimestamp: updateTimestamp,
       flowRate,
+      description,
     };
   }
   // Delete flow case

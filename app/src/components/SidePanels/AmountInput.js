@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 
 const MAX_BUTTON_WIDTH = 6 * GU;
 
-const AmountInput = ({ amount, showMax, onChange, onMaxClick, ...props }) => {
+const AmountInput = React.forwardRef(({ amount, showMax, onChange, onMaxClick, ...props }, ref) => {
   const theme = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   return (
     <TextInput
+      ref={ref}
       css={`
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
@@ -44,6 +45,6 @@ const AmountInput = ({ amount, showMax, onChange, onMaxClick, ...props }) => {
       {...props}
     />
   );
-};
+});
 
 export default AmountInput;

@@ -1,6 +1,7 @@
 import { useAppState, useConnectedAccount } from '@aragon/api-react';
 import { DropDown, Field } from '@aragon/ui';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Web3EthAbi from 'web3-eth-abi';
 import { isAddress } from 'web3-utils';
 import {
   addressPattern,
@@ -19,6 +20,7 @@ import TokenSelector, { INITIAL_SELECTED_TOKEN } from '../TokenSelector';
 import InfoBox from '../InfoBox';
 import { ExistingFlowInfo, RequiredDepositInfo } from './InfoBoxes';
 import SuperTokensLink from '../SuperTokensLink';
+import TextInput from '@aragon/ui/dist/TextInput';
 
 const validateFields = (
   superToken,
@@ -86,8 +88,10 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState('');
+  const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
+  const flowRateInputRef = useRef();
   const { agentAddress } = useAppState();
   const requiredDeposit =
     selectedToken.index >= 0
@@ -97,7 +101,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
         )
       : null;
 
-  const { presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
+  const { presetDescription, presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
     panelState.presetParams || {};
   const outgoingFlowSelected = selectedFlowType === 1;
   const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
@@ -137,6 +141,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     setRecipient('');
     setSelectedToken({ ...INITIAL_SELECTED_TOKEN });
     setFlowRate('');
+    setDescription('');
     setErrorMessage();
   };
 
@@ -169,6 +174,11 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     setErrorMessage('');
   }, []);
 
+  const handleDescriptionChange = useCallback(({ target: { value } }) => {
+    setDescription(value);
+    setErrorMessage('');
+  }, []);
+
   const handleSubmit = async event => {
     event.preventDefault();
     const isCustomToken = selectedToken.index === -1;
@@ -192,11 +202,15 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
 
     const newFlowRate = calculateNewFlowRate(existingFlow, flowRate);
     const adjustedFlowRate = toDecimals(newFlowRate, selectedToken.data.decimals);
+    const encodedDescription = description.length
+      ? Web3EthAbi.encodeParameter('string', description)
+      : null;
 
     panelState.requestTransaction(onUpdateFlow, [
       selectedToken.address,
       recipient,
       adjustedFlowRate,
+      encodedDescription,
       outgoingFlowSelected,
     ]);
   };
@@ -209,12 +223,16 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
 
   // Handle reset when opening.
   useEffect(() => {
-    if (panelState.didOpen && !isFlowUpdateOperation) {
-      // reset to default values
-      // Focus the right input after some time to avoid the panel transition to
-      // be skipped by the browser.
-      recipientInputRef && setTimeout(() => recipientInputRef.current.focus(), 100);
+    if (!panelState.didOpen) {
+      return;
     }
+
+    const inputRef = isFlowUpdateOperation ? flowRateInputRef : recipientInputRef;
+
+    // reset to default values
+    // Focus the right input after some time to avoid the panel transition to
+    // be skipped by the browser.
+    inputRef && setTimeout(() => inputRef.current.focus(), 100);
   }, [isFlowUpdateOperation, panelState.didOpen]);
 
   // Set up preset params.
@@ -231,7 +249,14 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     setSelectedFlowType(presetFlowTypeIndex);
     setRecipient(presetRecipient);
     setSelectedToken(fetchedToken);
-  }, [presetFlowTypeIndex, presetRecipient, presetSuperTokenAddress, superTokens]);
+    setDescription(presetDescription);
+  }, [
+    presetDescription,
+    presetFlowTypeIndex,
+    presetRecipient,
+    presetSuperTokenAddress,
+    superTokens,
+  ]);
 
   return (
     <>
@@ -275,7 +300,10 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           allowCustomToken={!outgoingFlowSelected}
           loadUserBalance={!outgoingFlowSelected}
         />
-        <FlowRateField onChange={handleFlowRateChange} />
+        <FlowRateField ref={flowRateInputRef} onChange={handleFlowRateChange} />
+        <Field label="Description">
+          <TextInput value={description} onChange={handleDescriptionChange} wide />
+        </Field>
         <SubmitButton
           panelState={panelState}
           label={isFlowUpdateOperation || !!displayFlowExists ? 'Update' : 'Create'}

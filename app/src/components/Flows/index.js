@@ -159,6 +159,7 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
       renderEntry={({
         accumulatedAmount,
         creationDate,
+        description,
         entity,
         flowRate,
         lastUpdateDate,
@@ -242,22 +243,56 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
           </div>,
         ];
       }}
-      renderEntryActions={({ superTokenAddress, entity, isCancelled, isIncoming }) =>
-        isCancelled ? null : (
+      renderEntryExpansion={({ description }) => {
+        if (!description || !description.length) {
+          return;
+        }
+
+        return (
+          <div
+            css={`
+              display: flex;
+              align-items: center;
+              margin: ${1 * GU}px;
+            `}
+          >
+            <div
+              css={`
+                ${textStyle('body4')};
+                color: ${theme.surfaceContentSecondary};
+                text-transform: uppercase;
+              `}
+            >
+              Description:
+            </div>
+            <div
+              css={`
+                margin: ${1.5 * GU}px ${1 * GU}px;
+                text-align: justify;
+              `}
+            >
+              {description}
+            </div>
+          </div>
+        );
+      }}
+      renderEntryActions={({ superTokenAddress, entity, description, isCancelled, isIncoming }) =>
+        isCancelled || (isIncoming && !addressesEqual(entity, connectedAccount)) ? null : (
           <ContextMenu disabled={disableMenu} zIndex={1}>
-            {isIncoming && !addressesEqual(entity, connectedAccount) ? null : (
-              <ContextMenuUpdateFlow
-                onUpdateFlow={() =>
-                  onUpdateFlow({
-                    presetSuperTokenAddress: superTokenAddress,
-                    presetRecipient: isIncoming ? agentAddress : entity,
-                    presetSender: isIncoming ? entity : agentAddress,
-                    presetFlowTypeIndex: isIncoming ? 0 : 1,
-                  })
-                }
-              />
-            )}
-            <ContextMenuDeleteFlow onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity)} />
+            <ContextMenuUpdateFlow
+              onUpdateFlow={() =>
+                onUpdateFlow({
+                  presetSuperTokenAddress: superTokenAddress,
+                  presetRecipient: isIncoming ? agentAddress : entity,
+                  presetSender: isIncoming ? entity : agentAddress,
+                  presetFlowTypeIndex: isIncoming ? 0 : 1,
+                  presetDescription: description,
+                })
+              }
+            />
+            <ContextMenuDeleteFlow
+              onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity, !isIncoming)}
+            />
           </ContextMenu>
         )
       }
