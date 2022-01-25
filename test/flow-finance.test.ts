@@ -145,7 +145,7 @@ describe('Flow Finance', () => {
 
   beforeEach(async () => (snapshotId = await useSnapshot(snapshotId)));
 
-  describe('initialize(Agent _agent,ISuperfluid _host,IConstantFlowAgreementV1 _cfa,address[] _acceptedTokens)', () => {
+  describe('when initializing flow finance app', () => {
     it('should revert when passing an invalid agent', async () => {
       await expect(
         flowFinance.initialize(nonContractAccount.address, host.address, cfav1.address)
@@ -176,7 +176,7 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('setAgent(Agent _agent)', () => {
+  describe('when setting a new agent', () => {
     let newAgent: Agent;
 
     before(async () => {
@@ -234,7 +234,7 @@ describe('Flow Finance', () => {
       snapshotId = await takeSnapshot();
     });
 
-    describe('deposit(ISuperToken _token, uint256 _amount, bool _isExternalDeposit)', () => {
+    describe('when depositing tokens into the app', () => {
       it('should deposit tokens correctly', async () => {
         const agentBalanceBefore = await transferredSuperToken.balanceOf(ffAgent.address);
 
@@ -263,20 +263,20 @@ describe('Flow Finance', () => {
         expect(agentBalanceAfter.sub(agentBalanceBefore)).to.equal(TRANSFERRED_AMOUNT);
       });
 
-      it('should revert when trying to deposit zero supertokens', async () => {
+      it('should revert when trying to deposit zero Super Tokens', async () => {
         await expect(
           ffTransferrer.deposit(transferredSuperToken.address, 0, true)
         ).to.be.revertedWith('FLOW_FINANCE_DEPOSIT_AMOUNT_ZERO');
       });
 
-      it('should revert when trying to deposit an invalid supertoken', async () => {
+      it('should revert when trying to deposit an invalid Super Token', async () => {
         await expect(
           ffTransferrer.deposit(fakeToken.address, TRANSFERRED_AMOUNT, true)
         ).to.be.revertedWith('FLOW_FINANCE_INVALID_SUPERTOKEN');
       });
     });
 
-    describe('withdraw(ISuperToken _token, address _receiver, uint256 _amount)', () => {
+    describe('when withdrawing tokens out of the app', () => {
       beforeEach(async () => {
         await ffTransferrer.deposit(transferredSuperToken.address, TRANSFERRED_AMOUNT, true);
       });
@@ -319,7 +319,7 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('createFlow(address _token,address _receiver,int96 _flowRate, bytes _description)', () => {
+  describe('when creating a new flow', () => {
     const flowRate = computeFlowRate(1000); // 1000 tokens/month
 
     it('should emit a valid FlowUpdated event when creating a new flow', async () => {
@@ -371,7 +371,7 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('updateFlow(ISuperToken _token,address _receiver,int96 _flowRate, bytes _description)', () => {
+  describe('when updating a flow', () => {
     const oldFlowRate = computeFlowRate(1000);
     const newFlowRate = computeFlowRate(2500);
 
@@ -432,7 +432,7 @@ describe('Flow Finance', () => {
     });
   });
 
-  describe('deleteFlow(ISuperToken _token,address _receiver)', () => {
+  describe('when deleting a flow', () => {
     beforeEach(async () =>
       flowFinance.createFlow(superToken.address, receiver.address, computeFlowRate(1000), '0x')
     );
