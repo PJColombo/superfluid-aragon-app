@@ -92,7 +92,7 @@ export const callAgreement = (host, cfaAddress, params, userData, operationABI) 
     .callAgreement(
       cfaAddress,
       Web3EthAbi.encodeFunctionCall(operationABI, params),
-      userData ?? '0x'
+      userData && userData.length ? userData : '0x'
     )
     .toPromise();
 };

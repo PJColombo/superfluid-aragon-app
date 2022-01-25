@@ -68,7 +68,13 @@ export const useDeleteFlow = (host, onDone = noop) => {
       if (isOutgoingFlow) {
         api.deleteFlow(tokenAddress, entity).toPromise();
       } else {
-        callAgreement(host, cfaAddress, [tokenAddress, entity, agentAddress, '0x'], deleteFlowABI);
+        callAgreement(
+          host,
+          cfaAddress,
+          [tokenAddress, entity, agentAddress, '0x'],
+          null,
+          deleteFlowABI
+        );
       }
       onDone();
     },
