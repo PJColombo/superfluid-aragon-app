@@ -1,0 +1,30 @@
+{
+  "inputs": [
+    {
+      "name": "token",
+      "type": "address"
+    },
+    {
+      "name": "sender",
+      "type": "address"
+    },
+    {
+      "name": "receiver",
+      "type": "address"
+    },
+    {
+      "name": "ctx",
+      "type": "bytes"
+    }
+  ],
+  "name": "deleteFlow",
+  "outputs": [
+    {
+      "internalType": "bytes",
+      "name": "newCtx",
+      "type": "bytes"
+    }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+}

@@ -26,6 +26,7 @@ const validateFields = (
   flowRate,
   agentAddress,
   requiredDeposit,
+  userBalance,
   isOutgoingFlow,
   isCustomToken
 ) => {
@@ -47,13 +48,16 @@ const validateFields = (
         lastUpdateDate,
       } = superToken;
 
-      currentBalance = calculateCurrentAmount(balance, netFlow, lastUpdateDate);
+      currentBalance = isOutgoingFlow
+        ? calculateCurrentAmount(balance, netFlow, lastUpdateDate)
+        : userBalance;
+
       decimals = stDecimals;
       symbol = stSymbol;
     } else {
       const data = superToken.data;
 
-      currentBalance = data.userBalance;
+      currentBalance = userBalance;
       decimals = data.decimals;
       symbol = data.symbol;
     }
@@ -72,6 +76,7 @@ const findSuperTokenByAddress = (address, superTokens) => {
     index,
     address: superToken.address,
     data: { decimals: superToken.decimals, name: superToken.name, symbol: superToken.symbol },
+    loadingData: superToken.isIncoming,
   };
 };
 
@@ -96,7 +101,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     panelState.presetParams || {};
   const outgoingFlowSelected = selectedFlowType === 1;
   const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
-  const sender = outgoingFlowSelected ? agentAddress : connectedAccount;
   const disableSubmit = Boolean(
     errorMessage ||
       (!recipient && !presetRecipient) ||
@@ -131,7 +135,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const clear = () => {
     setSelectedFlowType(1);
     setRecipient('');
-    setSelectedToken(INITIAL_SELECTED_TOKEN);
+    setSelectedToken({ ...INITIAL_SELECTED_TOKEN });
     setFlowRate('');
     setErrorMessage();
   };
@@ -168,6 +172,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const handleSubmit = async event => {
     event.preventDefault();
     const isCustomToken = selectedToken.index === -1;
+    const userBalance = selectedToken.data.userBalance;
 
     const error = validateFields(
       isCustomToken ? selectedToken : superTokens[selectedToken.index],
@@ -175,6 +180,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
       flowRate,
       agentAddress,
       requiredDeposit,
+      userBalance,
       outgoingFlowSelected,
       isCustomToken
     );
@@ -189,7 +195,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
 
     panelState.requestTransaction(onUpdateFlow, [
       selectedToken.address,
-      sender,
       recipient,
       adjustedFlowRate,
       outgoingFlowSelected,
@@ -217,10 +222,15 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     if (!presetSuperTokenAddress || !presetRecipient) {
       return;
     }
+    const fetchedToken = findSuperTokenByAddress(presetSuperTokenAddress, superTokens);
+    // Fetch user's Super Token balance when we're updating an incoming flow
+    if (presetFlowTypeIndex === 0) {
+      fetchedToken.loadingData = true;
+    }
 
     setSelectedFlowType(presetFlowTypeIndex);
     setRecipient(presetRecipient);
-    setSelectedToken(findSuperTokenByAddress(presetSuperTokenAddress, superTokens));
+    setSelectedToken(fetchedToken);
   }, [presetFlowTypeIndex, presetRecipient, presetSuperTokenAddress, superTokens]);
 
   return (

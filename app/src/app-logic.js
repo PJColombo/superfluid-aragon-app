@@ -7,35 +7,44 @@ import { addressesEqual, callAgreement, ZERO_ADDRESS } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 import useContract from './hooks/useContract';
 import hostABI from './abi/Host.json';
+import { createFlowABI, deleteFlowABI, updateFlowABI } from './abi/cfav1-operations/';
 
 export const useUpdateFlow = (host, onDone = noop) => {
   const api = useApi();
-  const { cfaAddress, flows } = useAppState();
+  const { agentAddress, cfaAddress, flows } = useAppState();
 
   return useCallback(
-    async (tokenAddress, sender, receiver, flowRate, isOutgoingFlow) => {
-      const useAgreementContract = !isOutgoingFlow;
-
+    async (tokenAddress, entity, flowRate, isOutgoingFlow) => {
       const flow = flows.find(
         f =>
           !f.isCancelled &&
           (isOutgoingFlow ? !f.isIncoming : f.isIncoming) &&
-          addressesEqual(f.entity, isOutgoingFlow ? receiver : sender) &&
+          addressesEqual(f.entity, entity) &&
           addressesEqual(f.superTokenAddress, tokenAddress)
       );
 
       try {
         if (flow) {
-          if (useAgreementContract) {
-            await callAgreement(host, cfaAddress, [tokenAddress, receiver, flowRate, '0x'], true);
+          if (!isOutgoingFlow) {
+            await callAgreement(
+              host,
+              cfaAddress,
+              [tokenAddress, agentAddress, flowRate, '0x'],
+              updateFlowABI
+            );
           } else {
-            await api.updateFlow(tokenAddress, receiver, flowRate).toPromise();
+            await api.updateFlow(tokenAddress, entity, flowRate).toPromise();
           }
         } else {
-          if (useAgreementContract) {
-            await callAgreement(host, cfaAddress, [tokenAddress, receiver, flowRate, '0x']);
+          if (!isOutgoingFlow) {
+            await callAgreement(
+              host,
+              cfaAddress,
+              [tokenAddress, agentAddress, flowRate, '0x'],
+              createFlowABI
+            );
           } else {
-            await api.createFlow(tokenAddress, receiver, flowRate).toPromise();
+            await api.createFlow(tokenAddress, entity, flowRate).toPromise();
           }
         }
       } catch (err) {
@@ -44,18 +53,23 @@ export const useUpdateFlow = (host, onDone = noop) => {
 
       onDone();
     },
-    [api, cfaAddress, host, flows, onDone]
+    [agentAddress, api, cfaAddress, host, flows, onDone]
   );
 };
 
-export const useDeleteFlow = (onDone = noop) => {
+export const useDeleteFlow = (host, onDone = noop) => {
   const api = useApi();
+  const { agentAddress, cfaAddress } = useAppState();
   return useCallback(
-    (tokenAddress, receiver) => {
-      api.deleteFlow(tokenAddress, receiver).toPromise();
+    (tokenAddress, entity, isOutgoingFlow) => {
+      if (isOutgoingFlow) {
+        api.deleteFlow(tokenAddress, entity).toPromise();
+      } else {
+        callAgreement(host, cfaAddress, [tokenAddress, entity, agentAddress, '0x'], deleteFlowABI);
+      }
       onDone();
     },
-    [api, onDone]
+    [agentAddress, api, cfaAddress, host, onDone]
   );
 };
 
@@ -135,7 +149,7 @@ export function useAppLogic() {
 
   const actions = {
     updateFlow: useUpdateFlow(host, createFlowPanel.requestClose),
-    deleteFlow: useDeleteFlow(),
+    deleteFlow: useDeleteFlow(host),
     deposit: useDeposit(transferPanel.requestClose),
     withdraw: useWithdraw(transferPanel.requestClose),
     convertTokens: useConvertTokens(convertPanel.requestClose),
