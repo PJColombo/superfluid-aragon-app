@@ -87,7 +87,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [selectedFlowType, setSelectedFlowType] = useState(1);
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
-  const [flowRate, setFlowRate] = useState('');
+  const [flowRate, setFlowRate] = useState('0');
   const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState();
   const recipientInputRef = useRef();
@@ -100,7 +100,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           superTokens[selectedToken.index].liquidationPeriodSeconds
         )
       : null;
-
   const { presetDescription, presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
     panelState.presetParams || {};
   const outgoingFlowSelected = selectedFlowType === 1;
@@ -109,7 +108,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     errorMessage ||
       (!recipient && !presetRecipient) ||
       (!selectedToken.address && !presetSuperTokenAddress) ||
-      !flowRate
+      flowRate === '0'
   );
   const displayError = errorMessage && errorMessage.length;
   const existingFlow = useMemo(() => {
@@ -134,13 +133,12 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     recipient,
     selectedToken.address,
   ]);
-  const displayFlowExists = existingFlow && Number(flowRate) > 0;
 
   const clear = () => {
     setSelectedFlowType(1);
     setRecipient('');
     setSelectedToken({ ...INITIAL_SELECTED_TOKEN });
-    setFlowRate('');
+    setFlowRate('0');
     setDescription('');
     setErrorMessage();
   };
@@ -212,6 +210,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
       adjustedFlowRate,
       encodedDescription,
       outgoingFlowSelected,
+      !isFlowUpdateOperation && !existingFlow,
     ]);
   };
 
@@ -258,6 +257,19 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
     superTokens,
   ]);
 
+  useEffect(() => {
+    if (isFlowUpdateOperation) {
+      return;
+    }
+
+    if (!existingFlow) {
+      setDescription('');
+      return;
+    }
+
+    setDescription(existingFlow.description);
+  }, [existingFlow, isFlowUpdateOperation]);
+
   return (
     <>
       <form onSubmit={handleSubmit}>
@@ -300,13 +312,13 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           allowCustomToken={!outgoingFlowSelected}
           loadUserBalance={!outgoingFlowSelected}
         />
-        <FlowRateField ref={flowRateInputRef} onChange={handleFlowRateChange} />
-        <Field label="Description">
+        <Field label="Description (optional)">
           <TextInput value={description} onChange={handleDescriptionChange} wide />
         </Field>
+        <FlowRateField ref={flowRateInputRef} onChange={handleFlowRateChange} />
         <SubmitButton
           panelState={panelState}
-          label={isFlowUpdateOperation || !!displayFlowExists ? 'Update' : 'Create'}
+          label={isFlowUpdateOperation || !!existingFlow ? 'Update' : 'Create'}
           disabled={disableSubmit}
         />
       </form>
@@ -326,7 +338,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           )}
         </InfoBox>
       )}
-      {displayFlowExists && (
+      {!!existingFlow && (
         <ExistingFlowInfo
           flow={existingFlow}
           selectedToken={selectedToken}

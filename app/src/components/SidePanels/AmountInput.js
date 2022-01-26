@@ -6,21 +6,21 @@ const MAX_BUTTON_WIDTH = 6 * GU;
 const AmountInput = React.forwardRef(({ amount, showMax, onChange, onMaxClick, ...props }, ref) => {
   const theme = useTheme();
   const [isFocused, setIsFocused] = useState(false);
+
+  const handleInputChange = ({ target: { value } }) => {
+    if (!value.length || (!isNaN(value) && Number(value) >= 0)) {
+      onChange(value);
+    }
+  };
+
   return (
     <TextInput
       ref={ref}
-      css={`
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-        }
-      `}
-      type="number"
       value={amount}
       step="any"
       onBlur={() => setIsFocused(false)}
       onFocus={() => setIsFocused(true)}
-      onChange={onChange}
+      onChange={handleInputChange}
       adornment={
         showMax && (
           <ButtonBase

@@ -16,11 +16,11 @@ const FlowRateField = React.forwardRef(({ onChange = noop }, ref) => {
   const valueInSeconds = computeFlowRate(rateValue, RATE_IN_SECONDS[selectedRate]);
 
   const handleInputChange = useCallback(
-    ({ target: { value } }) => {
+    value => {
       setRateValue(value);
       onChange((value / RATE_IN_SECONDS[selectedRate]).toString());
     },
-    [selectedRate, setRateValue, onChange]
+    [selectedRate, onChange]
   );
 
   const handleDropdownChange = useCallback(

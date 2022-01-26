@@ -43,7 +43,7 @@ const Downgrade = ({ panelState, superTokens, onConvert }) => {
     setErrorMessage('');
   }, []);
 
-  const handleAmountChange = useCallback(({ target: { value } }) => {
+  const handleAmountChange = useCallback(value => {
     setAmount(value);
     setErrorMessage('');
   }, []);

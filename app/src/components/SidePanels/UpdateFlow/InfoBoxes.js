@@ -10,8 +10,8 @@ export const ExistingFlowInfo = ({
   flowRate = '0',
   isOutgoingFlow = true,
 }) => {
-  const currentMonthlyFlowRate = toMonthlyRate(fromDecimals(flow.flowRate)).toFixed(2);
-  const newMonthlyFlowRate = toMonthlyRate(calculateNewFlowRate(flow, flowRate)).toFixed(2);
+  const currentMonthlyFlowRate = Number(toMonthlyRate(fromDecimals(flow.flowRate)).toFixed(2));
+  const newMonthlyFlowRate = Number(toMonthlyRate(calculateNewFlowRate(flow, flowRate)).toFixed(2));
   const tokenSymbol = selectedToken.data.symbol;
 
   return (

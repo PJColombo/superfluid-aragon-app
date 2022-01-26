@@ -11,33 +11,14 @@ import { createFlowABI, deleteFlowABI, updateFlowABI } from './abi/cfav1-operati
 
 export const useUpdateFlow = (host, onDone = noop) => {
   const api = useApi();
-  const { agentAddress, cfaAddress, flows } = useAppState();
+  const { agentAddress, cfaAddress } = useAppState();
 
   return useCallback(
-    async (tokenAddress, entity, flowRate, description, isOutgoingFlow) => {
-      const flow = flows.find(
-        f =>
-          !f.isCancelled &&
-          (isOutgoingFlow ? !f.isIncoming : f.isIncoming) &&
-          addressesEqual(f.entity, entity) &&
-          addressesEqual(f.superTokenAddress, tokenAddress)
-      );
+    async (tokenAddress, entity, flowRate, description, isOutgoingFlow, isCreateOperation) => {
       const flowDescription = description && description.length ? description : '0x';
 
       try {
-        if (flow) {
-          if (!isOutgoingFlow) {
-            await callAgreement(
-              host,
-              cfaAddress,
-              [tokenAddress, agentAddress, flowRate, '0x'],
-              flowDescription,
-              updateFlowABI
-            );
-          } else {
-            await api.updateFlow(tokenAddress, entity, flowRate, flowDescription).toPromise();
-          }
-        } else {
+        if (isCreateOperation) {
           if (!isOutgoingFlow) {
             await callAgreement(
               host,
@@ -49,6 +30,18 @@ export const useUpdateFlow = (host, onDone = noop) => {
           } else {
             await api.createFlow(tokenAddress, entity, flowRate, flowDescription).toPromise();
           }
+        } else {
+          if (!isOutgoingFlow) {
+            await callAgreement(
+              host,
+              cfaAddress,
+              [tokenAddress, agentAddress, flowRate, '0x'],
+              flowDescription,
+              updateFlowABI
+            );
+          } else {
+            await api.updateFlow(tokenAddress, entity, flowRate, flowDescription).toPromise();
+          }
         }
       } catch (err) {
         console.error(err);
@@ -56,7 +49,7 @@ export const useUpdateFlow = (host, onDone = noop) => {
 
       onDone();
     },
-    [agentAddress, api, cfaAddress, host, flows, onDone]
+    [agentAddress, api, cfaAddress, host, onDone]
   );
 };
 

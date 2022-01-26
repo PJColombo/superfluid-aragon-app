@@ -41,7 +41,7 @@ const Withdrawal = ({ panelState, superTokens, onWithdraw }) => {
     setErrorMessage('');
   }, []);
 
-  const handleAmountChange = useCallback(({ target: { value } }) => {
+  const handleAmountChange = useCallback(value => {
     setAmount(value);
     setErrorMessage('');
   }, []);
