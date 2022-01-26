@@ -121,7 +121,7 @@ const updateFlows = (state, event, updateTimestamp) => {
   const isIncoming = addressesEqual(receiver, agentAddress);
   const flowIndex = newFlows.findIndex(flow => isFlowEqual(flow, event));
   const flowExists = !!newFlows[flowIndex];
-  const description = userData ? Web3EthAbi.decodeParameter('string', userData) : null;
+  const description = userData ? Web3EthAbi.decodeParameter('string', userData) : '';
 
   // Create flow case
   if (!flowExists) {
