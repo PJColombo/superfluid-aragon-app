@@ -31,19 +31,27 @@ const SuperTokens = ({ superTokens, onDeposit }) => {
             color: ${theme.content};
           `}
         >
-          {isSyncing ? (
-            <div
-              css={`
-                display: flex;
-                align-items: center;
-                gap: ${1 * GU}px;
-              `}
-            >
-              <LoadingRing mode="half-circle" /> Loading super tokens.
-            </div>
-          ) : (
-            'No super tokens yet.'
-          )}
+          <div
+            css={`
+              display: flex;
+              align-items: center;
+              gap: ${1 * GU}px;
+            `}
+          >
+            {isSyncing ? (
+              <>
+                <LoadingRing mode="half-circle" /> Loading super tokens.
+              </>
+            ) : (
+              <div
+                css={`
+                  color: ${theme.surfaceContentSecondary};
+                `}
+              >
+                No super tokens yet.
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <Carousel
