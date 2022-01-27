@@ -32,12 +32,12 @@ function App() {
                 `}
               >
                 <Button label="Convert" icon={<IconCoin />} onClick={convertPanel.requestOpen} />
-                <Button icon={<IconSwap />} label="Transfer" onClick={transferPanel.requestOpen} />
+                <Button label="Transfer" icon={<IconSwap />} onClick={transferPanel.requestOpen} />
                 <Button
                   mode="strong"
-                  onClick={createFlowPanel.requestOpen}
                   label="Create Flow"
                   icon={<IconAdd />}
+                  onClick={createFlowPanel.requestOpen}
                 />
               </div>
             }
