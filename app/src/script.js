@@ -6,12 +6,14 @@ import {
   createSettings,
   EXTERNAL_SUBSCRIPTIONS_SYNCED,
   EXTERNAL_SUBSCRIPTION_CACHED,
+  loadInitialSuperTokens,
   retryEvery,
   subscribeToExternals,
 } from './store/helpers';
 import { handleFlowUpdated, handleVaultEvent } from './store/event-handlers';
 import { sha3 } from 'web3-utils';
 import AbiCoder from 'web3-eth-abi';
+import { PRESET_SUPER_TOKENS } from './store/preset-super-tokens';
 
 const FLOW_UPDATED_SIGNATURE = 'FlowUpdated(address,address,address,int96,int256,int256,bytes)';
 
@@ -119,6 +121,15 @@ const initializeState = (agentAddress, settings) => async cachedState => {
     ...cachedState,
     isSyncing: true,
   };
+  const currentBlock = await app.web3Eth('getBlockNumber').toPromise();
+
+  const nextStateWithInitialSTs = await loadInitialSuperTokens(
+    nextState,
+    PRESET_SUPER_TOKENS.get(settings.network.id),
+    currentBlock,
+    app,
+    settings
+  );
 
   const topicsReceiver = [
     sha3(FLOW_UPDATED_SIGNATURE),
@@ -131,18 +142,19 @@ const initializeState = (agentAddress, settings) => async cachedState => {
     null,
     AbiCoder.encodeParameter('address', agentAddress),
   ];
-  // Store subscriptions for when setting a new agent
+
   subscribeToExternals(
     app,
     [getExternal(agentAddress, agentABI), cfa, cfa],
     [undefined, topicsReceiver, topicsSender],
-    nextState.blockNumbersCache,
+    nextStateWithInitialSTs.blockNumbersCache,
+    currentBlock,
     initialBlock
   );
 
   console.log('Returning new Initial State');
-  console.log(nextState);
-  return nextState;
+  console.log(nextStateWithInitialSTs);
+  return nextStateWithInitialSTs;
 };
 
 const getInitialBlock = async agentAddress => {

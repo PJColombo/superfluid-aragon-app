@@ -6,6 +6,7 @@ import { getTokenListUrlByNetwork } from '../helpers/token-list';
 import cfaV1ABI from '../abi/CFAv1.json';
 import governanceABI from '../abi/Governance.json';
 import hostABI from '../abi/Host.json';
+import { updateSuperTokens } from './updaters';
 
 const REORG_SAFETY_BLOCK_AGE = 100;
 
@@ -107,6 +108,7 @@ export const subscribeToExternals = (
   externalApps,
   topics = [],
   blockNumbersCache,
+  currentBlock,
   initialBlock
 ) =>
   Promise.all(
@@ -116,6 +118,7 @@ export const subscribeToExternals = (
         externalApp,
         topics[index],
         blockNumbersCache,
+        currentBlock,
         initialBlock,
         index === 0 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCING }] : [],
         index === externalApps.length - 1 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCED }] : []
@@ -128,6 +131,7 @@ export const subscribeToExternal = async (
   external,
   topics,
   blockNumbersCache,
+  currentBlock,
   initialBlock = 0,
   customInitialEvents = [],
   customFinalEvents = []
@@ -137,7 +141,6 @@ export const subscribeToExternal = async (
   const contract = external.contract;
   const cachedBlockNumber = blockNumbersCache[contractAddress];
 
-  const currentBlock = await app.web3Eth('getBlockNumber').toPromise();
   const cachedPastEventsToBlock = Math.max(
     initialBlock + currentBlock - REORG_SAFETY_BLOCK_AGE,
     initialBlock
@@ -238,4 +241,39 @@ export const calculateNewAccumulatedAmount = (oldFlow, currentTimestamp) => {
     .mul(new BN(flowRate))
     .add(new BN(accumulatedAmount))
     .toString();
+};
+
+export const loadInitialSuperTokens = async (
+  state,
+  initialSTAddresses,
+  currentBlock,
+  app,
+  settings
+) => {
+  const nextState = {
+    ...state,
+  };
+
+  if (!Array.isArray(nextState.superTokens) && !Array.isArray(initialSTAddresses)) {
+    return nextState;
+  }
+
+  const currentSuperTokenAddress = new Set(
+    nextState.superTokens.map(({ address }) => address).concat(initialSTAddresses)
+  );
+
+  const { timestamp } = await app.web3Eth('getBlock', currentBlock).toPromise();
+
+  console.log(currentSuperTokenAddress);
+  for (const superTokenAddress of currentSuperTokenAddress) {
+    nextState.superTokens = await updateSuperTokens(
+      nextState,
+      app,
+      settings,
+      superTokenAddress,
+      timestamp
+    );
+  }
+
+  return nextState;
 };
