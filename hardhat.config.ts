@@ -47,8 +47,8 @@ const config: HardhatUserConfig = {
   },
   aragon: {
     appSrcPath: 'app/',
-    appEnsName: 'flow-finance.open.aragonpm.eth',
-    appContractName: 'FlowFinance',
+    appEnsName: 'superfluid.open.aragonpm.eth',
+    appContractName: 'Superfluid',
     appRoles: [
       {
         id: 'MANAGE_STREAMS_ROLE',
@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
         params: [],
       },
     ],
-    appBuildOutputPath: 'app/build',
+    appBuildOutputPath: 'app/dist',
   },
   networks: {
     hardhat: {
@@ -80,19 +80,19 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: node_url('mainnet'),
       accounts: accounts('mainnet'),
-      appEnsName: 'flow-finance.open.aragonpm.eth',
+      appEnsName: 'superfluid.open.aragonpm.eth',
     },
     rinkeby: {
       url: node_url('rinkeby'),
       accounts: accounts('rinkeby'),
       ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D',
-      appEnsName: 'flow-finance.open.aragonpm.eth',
+      appEnsName: 'superfluid.open.aragonpm.eth',
     },
     xdai: {
       url: node_url('xdai'),
       accounts: accounts('xdai'),
       ensRegistry: '0xaafca6b0c89521752e559650206d7c925fd0e530',
-      appEnsName: 'flow-finance.open.aragonpm.eth',
+      appEnsName: 'superfluid.open.aragonpm.eth',
     },
     polygon: {
       url: node_url('polygon'),

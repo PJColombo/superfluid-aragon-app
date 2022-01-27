@@ -1,9 +1,9 @@
 export enum EthereumNetworkNames {
-  goerli = "goerli",
-  polygon = "polygon",
-  mumbai = "mumbai",
-  rinkeby = "rinkeby",
-  xdai = "xdai",
+  Goerli = 'goerli',
+  Polygon = 'polygon',
+  Mumbai = 'mumbai',
+  Rinkeby = 'rinkeby',
+  Xdai = 'xdai',
 }
 
 export interface Deployments {
@@ -11,13 +11,12 @@ export interface Deployments {
     daoFactory: string;
     agentBase: string;
   };
-  superfluid: {
+  superfluidProtocol: {
     cfav1: string;
     host: string;
     supertokens: string[];
     tokens: string[];
-
-  }
+  };
 }
 
 export interface NetworksDeployments {

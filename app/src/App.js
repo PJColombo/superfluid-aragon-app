@@ -23,7 +23,7 @@ function App() {
         <IdentityProvider>
           <SyncIndicator visible={isSyncing} shift={50} />
           <Header
-            primary="Flow Finance"
+            primary="Superfluid"
             secondary={
               <div
                 css={`

@@ -138,7 +138,7 @@ const Deposit = ({ panelState, superTokens, onDeposit }) => {
           margin-top: ${3 * GU}px;
         `}
       >
-        The Flow Finance app expects to receive {<SuperTokensLink />}. <br />
+        The Superfluid app expects to receive {<SuperTokensLink />}. <br />
         If you don&apos;t have any, go to the &quot;Convert Token&quot; side panel to convert some
         of your ERC20 to their Super Token version.
       </Info>

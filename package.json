@@ -1,16 +1,16 @@
 {
-  "name": "flow-finance",
+  "name": "superfluid-aragon-app",
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BlossomLabs/aragon-superfluid.git"
+    "url": "git+https://github.com/BlossomLabs/superfluid-aragon-app.git"
   },
   "author": "Blossom Labs",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BlossomLabs/aragon-superfluid/issues"
+    "url": "https://github.com/BlossomLabs/superfluid-aragon-app/issues"
   },
-  "homepage": "https://github.com/BlossomLabs/aragon-superfluid#readme",
+  "homepage": "https://github.com/BlossomLabs/superfluid-aragon-app#readme",
   "files": [
     "/artifacts/contracts/**/*.json",
     "!/artifacts/contracts/**/*.dbg.json",

@@ -3,7 +3,7 @@ const deploySuperToken = require('@superfluid-finance/ethereum-contracts/scripts
 const deployTestToken = require('@superfluid-finance/ethereum-contracts/scripts/deploy-test-token');
 const SuperfluidSDK = require('@superfluid-finance/js-sdk');
 const { utils } = require('ethers');
-const { ANY_ENTITY, createAppPermission } = require('./acl');
+const { createAppPermission } = require('./acl');
 const { getSuperTokenName } = require('./tokens');
 
 const handleError = (err) => {
@@ -12,11 +12,11 @@ const handleError = (err) => {
   }
 };
 
-module.exports.sendTokensToAgent = async (sf, flowFinance, sender, tokens, amount) => {
+module.exports.sendTokensToAgent = async (sf, superfluidApp, sender, tokens, amount) => {
   const testToken = sf.tokens[tokens[0]];
   const superToken = sf.superTokens[getSuperTokenName(tokens[0])];
   // const flowSuperToken = sf.superTokens[getSuperTokenName(tokens[0])];
-  // const agentAddress = await flowFinance.agent();
+  // const agentAddress = await superfluidApp.agent();
   // const flowAmount = ONE_TOKEN.mul(2)
   //   .div(3600 * 24 * 30)
   //   .toString();
@@ -24,13 +24,13 @@ module.exports.sendTokensToAgent = async (sf, flowFinance, sender, tokens, amoun
   await testToken.approve(superToken.address, amount, { from: sender });
   await superToken.upgrade(amount, { from: sender });
 
-  await superToken.approve(flowFinance.address, amount, { from: sender });
-  await flowFinance.deposit(superToken.address, amount, true, { from: sender });
+  await superToken.approve(superfluidApp.address, amount, { from: sender });
+  await superfluidApp.deposit(superToken.address, amount, true, { from: sender });
 
   // Create an incoming flow
-  // await flowSuperToken.approve(flowFinance.address, amount, { from: sender });
-  // await flowFinance.deposit(flowSuperToken.address, amount, true, { from: sender });
-  // await flowFinance.createFlow(flowSuperToken.address, agentAddress, flowAmount, { from: sender });
+  // await flowSuperToken.approve(superfluidApp.address, amount, { from: sender });
+  // await superfluidApp.deposit(flowSuperToken.address, amount, true, { from: sender });
+  // await superfluidApp.createFlow(flowSuperToken.address, agentAddress, flowAmount, { from: sender });
 };
 
 module.exports.setUpSuperfluid = async (

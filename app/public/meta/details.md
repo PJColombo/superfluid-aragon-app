@@ -1,4 +1,4 @@
-The Flow Finance app makes it easy to manage an organization's fluid assets.
+The Superfluid app makes it easy to manage an organization's fluid assets.
 
 ## Features
 - Stream Super Tokens (Superfluid's ERC-777-compatible tokens) held in the organization's Agent via the Superfluid's Constant Flow Agreement.

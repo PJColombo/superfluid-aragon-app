@@ -2,27 +2,27 @@ import hre from 'hardhat';
 import { Deployments, EthereumNetworkNames, NetworksDeployments } from './types';
 
 const getNetworkNameById = (chainId: number): string => {
-  const { rinkeby, goerli, xdai, polygon } = EthereumNetworkNames;
+  const { Rinkeby, Goerli, Xdai, Polygon } = EthereumNetworkNames;
   switch (chainId) {
     case 4:
-      return rinkeby;
+      return Rinkeby;
     case 5:
-      return goerli;
+      return Goerli;
     case 100:
-      return xdai;
+      return Xdai;
     case 137:
-      return polygon;
+      return Polygon;
     default:
-      return xdai;
+      return Xdai;
   }
 };
 const Config: NetworksDeployments = {
-  [EthereumNetworkNames.xdai]: {
+  [EthereumNetworkNames.Xdai]: {
     aragon: {
       daoFactory: '0x4037f97fcc94287257e50bd14c7da9cb4df18250',
       agentBase: '0xa6ad366bfd2f43615bbec56f50cf606036fc11fe',
     },
-    superfluid: {
+    superfluidProtocol: {
       cfav1: '0xEbdA4ceF883A7B12c4E669Ebc58927FBa8447C7D',
       host: '0x2dFe937cD98Ab92e59cF3139138f18c823a4efE7',
       supertokens: [
@@ -31,12 +31,12 @@ const Config: NetworksDeployments = {
       tokens: [''], // wxDAI
     },
   },
-  [EthereumNetworkNames.rinkeby]: {
+  [EthereumNetworkNames.Rinkeby]: {
     aragon: {
       daoFactory: '0xad4d106b43b480faa3ef7f98464ffc27fc1faa96',
       agentBase: '0xe10c2dE02F1c64485B680FC561E8E9c680691FAA',
     },
-    superfluid: {
+    superfluidProtocol: {
       cfav1: '0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A',
       host: '0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6',
       supertokens: [
@@ -52,7 +52,7 @@ const Config: NetworksDeployments = {
 };
 
 export const getDeployments = (): Deployments => {
-  return Config[EthereumNetworkNames[getNetworkNameById(hre.network.config.chainId)]];
+  return Config[getNetworkNameById(hre.network.config.chainId)];
 };
 
 export default NetworksDeployments;
