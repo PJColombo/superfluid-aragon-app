@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import { differenceInSeconds } from 'date-fns';
 import Web3EthAbi from 'web3-eth-abi';
-import { fromDecimals, isTestNetwork, MONTH } from '.';
+import { fromDecimals, isTestNetwork, MONTH, ZERO_BN } from '.';
 import superTokenABI from '../abi/SuperToken';
 
 export const isSuperToken = async (tokenAddress, app) => {
@@ -86,6 +86,13 @@ export const calculateRequiredDeposit = (flowRate, liquidationPeriod) => {
 
   return normalizedFlowRate * normalizedLiquidationPeriod;
 };
+
+export const getAvailableSuperTokens = superTokens =>
+  superTokens
+    // Filter out tokens with empty balances.
+    .filter(({ balance, netFlow, lastUpdateDate }) =>
+      calculateCurrentAmount(balance, netFlow, lastUpdateDate).gt(ZERO_BN)
+    );
 
 export const callAgreement = (host, cfaAddress, params, userData, operationABI) => {
   return host

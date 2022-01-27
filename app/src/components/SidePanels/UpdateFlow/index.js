@@ -11,6 +11,7 @@ import {
   calculateCurrentAmount,
   calculateRequiredDeposit,
   fromDecimals,
+  getAvailableSuperTokens,
 } from '../../../helpers';
 import BaseSidePanel from '../BaseSidePanel';
 import FlowRateField from './FlowRateField';
@@ -83,16 +84,19 @@ const findSuperTokenByAddress = (address, superTokens) => {
 };
 
 const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
+  const availableSuperTokens = useMemo(() => getAvailableSuperTokens(superTokens), [superTokens]);
+  const { agentAddress } = useAppState();
   const connectedAccount = useConnectedAccount();
-  const [selectedFlowType, setSelectedFlowType] = useState(1);
+  const recipientInputRef = useRef();
+  const flowRateInputRef = useRef();
+  const [selectedFlowType, setSelectedFlowType] = useState(availableSuperTokens.length ? 1 : 0);
   const [recipient, setRecipient] = useState('');
   const [selectedToken, setSelectedToken] = useState(INITIAL_SELECTED_TOKEN);
   const [flowRate, setFlowRate] = useState('0');
   const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState();
-  const recipientInputRef = useRef();
-  const flowRateInputRef = useRef();
-  const { agentAddress } = useAppState();
+  const { presetDescription, presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
+    panelState.presetParams || {};
   const requiredDeposit =
     selectedToken.index >= 0
       ? calculateRequiredDeposit(
@@ -100,8 +104,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           superTokens[selectedToken.index].liquidationPeriodSeconds
         )
       : null;
-  const { presetDescription, presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
-    panelState.presetParams || {};
   const outgoingFlowSelected = selectedFlowType === 1;
   const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
   const disableSubmit = Boolean(
@@ -111,6 +113,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
       flowRate === '0'
   );
   const displayError = errorMessage && errorMessage.length;
+
   const existingFlow = useMemo(() => {
     if (isFlowUpdateOperation || !isAddress(recipient) || !isAddress(selectedToken.address)) {
       return null;
@@ -145,12 +148,17 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
 
   const handleFlowTypeChange = useCallback(
     index => {
-      // Incoming flows have the Agent has the recipient.
+      // Incoming flows have the Agent as the recipient.
       if (index === 0) {
         setRecipient(agentAddress);
       } else {
         setRecipient('');
       }
+      /**
+       * There may not be the same super tokens for both incoming and outgoing flows
+       * so let's clear the selector.
+       */
+      setSelectedToken({ ...INITIAL_SELECTED_TOKEN });
       setSelectedFlowType(index);
       setErrorMessage('');
     },
@@ -279,7 +287,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
             items={['Incoming', 'Outgoing']}
             selected={selectedFlowType}
             onChange={handleFlowTypeChange}
-            disabled={isFlowUpdateOperation}
+            disabled={isFlowUpdateOperation || !availableSuperTokens.length}
             wide
           />
         </Field>
@@ -305,7 +313,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           </Field>
         )}
         <TokenSelector
-          tokens={superTokens}
+          tokens={outgoingFlowSelected ? availableSuperTokens : superTokens}
           selectedToken={selectedToken}
           disabled={isFlowUpdateOperation}
           onChange={handleTokenChange}
