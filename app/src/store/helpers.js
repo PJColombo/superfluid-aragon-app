@@ -264,7 +264,6 @@ export const loadInitialSuperTokens = async (
 
   const { timestamp } = await app.web3Eth('getBlock', currentBlock).toPromise();
 
-  console.log(currentSuperTokenAddress);
   for (const superTokenAddress of currentSuperTokenAddress) {
     nextState.superTokens = await updateSuperTokens(
       nextState,

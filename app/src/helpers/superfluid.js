@@ -45,7 +45,7 @@ export const toMonthlyRate = flowRate => {
 };
 
 export const calculateCurrentAmount = (accumulatedAmount, rate, lastDate, date) => {
-  return accumulatedAmount.add(rate.mul(new BN(differenceInSeconds(date ?? new Date(), lastDate))));
+  return accumulatedAmount.add(rate.mul(new BN(differenceInSeconds(date || new Date(), lastDate))));
 };
 
 export const calculateDepletionDate = (balance, netFlow, currentDate, lastUpdateDate) => {

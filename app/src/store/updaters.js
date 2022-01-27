@@ -24,37 +24,41 @@ export const updateSuperTokens = async (
   updateTimestamp,
   netFlow
 ) => {
-  const tokenContract = getSuperTokenContract(tokenAddress, app);
-  const newSuperTokens = [...oldSuperTokens];
-  let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
-    addressesEqual(tokenAddress, address)
-  );
-  let updatedToken;
+  try {
+    const tokenContract = getSuperTokenContract(tokenAddress, app);
+    const newSuperTokens = [...oldSuperTokens];
+    let superTokenIndex = oldSuperTokens.findIndex(({ address }) =>
+      addressesEqual(tokenAddress, address)
+    );
+    let updatedToken;
 
-  if (superTokenIndex === -1) {
-    updatedToken = {
-      ...(await newSuperToken(tokenAddress, tokenContract, app, settings)),
-    };
-  } else {
-    updatedToken = {
-      ...oldSuperTokens[superTokenIndex],
-    };
+    if (superTokenIndex === -1) {
+      updatedToken = {
+        ...(await newSuperToken(tokenAddress, tokenContract, app, settings)),
+      };
+    } else {
+      updatedToken = {
+        ...oldSuperTokens[superTokenIndex],
+      };
+    }
+
+    updatedToken.lastUpdateTimestamp = updateTimestamp;
+    updatedToken.balance = await tokenContract.balanceOf(agentAddress).toPromise();
+
+    if (typeof netFlow !== 'undefined') {
+      updatedToken.netFlow = netFlow;
+    }
+
+    if (superTokenIndex === -1) {
+      newSuperTokens.push(updatedToken);
+    } else {
+      newSuperTokens[superTokenIndex] = updatedToken;
+    }
+
+    return newSuperTokens;
+  } catch (err) {
+    console.error(err);
   }
-
-  updatedToken.lastUpdateTimestamp = updateTimestamp;
-  updatedToken.balance = await tokenContract.balanceOf(agentAddress).toPromise();
-
-  if (typeof netFlow !== 'undefined') {
-    updatedToken.netFlow = netFlow;
-  }
-
-  if (superTokenIndex === -1) {
-    newSuperTokens.push(updatedToken);
-  } else {
-    newSuperTokens[superTokenIndex] = updatedToken;
-  }
-
-  return newSuperTokens;
 };
 
 export const updateFlows = (state, event, updateTimestamp) => {

@@ -14,7 +14,11 @@ const useSuperTokenItems = superTokens => {
   const isTestNet = network && isTestNetwork(network);
   const tokenAddresses = superTokens.map(superToken => getConvertRateToken(superToken, isTestNet));
 
-  const convertRates = useConvertRates(tokenAddresses, [DEFAULT_CURRENCY], network?.type);
+  const convertRates = useConvertRates(
+    tokenAddresses,
+    [DEFAULT_CURRENCY],
+    network ? network.type : null
+  );
 
   const balanceItems = useMemo(() => {
     return getAvailableSuperTokens(superTokens).map(superToken => {
@@ -32,8 +36,8 @@ const useSuperTokenItems = superTokens => {
         symbol,
       } = superToken;
 
-      const conversionRate =
-        convertRates[getConvertRateToken(superToken, isTestNet)]?.[DEFAULT_CURRENCY];
+      const convertRateToken = convertRates[getConvertRateToken(superToken, isTestNet)];
+      const conversionRate = convertRateToken ? convertRateToken[DEFAULT_CURRENCY] : null;
       let convertedAmount, convertedNetFlow;
 
       if (conversionRate) {

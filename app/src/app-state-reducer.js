@@ -72,7 +72,7 @@ const appStateReducer = state => {
       const formattedBalance = new BN(balance);
       const formattedNetflow = new BN(netFlow);
       const formattedLastUpdateDate = timestampToDate(lastUpdateTimestamp);
-      const [inflowRate, outflowRate] = inOutRates[superToken.address] ?? [new BN(0), new BN(0)];
+      const [inflowRate, outflowRate] = inOutRates[superToken.address] || [new BN(0), new BN(0)];
 
       return {
         ...superToken,

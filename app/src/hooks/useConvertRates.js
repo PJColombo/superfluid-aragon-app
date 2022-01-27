@@ -8,7 +8,7 @@ const useConvertRates = (tokenAddresses, currencies, networkName) => {
   const [rates, setRates] = useState({});
   const retryDelay = useRef(CONVERT_API_RETRY_DELAY);
 
-  const tokenAddressesQueryValues = tokenAddresses?.join(',');
+  const tokenAddressesQueryValues = tokenAddresses ? tokenAddresses.join(',') : null;
   const currenciesQueryValues = currencies.join(',');
 
   useEffect(() => {

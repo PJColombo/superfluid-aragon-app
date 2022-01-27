@@ -51,7 +51,7 @@ const initialize = async agentAddress => {
         'Reciving event: ',
         eventName,
         ' at block ',
-        event.returnValues._blockNumber ?? event.returnValues.blockNumber
+        event.returnValues._blockNumber || event.returnValues.blockNumber
       );
 
       try {

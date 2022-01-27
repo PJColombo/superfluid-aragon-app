@@ -10,11 +10,11 @@ export const loadTokenData = (token, api, network) => {
 
   if (isAddress(token)) {
     if (addressesEqual(token, ZERO_ADDRESS)) {
-      const { decimals, symbol } = network?.nativeCurrency ?? {};
+      const { decimals, symbol } = network && network.nativeCurrency ? network.nativeCurrency : {};
       return [
-        decimals ?? DEFAULT_NATIVE_CURRENCY_DECIMALS,
-        symbol ?? DEFAULT_NATIVE_CURRENCY_SYMBOL,
-        symbol ?? DEFAULT_NATIVE_CURRENCY_SYMBOL,
+        decimals && decimals !== 0 ? decimals : DEFAULT_NATIVE_CURRENCY_DECIMALS,
+        symbol || DEFAULT_NATIVE_CURRENCY_SYMBOL,
+        symbol || DEFAULT_NATIVE_CURRENCY_SYMBOL,
       ];
     }
     tokenContract = api.external(token, erc20ABI);
