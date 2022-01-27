@@ -55,11 +55,12 @@ const IncomingFlowsWarnings = ({ incomingFlowTokens, superTokens }) => {
       </Info>
     );
   });
-  const firstIncomingWarning = incomingFlowWarnings.shift();
 
   if (!incomingFlowWarnings.length) {
     return null;
   }
+
+  const firstIncomingWarning = incomingFlowWarnings.shift();
 
   return (
     <div>
