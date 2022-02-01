@@ -153,17 +153,32 @@ contract Superfluid is AragonApp {
      * @param _token Address of super token
      * @param _receiver Receiver of the flow
      */
-    function deleteFlow(ISuperToken _token, address _receiver) external isInitialized isValidSuperToken(_token) {
-        bool senderHasPermission = canPerform(msg.sender, MANAGE_STREAMS_ROLE, new uint256[](0));
-        (uint256 timestamp, , , ) = cfa.getFlow(_token, agent, msg.sender);
-
-        // Sender is allow to delete the flows he's part of.
-        require(timestamp != 0 || senderHasPermission, ERROR_SENDER_CAN_NOT_DELETE_FLOW);
+    function deleteFlow(ISuperToken _token, address _receiver) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.deleteFlow.selector,
             _token,
             agent,
             _receiver,
+            new bytes(0)
+        );
+
+        callAgreement(encodedAgreementCall, new bytes(0));
+    }
+
+    /**
+        @notice Delete `_token.symbol(): string` flow.
+        @param _token Address of Super Token
+     */
+    function deleteOwnFlow(ISuperToken _token) external isInitialized isValidSuperToken(_token) {
+        // Check that sender is part of the flow.
+        (uint256 timestamp, , , ) = cfa.getFlow(_token, agent, msg.sender);
+        require(timestamp != 0, ERROR_SENDER_CAN_NOT_DELETE_FLOW);
+
+        bytes memory encodedAgreementCall = abi.encodeWithSelector(
+            cfa.deleteFlow.selector,
+            _token,
+            agent,
+            msg.sender,
             new bytes(0)
         );
 

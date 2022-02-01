@@ -297,7 +297,7 @@ describe('Superfluid', () => {
         expect(withdrawerBalanceAfter.sub(withdrawerBalanceBefore)).to.equal(TRANSFERRED_AMOUNT);
       });
 
-      it('should revert when trying to withdraw supertokens without having the MANAGE_STREAMS_ROLE', async () => {
+      it('should revert when trying to withdraw Super Tokens without having the MANAGE_STREAMS_ROLE', async () => {
         await expect(
           superfluidApp
             .connect(permissionlessAccount)
@@ -305,13 +305,13 @@ describe('Superfluid', () => {
         ).to.be.revertedWith('APP_AUTH_FAILED');
       });
 
-      it('should revert when trying to withdraw zero supertokens', async () => {
+      it('should revert when trying to withdraw zero Super Tokens', async () => {
         await expect(
           ffTransferrer.withdraw(transferredSuperToken.address, transferrer.address, 0)
         ).to.be.revertedWith('SUPERFLUID_WITHDRAW_AMOUNT_ZERO');
       });
 
-      it('should revert when trying to withdraw an invalid supertoken', async () => {
+      it('should revert when trying to withdraw an invalid Super Token', async () => {
         await expect(
           ffTransferrer.withdraw(fakeToken.address, transferrer.address, TRANSFERRED_AMOUNT)
         ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
@@ -363,13 +363,13 @@ describe('Superfluid', () => {
       ).to.be.revertedWith('APP_AUTH_FAILED');
     });
 
-    it('should revert when trying to create flow using a non-contract supertoken', async () => {
+    it('should revert when trying to create flow using a non-contract Super Token', async () => {
       await expect(
         superfluidApp.createFlow(nonContractAccount.address, receiver.address, flowRate, '0x')
       ).to.be.revertedWith('SUPERFLUID_SUPERTOKEN_NOT_CONTRACT');
     });
 
-    it('should revert when trying to create flow using an invalid supertoken', async () => {
+    it('should revert when trying to create flow using an invalid Super Token', async () => {
       await expect(
         superfluidApp.createFlow(fakeToken.address, receiver.address, flowRate, '0x')
       ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
@@ -429,13 +429,13 @@ describe('Superfluid', () => {
       ).to.be.revertedWith('APP_AUTH_FAILED');
     });
 
-    it('should revert when trying to create flow using a non-contract supertoken', async () => {
+    it('should revert when trying to create flow using a non-contract Super Token', async () => {
       await expect(
         superfluidApp.updateFlow(nonContractAccount.address, receiver.address, newFlowRate, '0x')
       ).to.be.revertedWith('SUPERFLUID_SUPERTOKEN_NOT_CONTRACT');
     });
 
-    it('should revert when trying to create flow using an invalid supertoken', async () => {
+    it('should revert when trying to create flow using an invalid Super Token', async () => {
       await expect(
         superfluidApp.updateFlow(fakeToken.address, receiver.address, newFlowRate, '0x')
       ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
@@ -447,12 +447,6 @@ describe('Superfluid', () => {
       superfluidApp.createFlow(superToken.address, receiver.address, computeFlowRate(1000), '0x')
     );
 
-    it('should emit a correct FlowUpdated event', async () => {
-      expect(await superfluidApp.deleteFlow(superToken.address, receiver.address))
-        .to.emit(cfav1, 'FlowUpdated')
-        .withArgs(superToken.address, ffAgent.address, receiver.address, 0, 0, 0, '0x');
-    });
-
     it('should delete a flow correctly', async () => {
       await superfluidApp.deleteFlow(superToken.address, receiver.address);
 
@@ -461,29 +455,47 @@ describe('Superfluid', () => {
       checkFlow(flow, [0, 0, 0, 0]);
     });
 
-    it("should allow receiver to delete a flow he's part of", async () => {
-      await superfluidApp.connect(receiver).deleteFlow(superToken.address, receiver.address);
+    it('should delete a own flow correctly', async () => {
+      await superfluidApp.connect(receiver).deleteOwnFlow(superToken.address);
 
       const flow = await cfav1.getFlow(superToken.address, ffAgent.address, receiver.address);
 
       checkFlow(flow, [0, 0, 0, 0]);
     });
 
-    it('should revert when trying to delete a flow without having the MANAGE_STREAMS_ROLE nor being the receiver', async () => {
+    it('should emit a correct FlowUpdated event', async () => {
+      expect(await superfluidApp.deleteFlow(superToken.address, receiver.address))
+        .to.emit(cfav1, 'FlowUpdated')
+        .withArgs(superToken.address, ffAgent.address, receiver.address, 0, 0, 0, '0x');
+    });
+
+    it('should emit a correct FlowUpdated event when deleting a own flow', async () => {
+      expect(await superfluidApp.connect(receiver).deleteOwnFlow(superToken.address))
+        .to.emit(cfav1, 'FlowUpdated')
+        .withArgs(superToken.address, ffAgent.address, receiver.address, 0, 0, 0, '0x');
+    });
+
+    it('should revert when trying to delete a flow without having the MANAGE_STREAMS_ROLE', async () => {
       await expect(
         superfluidApp
           .connect(permissionlessAccount)
           .deleteFlow(superToken.address, receiver.address)
+      ).to.be.revertedWith('APP_AUTH_FAILED');
+    });
+
+    it('should revert when trying to delete a own flow one is not part of', async () => {
+      await expect(
+        superfluidApp.connect(permissionlessAccount).deleteOwnFlow(superToken.address)
       ).to.be.revertedWith('SUPERFLUID_SENDER_CAN_NOT_DELETE_FLOW');
     });
 
-    it('should revert when trying to delete a flow of a non-contract supertoken', async () => {
+    it('should revert when trying to delete a flow of a non-contract Super Token', async () => {
       await expect(
         superfluidApp.deleteFlow(nonContractAccount.address, receiver.address)
       ).to.be.revertedWith('SUPERFLUID_SUPERTOKEN_NOT_CONTRACT');
     });
 
-    it('should revert when trying to delete a flow of an invalid supertoken', async () => {
+    it('should revert when trying to delete a flow of an invalid Super Token', async () => {
       await expect(
         superfluidApp.deleteFlow(fakeToken.address, receiver.address)
       ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
