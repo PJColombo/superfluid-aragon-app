@@ -83,8 +83,10 @@ const findSuperTokenByAddress = (address, superTokens) => {
   };
 };
 
-const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
-  const availableSuperTokens = useMemo(() => getAvailableSuperTokens(superTokens), [superTokens]);
+const InnerUpdateFlow = ({ panelState, flows, superTokens: allSuperTokens, onUpdateFlow }) => {
+  const availableSuperTokens = useMemo(() => getAvailableSuperTokens(allSuperTokens), [
+    allSuperTokens,
+  ]);
   const { agentAddress } = useAppState();
   const connectedAccount = useConnectedAccount();
   const recipientInputRef = useRef();
@@ -95,6 +97,8 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
   const [flowRate, setFlowRate] = useState('0');
   const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState();
+  const outgoingFlowSelected = selectedFlowType === 1;
+  const superTokens = outgoingFlowSelected ? availableSuperTokens : allSuperTokens;
   const { presetDescription, presetFlowTypeIndex, presetSuperTokenAddress, presetRecipient } =
     panelState.presetParams || {};
   const requiredDeposit =
@@ -104,7 +108,6 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           superTokens[selectedToken.index].liquidationPeriodSeconds
         )
       : null;
-  const outgoingFlowSelected = selectedFlowType === 1;
   const isFlowUpdateOperation = Boolean(presetSuperTokenAddress && presetRecipient);
   const disableSubmit = Boolean(
     errorMessage ||
@@ -287,7 +290,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
             items={['Incoming', 'Outgoing']}
             selected={selectedFlowType}
             onChange={handleFlowTypeChange}
-            disabled={isFlowUpdateOperation || !availableSuperTokens.length}
+            disabled={isFlowUpdateOperation || !superTokens.length}
             wide
           />
         </Field>
@@ -313,7 +316,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens, onUpdateFlow }) => {
           </Field>
         )}
         <TokenSelector
-          tokens={outgoingFlowSelected ? availableSuperTokens : superTokens}
+          tokens={superTokens}
           selectedToken={selectedToken}
           disabled={isFlowUpdateOperation}
           onChange={handleTokenChange}
