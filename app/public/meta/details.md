@@ -5,4 +5,4 @@ The Superfluid app makes it easy to manage an organization's fluid assets.
 - Convert ERC-20 tokens to their Super Tokens version and vice versa.
 - Deposit and withdraw Super Tokens.
 - See the current dynamic balance of all Super Tokens held in the organization's Agent at all times.
-- Browse through all the app's stream and filter them by state, type, Super Token or date.
+- Browse through all the app's streams and filter them by state, type, Super Token or date.
