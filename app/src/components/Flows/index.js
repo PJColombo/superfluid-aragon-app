@@ -291,7 +291,9 @@ export default React.memo(({ disableMenu, flows, tokens, onUpdateFlow, onDeleteF
               }
             />
             <ContextMenuDeleteFlow
-              onDeleteFlow={() => onDeleteFlow(superTokenAddress, entity, !isIncoming)}
+              onDeleteFlow={() =>
+                onDeleteFlow(superTokenAddress, entity, !isIncoming, connectedAccount === entity)
+              }
             />
           </ContextMenu>
         )

@@ -57,9 +57,13 @@ export const useDeleteFlow = (host, onDone = noop) => {
   const api = useApi();
   const { agentAddress, cfaAddress } = useAppState();
   return useCallback(
-    (tokenAddress, entity, isOutgoingFlow) => {
+    (tokenAddress, entity, isOutgoingFlow, isOwnFlow) => {
       if (isOutgoingFlow) {
-        api.deleteFlow(tokenAddress, entity).toPromise();
+        if (isOwnFlow) {
+          api.deleteOwnFlow(tokenAddress).toPromise();
+        } else {
+          api.deleteFlow(tokenAddress, entity).toPromise();
+        }
       } else {
         callAgreement(
           host,
