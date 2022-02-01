@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
     appRoles: [
       {
         id: 'MANAGE_STREAMS_ROLE',
-        name: 'Manage payment flow streams',
+        name: 'Manage payment streams',
         params: [],
       },
       {
