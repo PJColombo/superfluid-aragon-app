@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
         params: [],
       },
     ],
-    appBuildOutputPath: 'app/dist',
+    appBuildOutputPath: 'dist',
   },
   networks: {
     hardhat: {
@@ -119,10 +119,11 @@ const config: HardhatUserConfig = {
       httpHeaders: { origin: 'hardhat' },
       timeout: 0,
       gas: 0,
+      ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D', // Rinkeby
     },
   },
   ipfs: {
-    gateway: 'https://ipfs.blossom.software/',
+    gateway: 'http://localhost:8080',
     pinata: {
       key: process.env.PINATA_KEY || '',
       secret: process.env.PINATA_SECRET_KEY || '',
