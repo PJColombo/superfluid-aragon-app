@@ -179,17 +179,13 @@ function Carousel({
               opacity: drag.interpolate(drag => {
                 return drag || (i >= selected && i < selected + visibleItems) ? 1 : 0.25;
               }),
+              width: `${itemWidth}px`,
+              height: `${itemHeight}px`,
+              transition: 'opacity 150ms ease-in-out',
+              flexGrow: 0,
+              flexShrink: 0,
+              marginLeft: i > 0 ? `${itemSpacing}px` : 0,
             }}
-            css={`
-              flex-grow: 0;
-              flex-shrink: 0;
-              width: ${itemWidth}px;
-              height: ${itemHeight}px;
-              transition: opacity 150ms ease-in-out;
-              & + & {
-                margin-left: ${itemSpacing}px;
-              }
-            `}
           >
             {item}
           </AnimatedDiv>
