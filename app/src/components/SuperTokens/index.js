@@ -48,7 +48,7 @@ const SuperTokens = ({ superTokens, onDeposit }) => {
                   color: ${theme.surfaceContentSecondary};
                 `}
               >
-                No super tokens yet.
+                No Super Tokens yet.
               </div>
             )}
           </div>
@@ -63,7 +63,7 @@ const SuperTokens = ({ superTokens, onDeposit }) => {
             />
           ))}
           compactMode={compact}
-          customSideSpace={4 * GU}
+          customSideSpace={superTokenItems.length ? 8 * GU : 0}
           itemHeight={43 * GU}
           // Card's default content size + l&r padding + l&r marging
           itemWidth={230 + 2 * 3 * GU + 1 * GU}

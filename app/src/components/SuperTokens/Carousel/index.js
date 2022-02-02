@@ -71,7 +71,13 @@ function Carousel({
   const balancedSideSpace = (containerWidth - visibleItemsWidth) / 2;
 
   // The space on one side of the visible items
-  const sideSpace = compactMode ? balancedSideSpace : customSideSpace || balancedSideSpace;
+  let sideSpace;
+
+  if (selected === 0) {
+    sideSpace = 0;
+  } else {
+    sideSpace = customSideSpace && customSideSpace >= 0 ? customSideSpace : balancedSideSpace;
+  }
 
   // Get the container x position from an item index
   const xFromItem = useCallback(
