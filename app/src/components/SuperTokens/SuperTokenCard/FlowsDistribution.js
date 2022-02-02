@@ -4,17 +4,18 @@ import { fromDecimals, toMonthlyRate } from '../../../helpers';
 
 const FlowsDistribution = ({ inflowRate, outflowRate, tokenDecimals }) => {
   const theme = useTheme();
-  const totalFlowRate = inflowRate.add(outflowRate).toNumber();
-  const inflowPct = (totalFlowRate === 0
-    ? 0
-    : (inflowRate.toNumber() / totalFlowRate) * 100
-  ).toFixed(2);
+  const totalFlowRate = Number(fromDecimals(inflowRate.add(outflowRate)));
+  const formattedInflowRate = fromDecimals(inflowRate, tokenDecimals);
+  const formattedOutflowRate = fromDecimals(outflowRate, tokenDecimals);
+  const inflowPct = (totalFlowRate === 0 ? 0 : (formattedInflowRate / totalFlowRate) * 100).toFixed(
+    2
+  );
   const outflowPct = (totalFlowRate === 0
     ? 0
-    : (outflowRate.toNumber() / totalFlowRate) * 100
+    : (formattedOutflowRate / totalFlowRate) * 100
   ).toFixed(2);
-  const monthlyInflowRate = toMonthlyRate(fromDecimals(inflowRate, tokenDecimals)).toFixed(2);
-  const monthlyOutflowRate = toMonthlyRate(fromDecimals(outflowRate, tokenDecimals)).toFixed(2);
+  const monthlyInflowRate = toMonthlyRate(formattedInflowRate).toFixed(2);
+  const monthlyOutflowRate = toMonthlyRate(formattedOutflowRate).toFixed(2);
   const distributionColors = [theme.negative, theme.positive];
 
   return (
