@@ -141,10 +141,7 @@ export const subscribeToExternal = async (
   const contract = external.contract;
   const cachedBlockNumber = blockNumbersCache[contractAddress];
 
-  const cachedPastEventsToBlock = Math.max(
-    initialBlock + currentBlock - REORG_SAFETY_BLOCK_AGE,
-    initialBlock
-  ); // clamp to 0 for safety
+  const cachedPastEventsToBlock = Math.max(currentBlock - REORG_SAFETY_BLOCK_AGE, initialBlock); // clamp to initial block for safety
   const cachedPastEventsFromBlock = cachedBlockNumber
     ? Math.min(cachedBlockNumber + 1, cachedPastEventsToBlock)
     : undefined;
@@ -161,7 +158,7 @@ export const subscribeToExternal = async (
       - Listening to current events from ${currentBlock}.`
   );
 
-  const pastEvents$ = contract
+  const pastCachedEvents$ = contract
     .pastEvents({
       ...topicsField,
       // When using cache, fetch events from the next block after cache
@@ -190,7 +187,7 @@ export const subscribeToExternal = async (
         },
       })
     );
-  const lastEvents$ = contract
+  const pastNonCachedEvents$ = contract
     .pastEvents({
       ...topicsField,
       fromBlock: nonCachedPastEventsFromBlock,
@@ -216,7 +213,7 @@ export const subscribeToExternal = async (
     fromBlock: currentBlock,
   });
 
-  return concat(pastEvents$, lastEvents$, currentEvents$).subscribe(
+  return concat(pastCachedEvents$, pastNonCachedEvents$, currentEvents$).subscribe(
     ({ event, returnValues, address, blockNumber }) =>
       app.emitTrigger(event, {
         ...returnValues,
