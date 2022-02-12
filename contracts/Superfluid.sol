@@ -60,11 +60,11 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Deposit `@tokenAmount(_token, _amount)`.
-    * @param _token Address of deposited super token
-    * @param _amount Amount of tokens sent
-    * @param _isExternalDeposit Flag that indicates wether the assets are already in the app
-    */
+     * @notice Deposit `@tokenAmount(_token, _amount)`.
+     * @param _token Address of deposited super token
+     * @param _amount Amount of tokens sent
+     * @param _isExternalDeposit Flag that indicates wether the assets are already in the app
+     */
     function deposit(
         ISuperToken _token,
         uint256 _amount,
@@ -85,11 +85,11 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Withdraw `@tokenAmount(_token, _amount)` to `_receiver`.
-    * @param _token Address of withdrawed super token
-    * @param _receiver Receiver of the withdrawed amount
-    * @param _amount Amount of tokens received
-    */
+     * @notice Withdraw `@tokenAmount(_token, _amount)` to `_receiver`.
+     * @param _token Address of withdrawed super token
+     * @param _receiver Receiver of the withdrawed amount
+     * @param _amount Amount of tokens received
+     */
     function withdraw(
         ISuperToken _token,
         address _receiver,
@@ -101,12 +101,12 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Create a new `_token.symbol(): string` flow with a rate of `@tokenAmount(_token, _flowRate  * 30 * 24 * 3600, false)` tokens per second to `_receiver`.
-    * @param _token Address of super token
-    * @param _receiver Receiver of the flow
-    * @param _flowRate Flow's rate of tokens per second
-    * @param _description Codified string containing the flow's description
-    */
+     * @notice Create a new `_token.symbol(): string` flow with a rate of `@tokenAmount(_token, _flowRate  * 30 * 24 * 3600, false, 6)` tokens per month to `_receiver`.
+     * @param _token Address of super token
+     * @param _receiver Receiver of the flow
+     * @param _flowRate Flow's rate of tokens per second
+     * @param _description Codified string containing the flow's description
+     */
     function createFlow(
         ISuperToken _token,
         address _receiver,
@@ -125,12 +125,12 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Update `_token.symbol(): string` flow to `_receiver`  with a new rate of `@tokenAmount(_token, _flowRate, false)` tokens per second.
-    * @param _token Address of super token
-    * @param _receiver Receiver of the flow
-    * @param _flowRate Flow's rate of tokens per second
-    * @param _description Codified string containing the flow's description
-    */
+     * @notice Update `_token.symbol(): string` flow to `_receiver`  with a new rate of `@tokenAmount(_token, _flowRate, false, 6)` tokens per month.
+     * @param _token Address of super token
+     * @param _receiver Receiver of the flow
+     * @param _flowRate Flow's rate of tokens per second
+     * @param _description Codified string containing the flow's description
+     */
     function updateFlow(
         ISuperToken _token,
         address _receiver,
@@ -149,11 +149,15 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Delete `_token.symbol(): string` flow to `_receiver`.
-    * @param _token Address of Super Token
-    * @param _receiver Receiver of the flow
-    */
-    function deleteFlow(ISuperToken _token, address _receiver) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+     * @notice Delete `_token.symbol(): string` flow to `_receiver`.
+     * @param _token Address of Super Token
+     * @param _receiver Receiver of the flow
+     */
+    function deleteFlow(ISuperToken _token, address _receiver)
+        external
+        auth(MANAGE_STREAMS_ROLE)
+        isValidSuperToken(_token)
+    {
         bytes memory encodedAgreementCall = abi.encodeWithSelector(
             cfa.deleteFlow.selector,
             _token,
@@ -166,9 +170,9 @@ contract Superfluid is AragonApp {
     }
 
     /**
-    * @notice Delete `_token.symbol(): string` flow.
-    * @param _token Address of Super Token
-    */
+     * @notice Delete `_token.symbol(): string` flow.
+     * @param _token Address of Super Token
+     */
     function deleteOwnFlow(ISuperToken _token) external isInitialized isValidSuperToken(_token) {
         // Check that sender is part of the flow.
         (uint256 timestamp, , , ) = cfa.getFlow(_token, agent, msg.sender);
