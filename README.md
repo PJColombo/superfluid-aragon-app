@@ -1,4 +1,4 @@
-# Superfluid Aragon App <a href="#"><img align="right" src=".github/assets/blossom-labs.png" height="80px" /></a>
+# Superfluid Aragon App <a href="#"><img align="right" src=".github/assets/blossom-labs.svg" height="80px" /></a>
 
 Superfluid is an Aragon App that enables an organization to interact with the [Superfluid protocol](https://www.superfluid.finance/home). It allows a DAO to stream their funds by using Superfluid's [Constant Flow Agreement](https://docs.superfluid.finance/superfluid/docs/constant-flow-agreement) via an agent app that holds all the DAO's [Super Tokens](https://docs.superfluid.finance/superfluid/docs/super-tokens).
 
@@ -50,7 +50,7 @@ cd app/
 yarn
 ``` 
 
-3. Go to the root folder and run the following ():
+3. Go to the root folder and run the following:
 
 ```sh
 yarn start
