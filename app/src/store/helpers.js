@@ -1,5 +1,5 @@
 import { BN } from 'bn.js';
-import { concat, from } from 'rxjs';
+import { concat, from, merge } from 'rxjs';
 import { endWith, first, mergeMap, startWith } from 'rxjs/operators';
 import { addressesEqual, isTestNetwork } from '../helpers';
 import { getTokenListUrlByNetwork } from '../helpers/token-list';
@@ -14,8 +14,6 @@ const REORG_SAFETY_BLOCK_AGE = 100;
 export const EXTERNAL_SUBSCRIPTION_SYNCING = 'EXTERNAL_SUBSCRIPTION_SYNCING';
 export const EXTERNAL_SUBSCRIPTION_CACHED = 'EXTERNAL_SUBSCRIPTION_CACHED';
 export const EXTERNAL_SUBSCRIPTION_SYNCED = 'EXTERNAL_SUBSCRIPTION_SYNCED';
-export const EXTERNAL_SUBSCRIPTIONS_SYNCING = 'EXTERNAL_SUBSCRIPTIONS_SYNCING';
-export const EXTERNAL_SUBSCRIPTIONS_SYNCED = 'EXTERNAL_SUBSCRIPTIONS_SYNCED';
 
 export const fetchTokenList = async network => {
   const tokenListUrl = getTokenListUrlByNetwork(network);
@@ -103,48 +101,18 @@ export const retryEvery = async (
   return attempt();
 };
 
-export const subscribeToExternals = (
+export const subscribeToExternals = async (
   app,
-  externalApps,
-  topics = [],
-  blockNumbersCache,
+  externals,
+  topics,
+  cachedBlockNumber,
   currentBlock,
   initialBlock
-) =>
-  Promise.all(
-    externalApps.map((externalApp, index) =>
-      subscribeToExternal(
-        app,
-        externalApp,
-        topics[index],
-        blockNumbersCache,
-        currentBlock,
-        initialBlock,
-        index === 0 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCING }] : [],
-        index === externalApps.length - 1 ? [{ event: EXTERNAL_SUBSCRIPTIONS_SYNCED }] : []
-      )
-    )
-  );
-
-export const subscribeToExternal = async (
-  app,
-  external,
-  topics,
-  blockNumbersCache,
-  currentBlock,
-  initialBlock = 0,
-  customInitialEvents = [],
-  customFinalEvents = []
 ) => {
-  const topicsField = !!topics && { topics };
-  const contractAddress = external.address;
-  const contract = external.contract;
-  const cachedBlockNumber = blockNumbersCache[contractAddress];
-
   const cachedPastEventsToBlock = Math.max(currentBlock - REORG_SAFETY_BLOCK_AGE, initialBlock); // clamp to initial block for safety
   const cachedPastEventsFromBlock = cachedBlockNumber
     ? Math.min(cachedBlockNumber + 1, cachedPastEventsToBlock)
-    : undefined;
+    : initialBlock;
   const nonCachedPastEventsToBlock = currentBlock - 1;
   const nonCachedPastEventsFromBlock = Math.min(
     cachedPastEventsToBlock + 1,
@@ -152,74 +120,84 @@ export const subscribeToExternal = async (
   );
 
   console.log(
-    `Subscribing to ${contractAddress}.
+    `Subscribing to external contracts.
       - Caching events from ${cachedPastEventsFromBlock} to ${cachedPastEventsToBlock}.
       - Listening to last past events from ${nonCachedPastEventsFromBlock} to ${nonCachedPastEventsToBlock}
       - Listening to current events from ${currentBlock}.`
   );
 
-  const pastCachedEvents$ = contract
-    .pastEvents({
-      ...topicsField,
-      // When using cache, fetch events from the next block after cache
-      fromBlock: cachedPastEventsFromBlock,
-      toBlock: cachedPastEventsToBlock,
+  const pastCachedEvents$ = merge(
+    ...externals.map(({ contract }, index) => {
+      const topicsField = !!topics && { topics: topics[index] };
+
+      return contract.pastEvents({
+        ...topicsField,
+        fromBlock: cachedPastEventsFromBlock,
+        toBlock: cachedPastEventsToBlock,
+      });
     })
-    .pipe(
-      mergeMap(pastEvents => from(pastEvents)),
-      startWith(
-        ...[
-          ...customInitialEvents,
-          {
-            event: EXTERNAL_SUBSCRIPTION_SYNCING,
-            returnValues: {
-              address: contractAddress,
-              blockNumber: cachedPastEventsFromBlock,
-            },
-          },
-        ]
-      ),
-      endWith({
-        event: EXTERNAL_SUBSCRIPTION_CACHED,
-        returnValues: {
-          address: contractAddress,
-          blockNumber: cachedPastEventsToBlock,
-        },
-      })
-    );
-  const pastNonCachedEvents$ = contract
-    .pastEvents({
-      ...topicsField,
-      fromBlock: nonCachedPastEventsFromBlock,
-      toBlock: nonCachedPastEventsToBlock,
+  ).pipe(
+    mergeMap(pastEvents => from(pastEvents)),
+    startWith({
+      event: EXTERNAL_SUBSCRIPTION_SYNCING,
+      returnValues: {
+        from: cachedPastEventsFromBlock,
+        to: cachedPastEventsToBlock,
+      },
+    }),
+    endWith({
+      event: EXTERNAL_SUBSCRIPTION_CACHED,
+      returnValues: {
+        from: cachedPastEventsFromBlock,
+        to: cachedPastEventsToBlock,
+      },
     })
-    .pipe(
-      mergeMap(pastEvents => from(pastEvents)),
-      endWith(
-        ...[
-          {
-            event: EXTERNAL_SUBSCRIPTION_SYNCED,
-            returnValues: {
-              address: contractAddress,
-              blockNumber: nonCachedPastEventsToBlock,
-            },
-          },
-          ...customFinalEvents,
-        ]
-      )
-    );
-  const currentEvents$ = contract.events({
-    ...topicsField,
-    fromBlock: currentBlock,
-  });
+  );
+
+  const pastNonCachedEvents$ = merge(
+    ...externals.map(({ contract }, index) => {
+      const topicsField = !!topics && { topics: topics[index] };
+
+      return contract.pastEvents({
+        ...topicsField,
+        fromBlock: nonCachedPastEventsFromBlock,
+        toBlock: nonCachedPastEventsToBlock,
+      });
+    })
+  ).pipe(
+    mergeMap(pastEvents => from(pastEvents)),
+    endWith({
+      event: EXTERNAL_SUBSCRIPTION_SYNCED,
+      returnValues: {
+        from: nonCachedPastEventsFromBlock,
+        to: nonCachedPastEventsToBlock,
+      },
+    })
+  );
+
+  const currentEvents$ = merge(
+    ...externals.map(({ contract }, index) => {
+      const topicsField = !!topics && { topics: topics[index] };
+
+      return contract.events({
+        ...topicsField,
+        fromBlock: currentBlock,
+      });
+    })
+  );
 
   return concat(pastCachedEvents$, pastNonCachedEvents$, currentEvents$).subscribe(
-    ({ event, returnValues, address, blockNumber }) =>
+    ({ event, returnValues, address, blockNumber }) => {
+      if (!event || !event.length || !returnValues) {
+        return;
+      }
+
       app.emitTrigger(event, {
         ...returnValues,
         _address: address,
         _blockNumber: blockNumber,
-      })
+      });
+    }
   );
 };
 
