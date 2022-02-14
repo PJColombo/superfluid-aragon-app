@@ -125,7 +125,7 @@ contract Superfluid is AragonApp {
     }
 
     /**
-     * @notice Update `_token.symbol(): string` flow to `_receiver`  with a new rate of `@tokenAmount(_token, _flowRate, false, 6)` tokens per month.
+     * @notice Update `_token.symbol(): string` flow to `_receiver`  with a new rate of `@tokenAmount(_token, _flowRate * 30 * 24 * 3600, false, 6)` tokens per month.
      * @param _token Address of super token
      * @param _receiver Receiver of the flow
      * @param _flowRate Flow's rate of tokens per second
