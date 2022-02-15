@@ -31,6 +31,21 @@ The app should have the following roles as well:
 * **SAFE_EXECUTE_ROLE**: It should be able to execute arbitrary code from the agent that holds the Super Tokens.
 * **TRANSFER_ROLE**: It should be able to transfer Super Tokens hold by the agent.
 
+## EVMcrispr installation script
+
+Use the following script on the [evmcrispr terminal](https://evm-crispr.blossom.software/#/terminal) to install the app on a DAO.
+
+```
+connect <dao-address> <path>
+install superfluid.open:new agent <host-address> <cfa-address> 
+grant superfluid.open:new agent SAFE_EXECUTE_ROLE voting
+grant superfluid.open:new agent TRANSFER_ROLE voting
+grant voting superfluid.open:new MANAGE_STREAMS_ROLE voting
+grant voting superfluid.open:new SET_AGENT_ROLE voting
+```
+
+You can find the Superfluid contract addresses [here](https://docs.superfluid.finance/superfluid/protocol-developers/networks).
+
 ## How to run locally
 
 1. Clone this repo:
