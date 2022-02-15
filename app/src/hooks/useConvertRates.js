@@ -4,7 +4,7 @@ import { getConvertRatesUrl } from '../helpers';
 const CONVERT_API_RETRY_DELAY = 2 * 1000;
 const CONVERT_API_RETRY_DELAY_MAX = 60 * 1000;
 
-const useConvertRates = (tokenAddresses, currencies, networkName) => {
+const useConvertRates = (tokenAddresses, currencies, chainId) => {
   const [rates, setRates] = useState({});
   const retryDelay = useRef(CONVERT_API_RETRY_DELAY);
 
@@ -16,19 +16,14 @@ const useConvertRates = (tokenAddresses, currencies, networkName) => {
     let retryTimer = null;
 
     const update = async () => {
-      if (
-        !tokenAddressesQueryValues ||
-        !currenciesQueryValues ||
-        !networkName ||
-        !networkName.length
-      ) {
+      if (!tokenAddressesQueryValues || !currenciesQueryValues || !chainId) {
         setRates({});
         return;
       }
 
       try {
         const response = await fetch(
-          getConvertRatesUrl(tokenAddressesQueryValues, currenciesQueryValues, networkName)
+          getConvertRatesUrl(tokenAddressesQueryValues, currenciesQueryValues, chainId)
         );
         const rates = await response.json();
 
@@ -60,7 +55,7 @@ const useConvertRates = (tokenAddresses, currencies, networkName) => {
       clearTimeout(retryTimer);
       retryDelay.current = CONVERT_API_RETRY_DELAY;
     };
-  }, [tokenAddressesQueryValues, currenciesQueryValues, networkName]);
+  }, [tokenAddressesQueryValues, currenciesQueryValues, chainId]);
 
   return rates;
 };

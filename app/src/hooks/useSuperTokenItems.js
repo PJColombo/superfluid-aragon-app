@@ -17,7 +17,7 @@ const useSuperTokenItems = superTokens => {
   const convertRates = useConvertRates(
     tokenAddresses,
     [DEFAULT_CURRENCY],
-    network ? network.type : null
+    network ? network.id : null
   );
 
   const balanceItems = useMemo(() => {

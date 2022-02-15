@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { addressesEqual, ZERO_ADDRESS } from '.';
+import { addressesEqual, LOCAL_NETWORK_ID, ZERO_ADDRESS } from '.';
 
 const BASE_URL = 'https://api.coingecko.com/api/v3/simple/token_price';
 
@@ -23,24 +23,24 @@ export const getNativeCurrencyContractEquivalent = symbol => {
   }
 };
 
-const networkToAssetPlatform = networkName => {
-  switch (networkName) {
-    case 'private':
-    case 'rinkeby':
-    case 'mainnet':
+const chainIdToAssetPlatform = chainId => {
+  switch (chainId) {
+    case 1:
+    case 4:
+    case LOCAL_NETWORK_ID:
       return 'ethereum';
-    case 'xdai':
+    case 100:
       return 'xdai';
-    case 'polygon':
-    case 'mumbai':
+    case 137:
+    case 80001:
       return 'polygon-pos';
     default:
       return null;
   }
 };
 
-export const getConvertRatesUrl = (tokenAddresses, currencies, networkName) => {
-  const assetPlatform = networkToAssetPlatform(networkName);
+export const getConvertRatesUrl = (tokenAddresses, currencies, chainId) => {
+  const assetPlatform = chainIdToAssetPlatform(chainId);
   return `${BASE_URL}/${assetPlatform}?vs_currencies=${currencies}&contract_addresses=${tokenAddresses}`;
 };
 
