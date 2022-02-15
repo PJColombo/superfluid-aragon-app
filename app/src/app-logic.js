@@ -1,9 +1,9 @@
-import { useApi, useAppState } from '@aragon/api-react';
+import { useApi, useAppState, useNetwork } from '@aragon/api-react';
 import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { addressesEqual, callAgreement, ZERO_ADDRESS } from './helpers';
+import { callAgreement, isNativeSuperToken } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 import useContract from './hooks/useContract';
 import hostABI from './abi/Host.json';
@@ -108,12 +108,13 @@ export const useWithdraw = (onDone = noop) => {
 
 export const useConvertTokens = (onDone = noop) => {
   const api = useApi();
+  const network = useNetwork();
 
   return useCallback(
     async (operation, superTokenAddress, amount) => {
       const superToken = api.external(superTokenAddress, superTokenAbi);
       const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
-      const isNativeSuperToken = addressesEqual(underlyingTokenAddress, ZERO_ADDRESS);
+      const isNative = isNativeSuperToken(superTokenAddress, underlyingTokenAddress, network.id);
 
       if (operation === UPGRADE) {
         let intentParams = {};
@@ -122,7 +123,7 @@ export const useConvertTokens = (onDone = noop) => {
          * Check if it's a native Super Token and pass amount as value. Otherwise,
          * set up approve pre-tx data.
          */
-        if (isNativeSuperToken) {
+        if (isNative) {
           intentParams.value = amount;
           await superToken.upgradeByETH(intentParams).toPromise();
         } else {
@@ -130,7 +131,7 @@ export const useConvertTokens = (onDone = noop) => {
           await superToken.upgrade(amount, intentParams).toPromise();
         }
       } else if (operation === DOWNGRADE) {
-        if (isNativeSuperToken) {
+        if (isNative) {
           await superToken.downgradeToETH(amount).toPromise();
         } else {
           await superToken.downgrade(amount).toPromise();
@@ -141,7 +142,7 @@ export const useConvertTokens = (onDone = noop) => {
 
       onDone();
     },
-    [api, onDone]
+    [api, network, onDone]
   );
 };
 

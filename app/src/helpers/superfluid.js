@@ -1,8 +1,15 @@
 import BN from 'bn.js';
 import { differenceInSeconds } from 'date-fns';
 import Web3EthAbi from 'web3-eth-abi';
-import { fromDecimals, isTestNetwork, MONTH, ZERO_BN } from '.';
+import { addressesEqual, fromDecimals, isTestNetwork, MONTH, ZERO_ADDRESS, ZERO_BN } from '.';
 import superTokenABI from '../abi/SuperToken';
+
+const NATIVE_SUPER_TOKENS = {
+  4: '0xa623b2DD931C5162b7a0B25852f4024Db48bb1A0', // ETHx
+  100: '0x59988e47A3503AaFaA0368b9deF095c818Fdca01', // xDAIx
+  137: '0x3aD736904E9e65189c3000c7DD2c8AC8bB7cD4e3', // Polygon,
+  80001: '0x96B82B65ACF7072eFEb00502F45757F254c2a0D4', // Mumbai
+};
 
 export const isSuperToken = async (tokenAddress, app) => {
   try {
@@ -14,6 +21,10 @@ export const isSuperToken = async (tokenAddress, app) => {
     return false;
   }
 };
+
+export const isNativeSuperToken = (superTokenAddress, underlyingTokenAddress, chainId) =>
+  addressesEqual(underlyingTokenAddress, ZERO_ADDRESS) ||
+  addressesEqual(superTokenAddress, NATIVE_SUPER_TOKENS[chainId]);
 
 export const getUnderlyingTokenSymbol = (superTokenSymbol, networkType) => {
   const isFakeSuperToken =
