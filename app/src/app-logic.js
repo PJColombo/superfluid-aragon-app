@@ -3,7 +3,7 @@ import { noop } from '@aragon/ui';
 import { useCallback } from 'react';
 import superTokenAbi from './abi/RawSuperToken.json';
 import usePanelState from './hooks/usePanelState';
-import { callAgreement, isNativeSuperToken } from './helpers';
+import { addressesEqual, callAgreement, isNativeSuperToken, ZERO_ADDRESS } from './helpers';
 import { UPGRADE, DOWNGRADE } from './super-token-operations';
 import useContract from './hooks/useContract';
 import hostABI from './abi/Host.json';
@@ -114,7 +114,9 @@ export const useConvertTokens = (onDone = noop) => {
     async (operation, superTokenAddress, amount) => {
       const superToken = api.external(superTokenAddress, superTokenAbi);
       const underlyingTokenAddress = await superToken.getUnderlyingToken().toPromise();
-      const isNative = isNativeSuperToken(superTokenAddress, underlyingTokenAddress, network.id);
+      const isNative =
+        isNativeSuperToken(superTokenAddress, network.id) ||
+        addressesEqual(underlyingTokenAddress, ZERO_ADDRESS);
 
       if (operation === UPGRADE) {
         let intentParams = {};

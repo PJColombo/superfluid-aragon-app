@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import { differenceInSeconds } from 'date-fns';
 import Web3EthAbi from 'web3-eth-abi';
-import { addressesEqual, fromDecimals, isTestNetwork, MONTH, ZERO_ADDRESS, ZERO_BN } from '.';
+import { addressesEqual, fromDecimals, isTestNetwork, MONTH, ZERO_BN } from '.';
 import superTokenABI from '../abi/SuperToken';
 
 const NATIVE_SUPER_TOKENS = {
@@ -22,8 +22,7 @@ export const isSuperToken = async (tokenAddress, app) => {
   }
 };
 
-export const isNativeSuperToken = (superTokenAddress, underlyingTokenAddress, chainId) =>
-  addressesEqual(underlyingTokenAddress, ZERO_ADDRESS) ||
+export const isNativeSuperToken = (superTokenAddress, chainId) =>
   addressesEqual(superTokenAddress, NATIVE_SUPER_TOKENS[chainId]);
 
 export const getUnderlyingTokenSymbol = (superTokenSymbol, networkType) => {

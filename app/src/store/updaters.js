@@ -1,6 +1,7 @@
 import Web3EthAbi from 'web3-eth-abi';
 import superTokenABI from '../abi/SuperToken.js';
 import { isTestNetwork } from '../helpers/network.js';
+import { isNativeSuperToken } from '../helpers/superfluid.js';
 import { getFakeTokenSymbol, getNativeCurrencyLogo, loadTokenData } from '../helpers/token.js';
 import { addressesEqual, ZERO_ADDRESS } from '../helpers/web3.js';
 import { calculateNewAccumulatedAmount, getFlowEventEntity, isFlowEqual } from './helpers';
@@ -156,10 +157,13 @@ const newSuperToken = async (superTokenAddress, superTokenContract, app, setting
     superfluid: { governance, host },
     tokenList,
   } = settings;
+  const isNative = isNativeSuperToken(superTokenAddress, network.id);
 
   const [[decimals, name, symbol], underlyingTokenAddress, liquidationPeriod] = await Promise.all([
     loadTokenData(superTokenContract, app, settings.network),
-    superTokenContract.getUnderlyingToken().toPromise(),
+    isNative
+      ? new Promise(resolve => resolve(ZERO_ADDRESS))
+      : superTokenContract.getUnderlyingToken().toPromise(),
     governance.contract.getCFAv1LiquidationPeriod(host.address, superTokenAddress).toPromise(),
   ]);
 
