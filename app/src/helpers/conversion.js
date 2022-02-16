@@ -49,7 +49,11 @@ export const getConvertRateToken = (superToken, isTestNetwork) => {
     return getNativeCurrencyContractEquivalent(superToken.underlyingToken.symbol);
   }
 
-  return isTestNetwork ? superToken.mainnetTokenEquivalentAddress : superToken.address;
+  const convertRateToken = isTestNetwork
+    ? superToken.mainnetTokenEquivalentAddress
+    : superToken.underlyingToken.address;
+
+  return convertRateToken ? convertRateToken.toLowerCase() : undefined;
 };
 
 export const getConvertedAmount = (amount, convertRate) => {

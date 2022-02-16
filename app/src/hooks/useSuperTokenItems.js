@@ -1,5 +1,6 @@
 import { useNetwork } from '@aragon/api-react';
 import { useMemo } from 'react';
+import { isAddress } from 'web3-utils';
 import {
   DEFAULT_CURRENCY,
   getAvailableSuperTokens,
@@ -12,7 +13,10 @@ import useConvertRates from './useConvertRates';
 const useSuperTokenItems = superTokens => {
   const network = useNetwork();
   const isTestNet = network && isTestNetwork(network);
-  const tokenAddresses = superTokens.map(superToken => getConvertRateToken(superToken, isTestNet));
+  const tokenAddresses = superTokens
+    .map(superToken => getConvertRateToken(superToken, isTestNet))
+    // Filter out Super Tokens that don't have a mainnet equivalent token
+    .filter(address => isAddress(address));
 
   const convertRates = useConvertRates(
     tokenAddresses,

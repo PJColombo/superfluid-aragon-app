@@ -28,7 +28,13 @@ const useConvertRates = (tokenAddresses, currencies, chainId) => {
         const rates = await response.json();
 
         if (!cancelled) {
-          setRates(rates);
+          // Set all convert rate tokens to lower case
+          const normalizedRates = Object.keys(rates).reduce((newRates, key) => {
+            newRates[key.toLowerCase()] = rates[key];
+            return newRates;
+          }, {});
+
+          setRates(normalizedRates);
           retryDelay.current = CONVERT_API_RETRY_DELAY;
         }
       } catch (err) {
