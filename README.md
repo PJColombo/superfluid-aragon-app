@@ -4,14 +4,21 @@ Superfluid is an Aragon App that enables an organization to interact with the [S
 
 The Superfluid app acts as an interface between the Agent and the Superfluid protocol contracts, using the Agent to perform all the calls to the CFA.
 
-#### 🐲 Project Stage: Rinkeby
+#### 🐲 Project Stage: Completed
 
-The Superfluid app has been published to `open.aragonpm.eth` registry on the Rinkeby network.
+The Superfluid app has been published to the `open.aragonpm.eth` registry on **Polygon**, **Rinkeby** and **xDAI** network.
 
 The app's repo ens name is the following: `superfluid.open.aragonpm.eth`.
 
 ![](.github/assets/superfluid-aragon-app.gif)
 
+## Demos
+
+Here you can find some demos to play with:
+
+- [Rinkeby demo](https://client.aragon.org/#/superfluiddemo/0xc6efd81d5d0438bd2c42bf34c3e3ec29442ede5e/).
+- [Polygon demo](https://polygon.aragon.blossom.software/#/superfluiddemo1/0x5cc834b60a4741a79ad2cd0d28d48a2e9c5e3aad/).
+- [xDAI demo](https://xdai.aragon.blossom.software/#/superfluiddemo/0x7569ca988796bd1511983fd9639360948a59ff49/).
 
 ## Initialization
 
