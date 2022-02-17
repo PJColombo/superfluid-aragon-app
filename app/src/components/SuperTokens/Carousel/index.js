@@ -21,6 +21,7 @@ function Carousel({
   const [visibleItems, setVisibleItems] = useState(0);
   const container = useRef(null);
   const { width: vw } = useViewport();
+
   const allowDrag = compactMode || (items && items.length > visibleItems);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function Carousel({
   // The space on one side of the visible items
   let sideSpace;
 
-  if (selected === 0) {
+  if (!compactMode && selected === 0) {
     sideSpace = 0;
   } else {
     sideSpace = customSideSpace && customSideSpace >= 0 ? customSideSpace : balancedSideSpace;
