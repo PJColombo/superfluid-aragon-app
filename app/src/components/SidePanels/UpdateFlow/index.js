@@ -290,7 +290,7 @@ const InnerUpdateFlow = ({ panelState, flows, superTokens: allSuperTokens, onUpd
             items={['Incoming', 'Outgoing']}
             selected={selectedFlowType}
             onChange={handleFlowTypeChange}
-            disabled={isFlowUpdateOperation || !superTokens.length}
+            disabled={isFlowUpdateOperation || !availableSuperTokens.length}
             wide
           />
         </Field>
