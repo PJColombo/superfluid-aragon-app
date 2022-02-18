@@ -97,7 +97,13 @@ const config: HardhatUserConfig = {
     polygon: {
       url: node_url('polygon'),
       accounts: accounts('polygon'),
-      ensRegistry: '0x7EdE100965B1E870d726cD480dD41F2af1Ca0130',
+      appEnsName: 'superfluid.open.aragonpm.eth',
+      // Aragon ENS registry
+      // ensRegistry: '0x3c70a0190d09f34519e6e218364451add21b7d4b',
+      // 1Hive ENS registry
+      // ensRegistry: '0x7EdE100965B1E870d726cD480dD41F2af1Ca0130',
+      // 1Hive ENS registry being used on the client:
+      ensRegistry: '0x4E065c622d584Fbe5D9078C3081840155FA69581',
     },
     mumbai: {
       url: node_url('mumbai'),
@@ -119,7 +125,6 @@ const config: HardhatUserConfig = {
       httpHeaders: { origin: 'hardhat' },
       timeout: 0,
       gas: 0,
-      ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D', // Rinkeby
     },
   },
   ipfs: {
