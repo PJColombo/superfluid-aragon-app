@@ -6,7 +6,7 @@ The Superfluid app acts as an interface between the Agent and the Superfluid pro
 
 #### 🐲 Project Stage: Completed
 
-The Superfluid app has been published to the `open.aragonpm.eth` registry on **Polygon**, **Rinkeby** and **xDAI** network.
+The Superfluid app has been published to the `open.aragonpm.eth` registry on **Polygon**, and **Gnosis** network.
 
 The app's repo ens name is the following: `superfluid.open.aragonpm.eth`.
 
@@ -16,9 +16,8 @@ The app's repo ens name is the following: `superfluid.open.aragonpm.eth`.
 
 Here you can find some demos to play with:
 
-- [Rinkeby demo](https://rinkeby.aragon.blossom.software/#/superfluiddemo/0xc6efd81d5d0438bd2c42bf34c3e3ec29442ede5e/).
 - [Polygon demo](https://polygon.aragon.blossom.software/#/superfluiddemo1/0x5cc834b60a4741a79ad2cd0d28d48a2e9c5e3aad/).
-- [xDAI demo](https://xdai.aragon.blossom.software/#/superfluiddemo/0x7569ca988796bd1511983fd9639360948a59ff49/).
+- [Gnosis demo](https://xdai.aragon.blossom.software/#/superfluiddemo/0x7569ca988796bd1511983fd9639360948a59ff49/).
 
 ## Initialization
 

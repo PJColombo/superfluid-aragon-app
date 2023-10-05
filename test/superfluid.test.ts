@@ -1,4 +1,3 @@
-import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
@@ -54,8 +53,8 @@ describe('Superfluid', () => {
 
   let snapshotId: string;
 
-  const generateSuperTokens = async (recipientSigner: Signer, amount: BigNumber) => {
-    await fakeToken.mint(await recipientSigner.getAddress(), amount);
+  const generateSuperTokens = async (recipientSigner: SignerWithAddress, amount: BigNumber) => {
+    await fakeToken.mint(recipientSigner.address, amount);
     await fakeToken.connect(recipientSigner).approve(superToken.address, amount);
 
     await superToken.connect(recipientSigner).upgrade(amount);
@@ -95,6 +94,9 @@ describe('Superfluid', () => {
   };
 
   before('Prepare Superfluid protocol contracts', async () => {
+    [root, receiver, permissionlessAccount, nonContractAccount, transferrer] =
+      await ethers.getSigners();
+
     const { superfluidProtocol } = deployments;
 
     host = await ethers.getContractAt('ISuperfluid', superfluidProtocol.host, root);
@@ -110,8 +112,6 @@ describe('Superfluid', () => {
       root
     );
 
-    [root, receiver, permissionlessAccount, nonContractAccount, transferrer] =
-      await ethers.getSigners();
     [dao, acl] = await newDao(root, daoFactory);
   });
 
@@ -138,7 +138,9 @@ describe('Superfluid', () => {
   before('Prepare agent app', async () => {
     ffAgent = await setUpAgent();
 
-    await generateSuperTokens(await impersonateAddress(ffAgent.address), TOKEN_AMOUNT);
+    const agentSigner = await impersonateAddress(ffAgent.address);
+
+    await generateSuperTokens(agentSigner, TOKEN_AMOUNT);
 
     snapshotId = await takeSnapshot();
   });

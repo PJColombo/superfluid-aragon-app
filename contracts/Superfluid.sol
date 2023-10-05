@@ -109,10 +109,7 @@ contract Superfluid is AragonApp {
      * @param _token Address of super token
      * @param _amount Amount of tokens upgraded
      */
-    function upgrade(
-        ISuperToken _token,
-        uint256 _amount
-    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+    function upgrade(ISuperToken _token, uint256 _amount) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
         require(_amount > 0, ERROR_UPGRADE_AMOUNT_ZERO);
 
         agent.transfer(_token.getUnderlyingToken(), this, _amount);
@@ -124,15 +121,16 @@ contract Superfluid is AragonApp {
         _token.transfer(agent, _amount);
     }
 
-        /**
+    /**
      * @notice Downgrade `@tokenAmount(_token, _amount)`.
      * @param _token Address of super token
      * @param _amount Amount of tokens downgraded
      */
-    function downgrade(
-        ISuperToken _token,
-        uint256 _amount
-    ) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+    function downgrade(ISuperToken _token, uint256 _amount)
+        external
+        auth(MANAGE_STREAMS_ROLE)
+        isValidSuperToken(_token)
+    {
         require(_amount > 0, ERROR_DOWNGRADE_AMOUNT_ZERO);
 
         agent.transfer(_token, this, _amount);
