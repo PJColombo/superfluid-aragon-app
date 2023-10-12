@@ -27,7 +27,6 @@ contract Superfluid is AragonApp {
     string private constant ERROR_UPGRADE_AMOUNT_ZERO = "SUPERFLUID_UPGRADE_AMOUNT_ZERO";
     string private constant ERROR_DOWNGRADE_AMOUNT_ZERO = "SUPERFLUID_DOWNGRADE_AMOUNT_ZERO";
     string private constant ERROR_SUPERTOKEN_APPROVE_FAILED = "SUPERFLUID_SUPERTOKEN_APPROVE_FAILED";
-    string private constant ERROR_UNDERLAYING_TOKEN_APPROVE_FAILED = "SUPERFLUID_UNDERLAYING_TOKEN_APPROVE_FAILED";
     string private constant ERROR_SUPERTOKEN_TRANSFER_FROM_REVERTED = "SUPERFLUID_SUPERTOKEN_TRANSFER_FROM_REVERT";
     string private constant ERROR_SENDER_CAN_NOT_DELETE_FLOW = "SUPERFLUID_SENDER_CAN_NOT_DELETE_FLOW";
 
@@ -114,7 +113,7 @@ contract Superfluid is AragonApp {
 
         agent.transfer(_token.getUnderlyingToken(), this, _amount);
 
-        require(ERC20(_token.getUnderlyingToken()).approve(_token, _amount), ERROR_UNDERLAYING_TOKEN_APPROVE_FAILED);
+        ERC20(_token.getUnderlyingToken()).approve(_token, _amount);
 
         _token.upgrade(_amount);
 
