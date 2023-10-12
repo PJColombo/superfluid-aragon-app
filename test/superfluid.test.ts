@@ -375,10 +375,6 @@ describe('Superfluid', () => {
     describe('when downgrading Super Token amount', () => {
       const amountToDowngrade = toDecimals(200);
 
-      beforeEach(async () => {
-        await mintFakeTokens(ffAgentSigner, amountToDowngrade);
-      });
-
       it('should downgrade Token amount on agent correctly', async () => {
         const agentFakeTokenBalanceBefore = await ffAgent.balance(fakeToken.address);
 
