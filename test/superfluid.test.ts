@@ -128,6 +128,7 @@ describe('Superfluid', () => {
 
     const MANAGE_STREAMS_ROLE = await SuperfluidBase.MANAGE_STREAMS_ROLE();
     const SET_AGENT_ROLE = await superfluidApp.SET_AGENT_ROLE();
+    const MANAGE_SUPERTOKENS_ROLE = await SuperfluidBase.MANAGE_SUPERTOKENS_ROLE();
 
     await acl.createPermission(
       root.address,
@@ -138,6 +139,8 @@ describe('Superfluid', () => {
     await acl.grantPermission(transferrer.address, superfluidApp.address, MANAGE_STREAMS_ROLE);
 
     await acl.createPermission(root.address, superfluidApp.address, SET_AGENT_ROLE, root.address);
+
+    await acl.createPermission(root.address, superfluidApp.address, MANAGE_SUPERTOKENS_ROLE, root.address);
   });
 
   before('Prepare agent app', async () => {
@@ -353,7 +356,7 @@ describe('Superfluid', () => {
         );
       });
 
-      it('should revert when trying to upgrade Super Token without having MANAGE_STREAMS_ROLE', async () => {
+      it('should revert when trying to upgrade Super Token without having MANAGE_SUPERTOKENS_ROLE', async () => {
         await expect(
           superfluidApp.connect(permissionlessAccount).upgrade(superToken.address, 0)
         ).to.be.revertedWith('APP_AUTH_FAILED');
@@ -399,7 +402,7 @@ describe('Superfluid', () => {
         );
       });
 
-      it('should revert when trying to downgrade Super Token without having MANAGE_STREAMS_ROLE', async () => {
+      it('should revert when trying to downgrade Super Token without having MANAGE_SUPERTOKENS_ROLE', async () => {
         await expect(
           superfluidApp.connect(permissionlessAccount).downgrade(superToken.address, 0)
         ).to.be.revertedWith('APP_AUTH_FAILED');

@@ -31,6 +31,7 @@ To initialized the app you'll need to set up the following parameters:
 
 The Superfluid app implements the following roles:
 * **MANAGE_STREAMS_ROLE**: Necessary to create, update, and delete constant flows.
+* **MANAGE_SUPERTOKENS_ROLE**: Necessary to upgrade and downgrade SuperToken amount.
 * **SET_AGENT_ROLE**: Necessary to change the agent if it's needed.
 
 The app should have the following roles as well:
@@ -48,6 +49,7 @@ grant superfluid.open:new agent SAFE_EXECUTE_ROLE voting
 grant superfluid.open:new agent TRANSFER_ROLE voting
 grant voting superfluid.open:new MANAGE_STREAMS_ROLE voting
 grant voting superfluid.open:new SET_AGENT_ROLE voting
+grant <?fluid-proposals> superfluid.open:new MANAGE_SUPERTOKENS_ROLE voting
 ```
 
 You can find the Superfluid contract addresses [here](https://docs.superfluid.finance/superfluid/protocol-developers/networks).
