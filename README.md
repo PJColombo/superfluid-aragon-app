@@ -6,7 +6,7 @@ The Superfluid app acts as an interface between the Agent and the Superfluid pro
 
 #### 🐲 Project Stage: Completed
 
-The Superfluid app has been published to the `open.aragonpm.eth` registry on **Polygon**, **Rinkeby** and **xDAI** network.
+The Superfluid app has been published to the `open.aragonpm.eth` registry on **Polygon**, and **Gnosis** network.
 
 The app's repo ens name is the following: `superfluid.open.aragonpm.eth`.
 
@@ -16,9 +16,8 @@ The app's repo ens name is the following: `superfluid.open.aragonpm.eth`.
 
 Here you can find some demos to play with:
 
-- [Rinkeby demo](https://rinkeby.aragon.blossom.software/#/superfluiddemo/0xc6efd81d5d0438bd2c42bf34c3e3ec29442ede5e/).
 - [Polygon demo](https://polygon.aragon.blossom.software/#/superfluiddemo1/0x5cc834b60a4741a79ad2cd0d28d48a2e9c5e3aad/).
-- [xDAI demo](https://xdai.aragon.blossom.software/#/superfluiddemo/0x7569ca988796bd1511983fd9639360948a59ff49/).
+- [Gnosis demo](https://xdai.aragon.blossom.software/#/superfluiddemo/0x7569ca988796bd1511983fd9639360948a59ff49/).
 
 ## Initialization
 
@@ -32,6 +31,7 @@ To initialized the app you'll need to set up the following parameters:
 
 The Superfluid app implements the following roles:
 * **MANAGE_STREAMS_ROLE**: Necessary to create, update, and delete constant flows.
+* **MANAGE_SUPERTOKENS_ROLE**: Necessary to upgrade and downgrade SuperToken amount.
 * **SET_AGENT_ROLE**: Necessary to change the agent if it's needed.
 
 The app should have the following roles as well:
@@ -49,6 +49,7 @@ grant superfluid.open:new agent SAFE_EXECUTE_ROLE voting
 grant superfluid.open:new agent TRANSFER_ROLE voting
 grant voting superfluid.open:new MANAGE_STREAMS_ROLE voting
 grant voting superfluid.open:new SET_AGENT_ROLE voting
+grant voting superfluid.open:new MANAGE_SUPERTOKENS_ROLE voting
 ```
 
 You can find the Superfluid contract addresses [here](https://docs.superfluid.finance/superfluid/protocol-developers/networks).

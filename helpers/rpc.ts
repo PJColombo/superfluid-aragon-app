@@ -1,4 +1,5 @@
-import { BigNumber, Signer } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { BigNumber } from 'ethers';
 import hre, { ethers } from 'hardhat';
 
 export const duration = {
@@ -29,13 +30,13 @@ export const setBalance = async (account: string, balance: string): Promise<void
 export const impersonateAddress = async (
   address: string,
   setInitialBalance = true
-): Promise<Signer> => {
+): Promise<SignerWithAddress> => {
   await hre.network.provider.request({
     method: 'hardhat_impersonateAccount',
     params: [address],
   });
 
-  const signer = await ethers.provider.getSigner(address);
+  const signer = await ethers.getSigner(address);
 
   if (setInitialBalance) {
     await setBalance(

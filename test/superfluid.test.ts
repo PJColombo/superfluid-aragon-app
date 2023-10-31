@@ -1,4 +1,3 @@
-import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
@@ -42,6 +41,7 @@ describe('Superfluid', () => {
   let acl: ACL;
   let superfluidApp: Superfluid;
   let ffAgent: Agent;
+  let ffAgentSigner: SignerWithAddress;
 
   let host: ISuperfluid;
   let cfav1: IConstantFlowAgreementV1;
@@ -54,11 +54,15 @@ describe('Superfluid', () => {
 
   let snapshotId: string;
 
-  const generateSuperTokens = async (recipientSigner: Signer, amount: BigNumber) => {
-    await fakeToken.mint(await recipientSigner.getAddress(), amount);
+  const generateSuperTokens = async (recipientSigner: SignerWithAddress, amount: BigNumber) => {
+    await fakeToken.mint(recipientSigner.address, amount);
     await fakeToken.connect(recipientSigner).approve(superToken.address, amount);
 
     await superToken.connect(recipientSigner).upgrade(amount);
+  };
+
+  const mintFakeTokens = async (recipientSigner: SignerWithAddress, amount: BigNumber) => {
+    await fakeToken.mint(recipientSigner.address, amount);
   };
 
   const setUpAgent = async (): Promise<Agent> => {
@@ -95,6 +99,9 @@ describe('Superfluid', () => {
   };
 
   before('Prepare Superfluid protocol contracts', async () => {
+    [root, receiver, permissionlessAccount, nonContractAccount, transferrer] =
+      await ethers.getSigners();
+
     const { superfluidProtocol } = deployments;
 
     host = await ethers.getContractAt('ISuperfluid', superfluidProtocol.host, root);
@@ -110,8 +117,6 @@ describe('Superfluid', () => {
       root
     );
 
-    [root, receiver, permissionlessAccount, nonContractAccount, transferrer] =
-      await ethers.getSigners();
     [dao, acl] = await newDao(root, daoFactory);
   });
 
@@ -123,6 +128,7 @@ describe('Superfluid', () => {
 
     const MANAGE_STREAMS_ROLE = await SuperfluidBase.MANAGE_STREAMS_ROLE();
     const SET_AGENT_ROLE = await superfluidApp.SET_AGENT_ROLE();
+    const MANAGE_SUPERTOKENS_ROLE = await SuperfluidBase.MANAGE_SUPERTOKENS_ROLE();
 
     await acl.createPermission(
       root.address,
@@ -133,12 +139,15 @@ describe('Superfluid', () => {
     await acl.grantPermission(transferrer.address, superfluidApp.address, MANAGE_STREAMS_ROLE);
 
     await acl.createPermission(root.address, superfluidApp.address, SET_AGENT_ROLE, root.address);
+
+    await acl.createPermission(root.address, superfluidApp.address, MANAGE_SUPERTOKENS_ROLE, root.address);
   });
 
   before('Prepare agent app', async () => {
     ffAgent = await setUpAgent();
+    ffAgentSigner = await impersonateAddress(ffAgent.address);
 
-    await generateSuperTokens(await impersonateAddress(ffAgent.address), TOKEN_AMOUNT);
+    await generateSuperTokens(ffAgentSigner, TOKEN_AMOUNT);
 
     snapshotId = await takeSnapshot();
   });
@@ -315,6 +324,100 @@ describe('Superfluid', () => {
         await expect(
           ffTransferrer.withdraw(fakeToken.address, transferrer.address, TRANSFERRED_AMOUNT)
         ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
+      });
+    });
+
+    describe('when upgrading Super Token amount', () => {
+      const amountToUpgrade = toDecimals(200);
+
+      beforeEach(async () => {
+        await mintFakeTokens(ffAgentSigner, amountToUpgrade);
+      });
+
+      it('should upgrade Token amount on agent correctly', async () => {
+        const agentFakeTokenBalanceBefore = await ffAgent.balance(fakeToken.address);
+
+        await superfluidApp.upgrade(superToken.address, amountToUpgrade);
+
+        const agentFakeTokenBalanceAfter = await ffAgent.balance(fakeToken.address);
+
+        expect(agentFakeTokenBalanceBefore.sub(amountToUpgrade)).equal(agentFakeTokenBalanceAfter);
+      });
+
+      it('should upgrade Super Token amount on agent correctly', async () => {
+        const agentSuperTokenBalanceBefore = await ffAgent.balance(superToken.address);
+
+        await superfluidApp.upgrade(superToken.address, amountToUpgrade);
+
+        const agentSuperTokenBalanceAfter = await ffAgent.balance(superToken.address);
+
+        expect(agentSuperTokenBalanceBefore.add(amountToUpgrade)).equal(
+          agentSuperTokenBalanceAfter
+        );
+      });
+
+      it('should revert when trying to upgrade Super Token without having MANAGE_SUPERTOKENS_ROLE', async () => {
+        await expect(
+          superfluidApp.connect(permissionlessAccount).upgrade(superToken.address, 0)
+        ).to.be.revertedWith('APP_AUTH_FAILED');
+      });
+
+      it('should revert if provided token is not SuperToken', async () => {
+        await expect(superfluidApp.upgrade(fakeToken.address, amountToUpgrade)).to.be.revertedWith(
+          'SUPERFLUID_INVALID_SUPERTOKEN'
+        );
+      });
+
+      it('should revert when trying to upgrade Super Token with amount less then 1', async () => {
+        await expect(superfluidApp.upgrade(superToken.address, 0)).to.be.revertedWith(
+          'SUPERFLUID_UPGRADE_AMOUNT_ZERO'
+        );
+      });
+    });
+
+    describe('when downgrading Super Token amount', () => {
+      const amountToDowngrade = toDecimals(200);
+
+      it('should downgrade Token amount on agent correctly', async () => {
+        const agentFakeTokenBalanceBefore = await ffAgent.balance(fakeToken.address);
+
+        await superfluidApp.downgrade(superToken.address, amountToDowngrade);
+
+        const agentFakeTokenBalanceAfter = await ffAgent.balance(fakeToken.address);
+
+        expect(agentFakeTokenBalanceBefore.add(amountToDowngrade)).equal(
+          agentFakeTokenBalanceAfter
+        );
+      });
+
+      it('should downgrade Super Token amount on agent correctly', async () => {
+        const agentSuperTokenBalanceBefore = await ffAgent.balance(superToken.address);
+
+        await superfluidApp.downgrade(superToken.address, amountToDowngrade);
+
+        const agentSuperTokenBalanceAfter = await ffAgent.balance(superToken.address);
+
+        expect(agentSuperTokenBalanceBefore.sub(amountToDowngrade)).equal(
+          agentSuperTokenBalanceAfter
+        );
+      });
+
+      it('should revert when trying to downgrade Super Token without having MANAGE_SUPERTOKENS_ROLE', async () => {
+        await expect(
+          superfluidApp.connect(permissionlessAccount).downgrade(superToken.address, 0)
+        ).to.be.revertedWith('APP_AUTH_FAILED');
+      });
+
+      it('should revert if provided token is not SuperToken', async () => {
+        await expect(
+          superfluidApp.downgrade(fakeToken.address, amountToDowngrade)
+        ).to.be.revertedWith('SUPERFLUID_INVALID_SUPERTOKEN');
+      });
+
+      it('should revert when trying to downgrade Super Token with amount less then 1', async () => {
+        await expect(superfluidApp.downgrade(superToken.address, 0)).to.be.revertedWith(
+          'SUPERFLUID_DOWNGRADE_AMOUNT_ZERO'
+        );
       });
     });
   });

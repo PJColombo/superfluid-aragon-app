@@ -5,22 +5,7 @@ import '@tenderly/hardhat-tenderly';
 import '@typechain/hardhat';
 import 'dotenv/config';
 import 'hardhat-deploy';
-import 'hardhat-gas-reporter';
-import { HardhatNetworkForkingConfig, HardhatUserConfig } from 'hardhat/types';
-import { accounts, node_url } from './utils/network';
-
-const forkConfig: { chainId?: number; forking?: HardhatNetworkForkingConfig } = {
-  ...(process.env.HARDHAT_FORK_ID && { chainId: parseInt(process.env.HARDHAT_FORK_ID) }),
-  forking: process.env.HARDHAT_FORK
-    ? {
-        url: process.env.HARDHAT_FORK,
-        blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
-          ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
-          : undefined,
-        enabled: true,
-      }
-    : undefined,
-};
+import { HardhatUserConfig } from 'hardhat/types';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -60,43 +45,39 @@ const config: HardhatUserConfig = {
         name: 'Set an agent',
         params: [],
       },
+      {
+        id: 'MANAGE_SUPERTOKENS_ROLE',
+        name: 'Manage SuperTokens amount',
+        params: [],
+      },
     ],
     appBuildOutputPath: 'dist',
   },
   networks: {
     hardhat: {
       initialBaseFeePerGas: 0,
-      // process.env.HARDHAT_FORK will specify the network that the fork is made from.
-      // this line ensure the use of the corresponding accounts
-      accounts: accounts(process.env.HARDHAT_FORK),
-      ...forkConfig,
+      forking: process.env.HARDHAT_FORK
+        ? {
+            url: process.env.HARDHAT_FORK,
+            blockNumber: process.env.HARDHAT_FORK_BLOCK_NUMBER
+              ? parseInt(process.env.HARDHAT_FORK_BLOCK_NUMBER)
+              : undefined,
+            enabled: true,
+          }
+        : undefined,
     },
-    localhost: {
-      url: node_url('localhost'),
-      // accounts: accounts(),
-      // ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D',
-      ...forkConfig,
-    },
-    mainnet: {
-      url: node_url('mainnet'),
-      accounts: accounts('mainnet'),
+    goerli: {
+      url: 'https://rpc.ankr.com/eth_goerli',
+      ensRegistry: '0x8cF5A255ED61F403837F040B8D9f052857469273',
       appEnsName: 'superfluid.open.aragonpm.eth',
     },
-    rinkeby: {
-      url: node_url('rinkeby'),
-      accounts: accounts('rinkeby'),
-      ensRegistry: '0x98Df287B6C145399Aaa709692c8D308357bC085D',
-      appEnsName: 'superfluid.open.aragonpm.eth',
-    },
-    xdai: {
-      url: node_url('xdai'),
-      accounts: accounts('xdai'),
+    gnosis: {
+      url: 'https://gnosis.publicnode.com',
       ensRegistry: '0xaafca6b0c89521752e559650206d7c925fd0e530',
       appEnsName: 'superfluid.open.aragonpm.eth',
     },
     polygon: {
-      url: node_url('polygon'),
-      accounts: accounts('polygon'),
+      url: 'https://polygon-rpc.com',
       appEnsName: 'superfluid.open.aragonpm.eth',
       // Aragon ENS registry
       // ensRegistry: '0x3c70a0190d09f34519e6e218364451add21b7d4b',
@@ -104,21 +85,6 @@ const config: HardhatUserConfig = {
       // ensRegistry: '0x7EdE100965B1E870d726cD480dD41F2af1Ca0130',
       // 1Hive ENS registry being used on the client:
       ensRegistry: '0x4E065c622d584Fbe5D9078C3081840155FA69581',
-    },
-    mumbai: {
-      url: node_url('mumbai'),
-      accounts: accounts('mumbai'),
-      ensRegistry: '0xB1576a9bE5EC445368740161174f3Dd1034fF8be',
-    },
-    arbitrum: {
-      url: node_url('arbitrum'),
-      accounts: accounts('arbitrum'),
-      ensRegistry: '0xB1576a9bE5EC445368740161174f3Dd1034fF8be',
-    },
-    arbtest: {
-      url: node_url('arbtest'),
-      accounts: accounts('arbtest'),
-      ensRegistry: '0x73ddD4B38982aB515daCf43289B41706f9A39199',
     },
     frame: {
       url: 'http://localhost:1248',
@@ -134,22 +100,9 @@ const config: HardhatUserConfig = {
       secret: process.env.PINATA_SECRET_KEY || '',
     },
   },
-  gasReporter: {
-    enabled: !!process.env.REPORT_GAS,
-  },
   mocha: {
     timeout: 0,
   },
-  external: process.env.HARDHAT_FORK
-    ? {
-        deployments: {
-          // process.env.HARDHAT_FORK will specify the network that the fork is made from.
-          // these lines allow it to fetch the deployments from the network being forked from both for node and deploy task
-          hardhat: ['deployments/' + process.env.HARDHAT_FORK],
-          localhost: ['deployments/' + process.env.HARDHAT_FORK],
-        },
-      }
-    : undefined,
   tenderly: {
     username: process.env.HARDHAT_TENDERLY_USERNAME,
     project: process.env.HARDHAT_TENDERLY_PROJECT,

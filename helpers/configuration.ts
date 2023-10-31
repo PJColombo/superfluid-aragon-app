@@ -2,22 +2,21 @@ import hre from 'hardhat';
 import { Deployments, EthereumNetworkNames, NetworksDeployments } from './types';
 
 const getNetworkNameById = (chainId: number): string => {
-  const { Rinkeby, Goerli, Xdai, Polygon } = EthereumNetworkNames;
+  const { Goerli, Gnosis, Polygon } = EthereumNetworkNames;
   switch (chainId) {
-    case 4:
-      return Rinkeby;
     case 5:
       return Goerli;
     case 100:
-      return Xdai;
+      return Gnosis;
     case 137:
       return Polygon;
     default:
-      return Xdai;
+      // local network
+      return Goerli;
   }
 };
 const Config: NetworksDeployments = {
-  [EthereumNetworkNames.Xdai]: {
+  [EthereumNetworkNames.Gnosis]: {
     aragon: {
       daoFactory: '0x4037f97fcc94287257e50bd14c7da9cb4df18250',
       agentBase: '0xa6ad366bfd2f43615bbec56f50cf606036fc11fe',
@@ -28,24 +27,24 @@ const Config: NetworksDeployments = {
       supertokens: [
         '0x59988e47A3503AaFaA0368b9deF095c818Fdca01', // xDAIx
       ],
-      tokens: [''], // wxDAI
+      tokens: ['0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d'], // wxDAI
     },
   },
-  [EthereumNetworkNames.Rinkeby]: {
+  [EthereumNetworkNames.Goerli]: {
     aragon: {
-      daoFactory: '0xad4d106b43b480faa3ef7f98464ffc27fc1faa96',
-      agentBase: '0xe10c2dE02F1c64485B680FC561E8E9c680691FAA',
+      daoFactory: '0x0c514a00401666780fcA29d4CD6943085818F049',
+      agentBase: '0x1B35F10413859D25Cf63D27336eF0434acF113FD',
     },
     superfluidProtocol: {
-      cfav1: '0xF4C5310E51F6079F601a5fb7120bC72a70b96e2A',
-      host: '0xeD5B5b32110c3Ded02a07c8b8e97513FAfb883B6',
+      cfav1: '0xEd6BcbF6907D4feEEe8a8875543249bEa9D308E8',
+      host: '0x22ff293e14F1EC3A09B137e9e06084AFd63adDF9',
       supertokens: [
-        '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90', // fDAIx
-        '0x0F1D7C55A2B133E000eA10EeC03c774e0d6796e8', // fUSDCx
+        '0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00', // fDAIx
+        '0x8aE68021f6170E5a766bE613cEA0d75236ECCa9a', // fUSDCx
       ],
       tokens: [
-        '0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7', // fDAI,
-        '0xbe49ac1EadAc65dccf204D4Df81d650B50122aB2', // fUSDC
+        '0x88271d333C72e51516B67f5567c728E702b3eeE8', // fDAI,
+        '0xc94dd466416A7dFE166aB2cF916D3875C049EBB7', // fUSDC
       ],
     },
   },

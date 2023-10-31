@@ -2,8 +2,7 @@ export enum EthereumNetworkNames {
   Goerli = 'goerli',
   Polygon = 'polygon',
   Mumbai = 'mumbai',
-  Rinkeby = 'rinkeby',
-  Xdai = 'xdai',
+  Gnosis = 'gnosis',
 }
 
 export interface Deployments {
