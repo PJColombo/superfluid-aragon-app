@@ -45,6 +45,11 @@ const config: HardhatUserConfig = {
         name: 'Set an agent',
         params: [],
       },
+      {
+        id: 'MANAGE_SUPERTOKENS_ROLE',
+        name: 'Manage SuperTokens amount',
+        params: [],
+      },
     ],
     appBuildOutputPath: 'dist',
   },

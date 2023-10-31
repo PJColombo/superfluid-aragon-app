@@ -13,9 +13,12 @@ contract Superfluid is AragonApp {
     Hardcoded constants to save gas
         bytes32 public constant MANAGE_STREAMS_ROLE = keccak256("MANAGE_STREAMS_ROLE");
         bytes32 public constant SET_AGENT_ROLE = keccak256("SET_AGENT_ROLE");
+        bytes32 public constant MANAGE_SUPERTOKENS_ROLE = keccak256("MANAGE_SUPERTOKENS_ROLE");
     */
     bytes32 public constant MANAGE_STREAMS_ROLE = 0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
     bytes32 public constant SET_AGENT_ROLE = 0xf57d195c0663dd0e8a2210bb519e2b7de35301795015198efff16e9a2be238c8;
+    bytes32 public constant MANAGE_SUPERTOKENS_ROLE =
+        0xc3785b41f0ebb77bd89636ecae52c950cee1cd359f0a1e5fababbcb5a0bfcb97;
 
     string private constant ERROR_AGENT_NOT_CONTRACT = "SUPERFLUID_AGENT_NOT_CONTRACT";
     string private constant ERROR_HOST_NOT_CONTRACT = "SUPERFLUID_HOST_NOT_CONTRACT";
@@ -108,7 +111,11 @@ contract Superfluid is AragonApp {
      * @param _token Address of super token
      * @param _amount Amount of tokens upgraded
      */
-    function upgrade(ISuperToken _token, uint256 _amount) external auth(MANAGE_STREAMS_ROLE) isValidSuperToken(_token) {
+    function upgrade(ISuperToken _token, uint256 _amount)
+        external
+        auth(MANAGE_SUPERTOKENS_ROLE)
+        isValidSuperToken(_token)
+    {
         require(_amount > 0, ERROR_UPGRADE_AMOUNT_ZERO);
 
         agent.transfer(_token.getUnderlyingToken(), this, _amount);
@@ -127,7 +134,7 @@ contract Superfluid is AragonApp {
      */
     function downgrade(ISuperToken _token, uint256 _amount)
         external
-        auth(MANAGE_STREAMS_ROLE)
+        auth(MANAGE_SUPERTOKENS_ROLE)
         isValidSuperToken(_token)
     {
         require(_amount > 0, ERROR_DOWNGRADE_AMOUNT_ZERO);
