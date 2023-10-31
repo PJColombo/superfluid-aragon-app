@@ -49,7 +49,7 @@ grant superfluid.open:new agent SAFE_EXECUTE_ROLE voting
 grant superfluid.open:new agent TRANSFER_ROLE voting
 grant voting superfluid.open:new MANAGE_STREAMS_ROLE voting
 grant voting superfluid.open:new SET_AGENT_ROLE voting
-grant <?fluid-proposals> superfluid.open:new MANAGE_SUPERTOKENS_ROLE voting
+grant voting superfluid.open:new MANAGE_SUPERTOKENS_ROLE voting
 ```
 
 You can find the Superfluid contract addresses [here](https://docs.superfluid.finance/superfluid/protocol-developers/networks).
