@@ -37,8 +37,9 @@
     "@aragon/os": "4.4.0"
   },
   "devDependencies": {
-    "@1hive/hardhat-aragon": "^0.1.0",
+    "@1hive/hardhat-aragon": "^0.1.4",
     "@aragon/buidler-aragon": "^0.2.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
     "@nomiclabs/buidler": "^1.3.0",
     "@nomiclabs/buidler-etherscan": "^1.3.0",
     "@nomiclabs/buidler-truffle5": "^1.3.0",

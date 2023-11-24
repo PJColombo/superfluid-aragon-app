@@ -1,6 +1,7 @@
 import '@1hive/hardhat-aragon';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
+import '@nomicfoundation/hardhat-verify';
 import '@tenderly/hardhat-tenderly';
 import '@typechain/hardhat';
 import 'dotenv/config';
@@ -94,7 +95,8 @@ const config: HardhatUserConfig = {
     },
   },
   ipfs: {
-    gateway: 'http://localhost:8080',
+    url: 'http://127.0.0.1:5001/',
+    gateway: 'https://ipfs.blossom.software/',
     pinata: {
       key: process.env.PINATA_KEY || '',
       secret: process.env.PINATA_SECRET_KEY || '',
@@ -106,6 +108,11 @@ const config: HardhatUserConfig = {
   tenderly: {
     username: process.env.HARDHAT_TENDERLY_USERNAME,
     project: process.env.HARDHAT_TENDERLY_PROJECT,
+  },
+  etherscan: {
+    apiKey: {
+      xdai: process.env.ETHERSCAN_API_KEY_XDAI || '',
+    },
   },
   typechain: {
     outDir: 'typechain',
